@@ -79,7 +79,7 @@ import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-nam
 import type { ResourceDiagnostic } from "../../core/resource-loader.ts";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-cwd.ts";
 import { type SessionContext, SessionManager } from "../../core/session-manager.ts";
-import { BUILTIN_SLASH_COMMANDS } from "../../core/slash-commands.ts";
+import { BUILTIN_SLASH_COMMANDS, createInitOnboardingPrompt } from "../../core/slash-commands.ts";
 import type { SourceInfo } from "../../core/source-info.ts";
 import { isInstallTelemetryEnabled } from "../../core/telemetry.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
@@ -142,6 +142,8 @@ interface Expandable {
 	setExpanded(expanded: boolean): void;
 }
 
+const BRAND_COLORS = ["#ffcd79", "#ffb887", "#dfa9ff", "#ff9d79"] as const;
+
 function isExpandable(obj: unknown): obj is Expandable {
 	return typeof obj === "object" && obj !== null && "setExpanded" in obj && typeof obj.setExpanded === "function";
 }
@@ -163,10 +165,10 @@ function truecolorForeground(hex: string, text: string): string {
 }
 
 function formatBrandMark(): string {
-	const topLeft = truecolorBackground("#ffcd79", "  ");
-	const topRight = truecolorBackground("#ffb887", "  ");
-	const bottomLeft = truecolorBackground("#dfa9ff", "  ");
-	const bottomRight = truecolorBackground("#ff9d79", "  ");
+	const topLeft = truecolorBackground(BRAND_COLORS[0], "  ");
+	const topRight = truecolorBackground(BRAND_COLORS[1], "  ");
+	const bottomLeft = truecolorBackground(BRAND_COLORS[2], "  ");
+	const bottomRight = truecolorBackground(BRAND_COLORS[3], "  ");
 	return `${topLeft}${topRight}\n${bottomLeft}${bottomRight}`;
 }
 
@@ -183,7 +185,11 @@ function formatStartupBrand(): string {
 }
 
 function brandPromptBorder(text: string): string {
-	return truecolorForeground("#ffb887", text);
+	return truecolorForeground(BRAND_COLORS[1], text);
+}
+
+function brandLoaderIndicator(text: string, frameIndex: number): string {
+	return truecolorForeground(BRAND_COLORS[frameIndex % BRAND_COLORS.length], text);
 }
 
 class ExpandableText extends Text implements Expandable {
@@ -1725,7 +1731,7 @@ export class InteractiveMode {
 	private createWorkingLoader(): Loader {
 		return new Loader(
 			this.ui,
-			(spinner) => theme.fg("accent", spinner),
+			brandLoaderIndicator,
 			(text) => theme.fg("muted", text),
 			this.getWorkingLoaderMessage(),
 			this.workingIndicatorOptions,
@@ -2502,6 +2508,12 @@ export class InteractiveMode {
 			if (!text) return;
 
 			// Handle commands
+			if (text === "/init") {
+				this.editor.addToHistory?.(text);
+				this.editor.setText("");
+				await this.handleInitCommand();
+				return;
+			}
 			if (text === "/settings") {
 				this.showSettingsSelector();
 				this.editor.setText("");
@@ -2911,7 +2923,7 @@ export class InteractiveMode {
 						: `${event.reason === "overflow" ? "Context overflow detected, " : ""}Auto-compacting... ${cancelHint}`;
 				this.autoCompactionLoader = new Loader(
 					this.ui,
-					(spinner) => theme.fg("accent", spinner),
+					brandLoaderIndicator,
 					(text) => theme.fg("muted", text),
 					label,
 				);
@@ -4048,6 +4060,22 @@ export class InteractiveMode {
 		this.showModelSelector(searchTerm);
 	}
 
+	private async handleInitCommand(): Promise<void> {
+		this.flushPendingBashComponents();
+		try {
+			await this.session.sendCustomMessage(
+				{
+					customType: "onboarding_init",
+					content: createInitOnboardingPrompt(),
+					display: false,
+				},
+				{ triggerTurn: true },
+			);
+		} catch (error) {
+			this.showError(error instanceof Error ? error.message : String(error));
+		}
+	}
+
 	private async findExactModelMatch(searchTerm: string): Promise<Model<any> | undefined> {
 		const models = await this.getModelCandidates();
 		return findExactModelReferenceMatch(searchTerm, models);
@@ -4348,7 +4376,7 @@ export class InteractiveMode {
 						this.chatContainer.addChild(new Spacer(1));
 						summaryLoader = new Loader(
 							this.ui,
-							(spinner) => theme.fg("accent", spinner),
+							brandLoaderIndicator,
 							(text) => theme.fg("muted", text),
 							`Summarizing branch... (${keyText("app.interrupt")} to cancel)`,
 						);

@@ -8,6 +8,8 @@ export interface LoaderIndicatorOptions {
 	intervalMs?: number;
 }
 
+export type LoaderColorFn = (str: string, frameIndex: number) => string;
+
 const DEFAULT_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const DEFAULT_INTERVAL_MS = 80;
 
@@ -21,13 +23,13 @@ export class Loader extends Text {
 	private intervalId: NodeJS.Timeout | null = null;
 	private ui: TUI | null = null;
 	private renderIndicatorVerbatim = false;
-	private spinnerColorFn: (str: string) => string;
+	private spinnerColorFn: LoaderColorFn;
 	private messageColorFn: (str: string) => string;
 	private message: string = "Loading...";
 
 	constructor(
 		ui: TUI,
-		spinnerColorFn: (str: string) => string,
+		spinnerColorFn: LoaderColorFn,
 		messageColorFn: (str: string) => string,
 		message: string = "Loading...",
 		indicator?: LoaderIndicatorOptions,
@@ -82,7 +84,7 @@ export class Loader extends Text {
 
 	private updateDisplay(): void {
 		const frame = this.frames[this.currentFrame] ?? "";
-		const renderedFrame = this.renderIndicatorVerbatim ? frame : this.spinnerColorFn(frame);
+		const renderedFrame = this.renderIndicatorVerbatim ? frame : this.spinnerColorFn(frame, this.currentFrame);
 		const indicator = frame.length > 0 ? `${renderedFrame} ` : "";
 		this.setText(`${indicator}${this.messageColorFn(this.message)}`);
 		if (this.ui) {

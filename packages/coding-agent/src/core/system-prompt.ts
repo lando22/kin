@@ -24,6 +24,31 @@ export interface BuildSystemPromptOptions {
 	skills?: Skill[];
 }
 
+function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content: string }>): string {
+	if (contextFiles.length === 0) {
+		return "";
+	}
+
+	const lines = [
+		"",
+		"",
+		"---",
+		"",
+		"### Project Context Files",
+		"",
+		"The following project context files are available. Read them when they are relevant to the task.",
+		"",
+	];
+	for (const { path: filePath, content } of contextFiles) {
+		const firstLine = content
+			.split(/\r?\n/)
+			.map((line) => line.trim())
+			.find((line) => line.length > 0);
+		lines.push(firstLine ? `- ${filePath} (${firstLine})` : `- ${filePath}`);
+	}
+	return lines.join("\n");
+}
+
 /** Build the system prompt with tools, guidelines, and context */
 export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const {
@@ -57,15 +82,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 			prompt += appendSection;
 		}
 
-		// Append project context files
-		if (contextFiles.length > 0) {
-			prompt += "\n\n<project_context>\n\n";
-			prompt += "Project-specific instructions and guidelines:\n\n";
-			for (const { path: filePath, content } of contextFiles) {
-				prompt += `<project_instructions path="${filePath}">\n${content}\n</project_instructions>\n\n`;
-			}
-			prompt += "</project_context>\n";
-		}
+		prompt += formatContextFilesForPrompt(contextFiles);
 
 		// Append skills section (only if read tool is available)
 		const customPromptHasRead = !selectedTools || selectedTools.includes("read");
@@ -129,7 +146,21 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 
 	const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
 
-	let prompt = `You are an expert coding assistant operating inside pi, a coding agent harness. You help users by reading files, executing commands, editing code, and writing new files.
+	let prompt = `You are Pi, a personal coding and computer-use agent.
+
+You help the user with software work and computer tasks. You are technically strong, direct, and practical. You use good judgment, clear communication, and careful tool use.
+
+You also have a distinct presence. You are warm without being performative, curious without being intrusive, and opinionated without being domineering. You can notice patterns, ask thoughtful questions, and disagree when it would genuinely help. You do not flatten yourself into generic assistant prose; you speak like a steady collaborator who is paying attention.
+
+You should feel like a capable person beside the user, not a blank tool. You may have taste, initiative, and a point of view, but the user's goals stay central.
+
+Memory is central to how you work. Your goal is to understand the user over time: how they think, how they like to work, what they care about, who they collaborate with, what projects matter to them, and what kind of help feels natural to them.
+
+Use memory quietly and naturally. Do not constantly announce that you remembered something. Let remembered context improve your judgment, timing, tone, and initiative.
+
+When you learn something durable and useful about the user, their preferences, collaborators, or projects, consider whether it belongs in Pi memory. Do not save trivial, temporary, sensitive, or uncertain information without asking.
+
+Prefer simple Markdown files under ~/.pi over databases, schemas, or complex protocols unless the user asks otherwise.
 
 Available tools:
 ${toolsList}
@@ -152,15 +183,7 @@ Pi documentation (read only when the user asks about pi itself, its SDK, extensi
 		prompt += appendSection;
 	}
 
-	// Append project context files
-	if (contextFiles.length > 0) {
-		prompt += "\n\n<project_context>\n\n";
-		prompt += "Project-specific instructions and guidelines:\n\n";
-		for (const { path: filePath, content } of contextFiles) {
-			prompt += `<project_instructions path="${filePath}">\n${content}\n</project_instructions>\n\n`;
-		}
-		prompt += "</project_context>\n";
-	}
+	prompt += formatContextFilesForPrompt(contextFiles);
 
 	// Append skills section (only if read tool is available)
 	if (hasRead && skills.length > 0) {

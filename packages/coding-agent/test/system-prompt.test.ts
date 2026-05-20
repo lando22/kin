@@ -27,6 +27,18 @@ describe("buildSystemPrompt", () => {
 	});
 
 	describe("default tools", () => {
+		test("describes Pi as a personal memory-focused agent", () => {
+			const prompt = buildSystemPrompt({
+				contextFiles: [],
+				skills: [],
+				cwd: process.cwd(),
+			});
+
+			expect(prompt).toContain("You are Pi, a personal coding and computer-use agent.");
+			expect(prompt).toContain("Memory is central to how you work.");
+			expect(prompt).toContain("You should feel like a capable person beside the user");
+		});
+
 		test("includes all default tools when snippets are provided", () => {
 			const prompt = buildSystemPrompt({
 				toolSnippets: {
@@ -56,6 +68,37 @@ describe("buildSystemPrompt", () => {
 			expect(prompt).toContain(
 				"- When reading pi docs or examples, resolve docs/... under Additional docs and examples/... under Examples, not the current working directory",
 			);
+		});
+	});
+
+	describe("context files", () => {
+		test("formats context files as Markdown references", () => {
+			const prompt = buildSystemPrompt({
+				contextFiles: [{ path: "/repo/AGENTS.md", content: "# Rules\n\nBe direct.\n" }],
+				skills: [],
+				cwd: process.cwd(),
+			});
+
+			expect(prompt).toContain(
+				"---\n\n### Project Context Files\n\nThe following project context files are available. Read them when they are relevant to the task.",
+			);
+			expect(prompt).toContain("- /repo/AGENTS.md (# Rules)");
+			expect(prompt).not.toContain("Be direct.");
+			expect(prompt).not.toContain("<project_context>");
+			expect(prompt).not.toContain("<project_instructions");
+		});
+
+		test("uses the same Markdown reference format with custom prompts", () => {
+			const prompt = buildSystemPrompt({
+				customPrompt: "Custom base.",
+				contextFiles: [{ path: "/repo/AGENTS.md", content: "Project rules." }],
+				selectedTools: [],
+				skills: [],
+				cwd: process.cwd(),
+			});
+
+			expect(prompt).toContain("Custom base.\n\n---\n\n### Project Context Files");
+			expect(prompt).toContain("- /repo/AGENTS.md (Project rules.)");
 		});
 	});
 
