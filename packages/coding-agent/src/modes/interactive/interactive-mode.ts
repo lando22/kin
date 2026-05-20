@@ -146,6 +146,46 @@ function isExpandable(obj: unknown): obj is Expandable {
 	return typeof obj === "object" && obj !== null && "setExpanded" in obj && typeof obj.setExpanded === "function";
 }
 
+function truecolorBackground(hex: string, text: string): string {
+	const cleaned = hex.replace("#", "");
+	const r = parseInt(cleaned.slice(0, 2), 16);
+	const g = parseInt(cleaned.slice(2, 4), 16);
+	const b = parseInt(cleaned.slice(4, 6), 16);
+	return `\x1b[48;2;${r};${g};${b}m${text}\x1b[49m`;
+}
+
+function truecolorForeground(hex: string, text: string): string {
+	const cleaned = hex.replace("#", "");
+	const r = parseInt(cleaned.slice(0, 2), 16);
+	const g = parseInt(cleaned.slice(2, 4), 16);
+	const b = parseInt(cleaned.slice(4, 6), 16);
+	return `\x1b[38;2;${r};${g};${b}m${text}\x1b[39m`;
+}
+
+function formatBrandMark(): string {
+	const topLeft = truecolorBackground("#ffcd79", "  ");
+	const topRight = truecolorBackground("#ffb887", "  ");
+	const bottomLeft = truecolorBackground("#dfa9ff", "  ");
+	const bottomRight = truecolorBackground("#ff9d79", "  ");
+	return `${topLeft}${topRight}\n${bottomLeft}${bottomRight}`;
+}
+
+function formatStartupBrand(): string {
+	const [markTop, markBottom] = formatBrandMark().split("\n");
+	const wordmarkTop = theme.bold("█▀█  ▀");
+	const wordmarkBottom = theme.bold("█▀▀  █");
+	return [
+		`${markTop}  ${wordmarkTop}`,
+		`${markBottom}  ${wordmarkBottom}`,
+		"",
+		theme.fg("text", "Your personal agent for work."),
+	].join("\n");
+}
+
+function brandPromptBorder(text: string): string {
+	return truecolorForeground("#ffb887", text);
+}
+
 class ExpandableText extends Text implements Expandable {
 	private readonly getCollapsedText: () => string;
 	private readonly getExpandedText: () => string;
@@ -597,7 +637,7 @@ export class InteractiveMode {
 
 		// Add header with keybindings from config (unless silenced)
 		if (this.options.verbose || !this.settingsManager.getQuietStartup()) {
-			const logo = theme.bold(theme.fg("accent", APP_NAME)) + theme.fg("dim", ` v${this.version}`);
+			const brand = formatStartupBrand();
 
 			// Build startup instructions using keybinding hint helpers
 			const hint = (keybinding: AppKeybinding, description: string) => keyHint(keybinding, description);
@@ -630,17 +670,14 @@ export class InteractiveMode {
 				rawKeyHint("!", "bash"),
 				hint("app.tools.expand", "more"),
 			].join(theme.fg("muted", " · "));
-			const compactOnboarding = theme.fg(
-				"dim",
-				`Press ${keyText("app.tools.expand")} to show full startup help and loaded resources.`,
-			);
+			const compactOnboarding = theme.fg("dim", `Press ${keyText("app.tools.expand")} to show full startup help.`);
 			const onboarding = theme.fg(
 				"dim",
 				`Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.`,
 			);
 			this.builtInHeader = new ExpandableText(
-				() => `${logo}\n${compactInstructions}\n${compactOnboarding}\n\n${onboarding}`,
-				() => `${logo}\n${expandedInstructions}\n\n${onboarding}`,
+				() => `${brand}\n\n${compactInstructions}\n${compactOnboarding}\n\n${onboarding}`,
+				() => `${brand}\n\n${expandedInstructions}\n\n${onboarding}`,
 				this.getStartupExpansionState(),
 				1,
 				0,
@@ -1283,7 +1320,7 @@ export class InteractiveMode {
 		force?: boolean;
 		showDiagnosticsWhenQuiet?: boolean;
 	}): void {
-		const showListing = options?.force || this.options.verbose || !this.settingsManager.getQuietStartup();
+		const showListing = options?.force === true;
 		const showDiagnostics = showListing || options?.showDiagnosticsWhenQuiet === true;
 		if (!showListing && !showDiagnostics) {
 			return;
@@ -3435,8 +3472,7 @@ export class InteractiveMode {
 		if (this.isBashMode) {
 			this.editor.borderColor = theme.getBashModeBorderColor();
 		} else {
-			const level = this.session.thinkingLevel || "off";
-			this.editor.borderColor = theme.getThinkingBorderColor(level);
+			this.editor.borderColor = brandPromptBorder;
 		}
 		this.ui.requestRender();
 	}
