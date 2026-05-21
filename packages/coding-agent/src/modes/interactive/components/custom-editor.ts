@@ -1,5 +1,67 @@
-import { Editor, type EditorOptions, type EditorTheme, type TUI } from "@earendil-works/pi-tui";
+import {
+	Editor,
+	type EditorOptions,
+	type EditorTheme,
+	type TUI,
+	truncateToWidth,
+	visibleWidth,
+} from "@earendil-works/pi-tui";
 import type { AppKeybinding, KeybindingsManager } from "../../../core/keybindings.ts";
+import { theme } from "../theme/theme.ts";
+
+const MIN_FRAMED_EDITOR_WIDTH = 16;
+const PROMPT_MARKER = "›";
+
+function padToWidth(text: string, width: number): string {
+	const currentWidth = visibleWidth(text);
+	if (currentWidth >= width) {
+		return truncateToWidth(text, width, "");
+	}
+	return text + " ".repeat(width - currentWidth);
+}
+
+function stripAnsi(text: string): string {
+	return text.replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, "").replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, "");
+}
+
+function borderText(text: string): string {
+	return theme.fg("borderMuted", text);
+}
+
+function extractScrollLabel(line: string): string | undefined {
+	const plain = stripAnsi(line).replace(/─/g, " ").replace(/\s+/g, " ").trim();
+	return plain.includes("↑") || plain.includes("↓") ? plain : undefined;
+}
+
+function isEditorBorderLine(line: string): boolean {
+	const plain = stripAnsi(line).trim();
+	return /^─+$/.test(plain) || /^─── [↑↓] \d+ more ─*$/.test(plain);
+}
+
+function buildBorder(width: number, left: string, right: string, leftLabel?: string, rightLabel?: string): string {
+	const innerWidth = Math.max(0, width - 2);
+	const safeLeftLabel = leftLabel ? ` ${truncateToWidth(leftLabel, Math.max(0, innerWidth - 2), "")} ` : "";
+	const safeRightLabel = rightLabel ? ` ${truncateToWidth(rightLabel, Math.max(0, innerWidth - 2), "")} ` : "";
+	const leftLabelWidth = visibleWidth(safeLeftLabel);
+	const rightLabelWidth = visibleWidth(safeRightLabel);
+
+	if (leftLabelWidth + rightLabelWidth >= innerWidth) {
+		return borderText(left + "─".repeat(innerWidth) + right);
+	}
+
+	const middleDashWidth = innerWidth - leftLabelWidth - rightLabelWidth;
+	const leftDashWidth = safeLeftLabel ? 1 : Math.max(0, middleDashWidth - (safeRightLabel ? 1 : 0));
+	const rightDashWidth = Math.max(0, middleDashWidth - leftDashWidth);
+
+	return [
+		borderText(left),
+		borderText("─".repeat(leftDashWidth)),
+		safeLeftLabel ? theme.fg("dim", safeLeftLabel) : "",
+		borderText("─".repeat(rightDashWidth)),
+		safeRightLabel ? theme.fg("dim", safeRightLabel) : "",
+		borderText(right),
+	].join("");
+}
 
 /**
  * Custom editor that handles app-level keybindings for coding-agent.
@@ -18,6 +80,52 @@ export class CustomEditor extends Editor {
 	constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager, options?: EditorOptions) {
 		super(tui, theme, options);
 		this.keybindings = keybindings;
+	}
+
+	render(width: number): string[] {
+		if (width < MIN_FRAMED_EDITOR_WIDTH) {
+			return super.render(width);
+		}
+
+		const textAreaWidth = Math.max(1, width - 4);
+		const baseLines = super.render(textAreaWidth);
+		if (baseLines.length < 3) {
+			return baseLines;
+		}
+
+		const bottomBorderIndex = (() => {
+			for (let i = baseLines.length - 1; i >= 1; i--) {
+				if (isEditorBorderLine(baseLines[i] ?? "")) {
+					return i;
+				}
+			}
+			return baseLines.length - 1;
+		})();
+
+		const topScrollLabel = extractScrollLabel(baseLines[0] ?? "");
+		const bottomScrollLabel = extractScrollLabel(baseLines[bottomBorderIndex] ?? "");
+		const contentLines = baseLines.slice(1, bottomBorderIndex);
+		const autocompleteLines = baseLines.slice(bottomBorderIndex + 1);
+		const rightLabel = this.getText().trim().startsWith("!") ? "bash" : "pi";
+		const result: string[] = [buildBorder(width, "╭", "╮", topScrollLabel)];
+		const isEmpty = this.getText().length === 0;
+
+		for (let i = 0; i < contentLines.length; i++) {
+			const prefix = i === 0 ? `${theme.fg("accent", PROMPT_MARKER)} ` : "  ";
+			let content = (contentLines[i] ?? "").trimEnd();
+			if (isEmpty && i === 0) {
+				content += theme.fg("dim", " Type a command...");
+			}
+			result.push(`${borderText("│")}${prefix}${padToWidth(content, textAreaWidth)}${borderText("│")}`);
+		}
+
+		for (const line of autocompleteLines) {
+			const content = line.trimEnd();
+			result.push(`${borderText("│")}  ${padToWidth(content, textAreaWidth)}${borderText("│")}`);
+		}
+
+		result.push(buildBorder(width, "╰", "╯", bottomScrollLabel, rightLabel));
+		return result;
 	}
 
 	/**

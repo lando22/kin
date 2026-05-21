@@ -1,5 +1,5 @@
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { AssistantMessageComponent } from "../src/modes/interactive/components/assistant-message.js";
 import { initTheme } from "../src/modes/interactive/theme/theme.js";
 
@@ -53,5 +53,30 @@ describe("AssistantMessageComponent", () => {
 		expect(rendered.includes(OSC133_ZONE_START)).toBe(false);
 		expect(rendered.includes(OSC133_ZONE_END)).toBe(false);
 		expect(rendered.includes(OSC133_ZONE_FINAL)).toBe(false);
+	});
+
+	test("collapses thinking traces to an elapsed-time line", () => {
+		initTheme("dark");
+		vi.useFakeTimers();
+		vi.setSystemTime(1_000);
+
+		try {
+			const component = new AssistantMessageComponent();
+			component.updateContent(createAssistantMessage([{ type: "thinking", thinking: "private trace" }]));
+			vi.setSystemTime(3_300);
+			component.updateContent(
+				createAssistantMessage([
+					{ type: "thinking", thinking: "private trace" },
+					{ type: "text", text: "answer" },
+				]),
+			);
+
+			const rendered = component.render(60).join("\n");
+			expect(rendered).toContain("Thinking for 2.3s");
+			expect(rendered).not.toContain("private trace");
+			expect(rendered).toContain("answer");
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

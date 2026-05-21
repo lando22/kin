@@ -431,6 +431,8 @@ interface PackageJson {
 	piConfig?: {
 		name?: string;
 		configDir?: string;
+		disableVersionCheck?: boolean;
+		changelogUrl?: string;
 	};
 }
 
@@ -442,6 +444,8 @@ export const APP_NAME: string = piConfigName || "pi";
 export const APP_TITLE: string = piConfigName ? APP_NAME : "π";
 export const CONFIG_DIR_NAME: string = pkg.piConfig?.configDir || ".pi";
 export const VERSION: string = pkg.version || "0.0.0";
+export const VERSION_CHECK_DISABLED: boolean = pkg.piConfig?.disableVersionCheck === true;
+export const CHANGELOG_URL: string = pkg.piConfig?.changelogUrl || "https://pi.dev/changelog";
 
 // e.g., PI_CODING_AGENT_DIR or TAU_CODING_AGENT_DIR
 export const ENV_AGENT_DIR = `${APP_NAME.toUpperCase()}_CODING_AGENT_DIR`;

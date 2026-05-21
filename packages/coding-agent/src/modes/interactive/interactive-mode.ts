@@ -51,6 +51,7 @@ import { spawn, spawnSync } from "child_process";
 import {
 	APP_NAME,
 	APP_TITLE,
+	CHANGELOG_URL,
 	getAgentDir,
 	getAuthPath,
 	getDebugLogPath,
@@ -75,6 +76,7 @@ import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.t
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider, findExactModelReferenceMatch, resolveModelScope } from "../../core/model-resolver.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
+import { resetPiMemory } from "../../core/pi-memory.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-names.ts";
 import type { ResourceDiagnostic } from "../../core/resource-loader.ts";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-cwd.ts";
@@ -3636,10 +3638,9 @@ export class InteractiveMode {
 	showNewVersionNotification(release: LatestPiRelease): void {
 		const action = theme.fg("accent", `${APP_NAME} update`);
 		const updateInstruction = theme.fg("muted", `New version ${release.version} is available. Run `) + action;
-		const changelogUrl = "https://pi.dev/changelog";
 		const changelogLink = getCapabilities().hyperlinks
-			? hyperlink(theme.fg("accent", "open changelog"), changelogUrl)
-			: theme.fg("accent", changelogUrl);
+			? hyperlink(theme.fg("accent", "open changelog"), CHANGELOG_URL)
+			: theme.fg("accent", CHANGELOG_URL);
 		const changelogLine = theme.fg("muted", "Changelog: ") + changelogLink;
 		const note = release.note?.trim();
 
@@ -4063,6 +4064,7 @@ export class InteractiveMode {
 	private async handleInitCommand(): Promise<void> {
 		this.flushPendingBashComponents();
 		try {
+			resetPiMemory();
 			await this.session.sendCustomMessage(
 				{
 					customType: "onboarding_init",

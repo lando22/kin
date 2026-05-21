@@ -1393,9 +1393,9 @@ async function generateModels() {
 		}
 	}
 
-	if (!allModels.some((m) => m.provider === "openai" && m.id === "gpt-5.4")) {
-		allModels.push({
-			id: "gpt-5.4",
+		if (!allModels.some((m) => m.provider === "openai" && m.id === "gpt-5.4")) {
+			allModels.push({
+				id: "gpt-5.4",
 			name: "GPT-5.4",
 			api: "openai-responses",
 			baseUrl: "https://api.openai.com/v1",
@@ -1409,13 +1409,34 @@ async function generateModels() {
 				cacheWrite: 0,
 			},
 			contextWindow: 272000,
-			maxTokens: 128000,
-		});
-	}
+				maxTokens: 128000,
+			});
+		}
 
-	const deepseekCompat: OpenAICompletionsCompat = {
-		requiresReasoningContentOnAssistantMessages: true,
-		thinkingFormat: "deepseek",
+		// Add missing OpenRouter Grok Build 0.1 until the generated OpenRouter snapshot catches up.
+		if (!allModels.some((m) => m.provider === "openrouter" && m.id === "x-ai/grok-build-0.1")) {
+			allModels.push({
+				id: "x-ai/grok-build-0.1",
+				name: "xAI: Grok Build 0.1",
+				api: "openai-completions",
+				baseUrl: "https://openrouter.ai/api/v1",
+				provider: "openrouter",
+				reasoning: true,
+				input: ["text", "image"],
+				cost: {
+					input: 1,
+					output: 2,
+					cacheRead: 0.2,
+					cacheWrite: 0,
+				},
+				contextWindow: 256000,
+				maxTokens: 131072,
+			});
+		}
+
+		const deepseekCompat: OpenAICompletionsCompat = {
+			requiresReasoningContentOnAssistantMessages: true,
+			thinkingFormat: "deepseek",
 	};
 	const deepseekV4Models: Model<"openai-completions">[] = [
 		{

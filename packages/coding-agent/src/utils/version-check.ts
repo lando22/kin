@@ -1,3 +1,4 @@
+import { VERSION_CHECK_DISABLED } from "../config.ts";
 import { getPiUserAgent } from "./pi-user-agent.ts";
 
 const LATEST_VERSION_URL = "https://pi.dev/api/latest-version";
@@ -57,7 +58,13 @@ export async function getLatestPiRelease(
 	currentVersion: string,
 	options: { timeoutMs?: number } = {},
 ): Promise<LatestPiRelease | undefined> {
-	if (process.env.PI_SKIP_VERSION_CHECK || process.env.PI_OFFLINE) return undefined;
+	if (
+		process.env.PI_SKIP_VERSION_CHECK ||
+		process.env.PI_OFFLINE ||
+		(VERSION_CHECK_DISABLED && !process.env.PI_FORCE_VERSION_CHECK)
+	) {
+		return undefined;
+	}
 
 	const response = await fetch(LATEST_VERSION_URL, {
 		headers: {

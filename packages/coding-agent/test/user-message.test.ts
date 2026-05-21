@@ -1,3 +1,4 @@
+import { visibleWidth } from "@earendil-works/pi-tui";
 import { describe, expect, test } from "vitest";
 import { UserMessageComponent } from "../src/modes/interactive/components/user-message.js";
 import { initTheme } from "../src/modes/interactive/theme/theme.js";
@@ -15,11 +16,11 @@ describe("UserMessageComponent", () => {
 		const lines = component.render(20);
 
 		expect(lines).toHaveLength(3);
+		expect(lines.map((line) => visibleWidth(line))).toEqual([20, 20, 20]);
 		expect(lines[0]).toContain(OSC133_ZONE_START);
-		expect(lines[0].endsWith(BG_RESET)).toBe(true);
-		expect(lines[0]).not.toContain(OSC133_ZONE_END);
+		expect(lines[1]).toContain("›");
 		expect(lines[1]).toContain("hello");
-		expect(lines[2].startsWith(OSC133_ZONE_END + OSC133_ZONE_FINAL)).toBe(true);
+		expect(lines[2]).toContain(OSC133_ZONE_END + OSC133_ZONE_FINAL);
 		expect(lines[2].endsWith(BG_RESET)).toBe(true);
 	});
 });
