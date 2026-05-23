@@ -78,7 +78,7 @@ import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.t
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider, findExactModelReferenceMatch, resolveModelScope } from "../../core/model-resolver.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
-import { readMemoryContent, readProjectContent, resetPiMemory } from "../../core/pi-memory.ts";
+import { readMemoryContent, readNotesContent, readProjectContent, resetPiMemory } from "../../core/pi-memory.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-names.ts";
 import {
 	findSessionsForDate,
@@ -4212,8 +4212,9 @@ export class InteractiveMode {
 			const uniqueCwds = [...new Set(sessions.map((s) => s.cwd).filter((c) => c && c !== "unknown"))];
 			this.showWarning(`Reading ${sessions.length} session(s) across ${uniqueCwds.length} project(s)...`);
 
-			// Read current memory and all project contexts
+			// Read current memory, notes, and all project contexts
 			const currentMemory = readMemoryContent();
+			const notesContent = readNotesContent();
 			const projectContexts = uniqueCwds.map((projectCwd) => ({
 				name: path.basename(projectCwd),
 				content: readProjectContent(projectCwd),
@@ -4222,6 +4223,7 @@ export class InteractiveMode {
 			const rawResponse = await generateReflection(model, sessions, {
 				date: new Date(),
 				currentMemory,
+				notesContent,
 				projectContexts,
 			});
 

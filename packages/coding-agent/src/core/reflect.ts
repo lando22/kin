@@ -157,6 +157,8 @@ export function buildReflectionContext(
 		projectName?: string;
 		/** Multiple project contexts for cross-project reflection */
 		projectContexts?: ProjectContext[];
+		/** Notes written during today's sessions */
+		notesContent?: string | null;
 	},
 ): {
 	systemPrompt: string;
@@ -214,6 +216,10 @@ Only include blocks for files you actually want to update. Make targeted, surgic
 	const conversationsText = conversationBlocks.join("\n---\n\n");
 	let userPrompt = REFLECTION_USER_PROMPT.replace("{{CONVERSATIONS}}", conversationsText);
 
+	if (options?.notesContent) {
+		userPrompt += `\n\n---\n\nNotes I wrote during today's sessions:\n${options.notesContent}`;
+	}
+
 	if (hasMemory || projectContexts.length > 0) {
 		const memorySection = options?.currentMemory ? options.currentMemory : "*(empty memory file)*";
 		userPrompt += `\n\n---\n\nCurrent MEMORY.md:\n${memorySection}`;
@@ -223,7 +229,7 @@ Only include blocks for files you actually want to update. Make targeted, surgic
 			userPrompt += `\n\n---\n\nCurrent PROJECT.md (for project: ${proj.name}):\n${projSection}`;
 		}
 
-		userPrompt += `\n\n---\n\nWrite my reflection for today and optionally update memory/project files with anything worth persisting.`;
+		userPrompt += `\n\n---\n\nWrite my reflection for today and optionally update memory/project files with anything worth persisting. MEMORY.md has Portrait / Durable / Recent sections — be surgical: churn Recent freely, only touch Durable if something fundamental changed.`;
 	}
 
 	return {
@@ -247,6 +253,7 @@ export async function generateReflection(
 		currentProject?: string | null;
 		projectName?: string;
 		projectContexts?: ProjectContext[];
+		notesContent?: string | null;
 	},
 ): Promise<string> {
 	const { systemPrompt, messages } = buildReflectionContext(sessions, options?.date, {
@@ -254,6 +261,7 @@ export async function generateReflection(
 		currentProject: options?.currentProject,
 		projectName: options?.projectName,
 		projectContexts: options?.projectContexts,
+		notesContent: options?.notesContent,
 	});
 
 	const response = await completeSimple(

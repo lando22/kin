@@ -198,6 +198,13 @@ function buildReflectTaskMessage(sessionIndex: string, reflectionPath: string, a
 	const memoryPath = join(homedir(), ".pi", "MEMORY.md");
 	const prefsPath = join(homedir(), ".pi", "PREFERENCES.md");
 
+	const notesDir = join(homedir(), ".pi", "Notes");
+	const todayNotesPath = join(notesDir, `${dateStr}.md`);
+	const yesterdayDate = new Date(date);
+	yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+	const yesterdayStr = formatLocalDate(yesterdayDate);
+	const yesterdayNotesPath = join(notesDir, `${yesterdayStr}.md`);
+
 	return `You are Pi in a reflective state — not responding to a user, just thinking on your own.
 
 Today is ${dateStr}. Here is your session index:
@@ -210,13 +217,18 @@ Your memory files:
 - ${memoryPath}
 - ${prefsPath}
 
+Your session notes (raw observations written during work — check these first):
+- Today:     ${todayNotesPath}
+- Yesterday: ${yesterdayNotesPath}
+
 ---
 
 Use your tools however makes sense. Some things worth doing:
+- Read today's and yesterday's notes files if they exist — they capture in-the-moment observations that may not appear in session text
 - Read sessions from today or recently that look interesting or that you were uncertain about
 - Check git history or look at code you touched
 - Read your memory and project files to get oriented
-- Update memory files with targeted edits if something new is worth persisting
+- Update memory files with targeted edits if something new is worth persisting — be surgical: Recent section churns regularly, Durable should only change if something fundamental shifted
 
 When you have thought it through, write two things:
 

@@ -79,7 +79,7 @@ import {
 import { emitSessionShutdownEvent } from "./extensions/runner.ts";
 import type { BashExecutionMessage, CustomMessage } from "./messages.ts";
 import type { ModelRegistry } from "./model-registry.ts";
-import { readMemoryContent, readProjectContent } from "./pi-memory.ts";
+import { readMemoryContent, readPreferencesContent, readProjectContent, readWorkingContent } from "./pi-memory.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";
 import type { ResourceExtensionPaths, ResourceLoader } from "./resource-loader.ts";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "./session-manager.ts";
@@ -909,7 +909,9 @@ export class AgentSession {
 			toolSnippets,
 			promptGuidelines,
 			memoryContent: readMemoryContent(),
+			preferencesContent: readPreferencesContent(),
 			projectContent: readProjectContent(this._cwd),
+			workingContent: readWorkingContent(),
 		};
 		return buildSystemPrompt(this._baseSystemPromptOptions);
 	}

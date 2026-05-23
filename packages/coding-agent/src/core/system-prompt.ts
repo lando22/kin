@@ -27,8 +27,12 @@ export interface BuildSystemPromptOptions {
 	skills?: Skill[];
 	/** Contents of ~/.pi/MEMORY.md, injected at the end of the prompt. */
 	memoryContent?: string | null;
+	/** Contents of ~/.pi/PREFERENCES.md, injected at the end of the prompt. */
+	preferencesContent?: string | null;
 	/** Contents of ~/.pi/Projects/<project>/PROJECT.md, injected at the end of the prompt. */
 	projectContent?: string | null;
+	/** Contents of ~/.pi/WORKING.md, ephemeral working context. */
+	workingContent?: string | null;
 }
 
 function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content: string }>): string {
@@ -56,17 +60,32 @@ function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content
 	return lines.join("\n");
 }
 
-function formatMemorySection(memoryContent?: string | null, projectContent?: string | null): string {
-	if (!memoryContent && !projectContent) return "";
+function formatMemorySection(
+	memoryContent?: string | null,
+	preferencesContent?: string | null,
+	projectContent?: string | null,
+	workingContent?: string | null,
+): string {
+	if (!memoryContent && !preferencesContent && !projectContent && !workingContent) return "";
 	const lines = ["\n\n---\n"];
 	if (memoryContent) {
 		lines.push("### Memory\n");
 		lines.push(memoryContent);
 	}
-	if (projectContent) {
+	if (preferencesContent) {
 		if (memoryContent) lines.push("\n");
+		lines.push("### Preferences\n");
+		lines.push(preferencesContent);
+	}
+	if (projectContent) {
+		if (memoryContent || preferencesContent) lines.push("\n");
 		lines.push("### Project\n");
 		lines.push(projectContent);
+	}
+	if (workingContent) {
+		if (memoryContent || preferencesContent || projectContent) lines.push("\n");
+		lines.push("### Working Context\n");
+		lines.push(workingContent);
 	}
 	return lines.join("\n");
 }
@@ -83,7 +102,9 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		contextFiles: providedContextFiles,
 		skills: providedSkills,
 		memoryContent,
+		preferencesContent,
 		projectContent,
+		workingContent,
 	} = options;
 	const resolvedCwd = cwd;
 	const promptCwd = resolvedCwd.replace(/\\/g, "/");
@@ -93,6 +114,13 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const month = String(now.getMonth() + 1).padStart(2, "0");
 	const day = String(now.getDate()).padStart(2, "0");
 	const date = `${year}-${month}-${day}`;
+	const hour = String(now.getHours()).padStart(2, "0");
+	const minute = String(now.getMinutes()).padStart(2, "0");
+	const second = String(now.getSeconds()).padStart(2, "0");
+	const timeZone = new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
+		.formatToParts(now)
+		.find((part) => part.type === "timeZoneName")?.value;
+	const time = `${hour}:${minute}:${second}${timeZone ? ` ${timeZone}` : ""}`;
 
 	const appendSection = appendSystemPrompt ? `\n\n${appendSystemPrompt}` : "";
 
@@ -114,11 +142,12 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 			prompt += formatSkillsForPrompt(skills);
 		}
 
-		// Add date and working directory last
+		// Add date, time, and working directory last
 		prompt += `\nCurrent date: ${date}`;
+		prompt += `\nCurrent time: ${time}`;
 		prompt += `\nCurrent working directory: ${promptCwd}`;
 		prompt += `\n${WAKE_CONTEXT_GUIDANCE}`;
-		prompt += formatMemorySection(memoryContent, projectContent);
+		prompt += formatMemorySection(memoryContent, preferencesContent, projectContent, workingContent);
 
 		return prompt;
 	}
@@ -190,13 +219,22 @@ Use memory quietly and naturally. Do not constantly announce that you remembered
 When you learn something durable and useful about the user, their preferences, collaborators, or projects, write it to the appropriate memory file below. Do not save trivial, temporary, sensitive, or uncertain information without asking.
 
 Memory files:
-- ~/.pi/MEMORY.md — durable facts about the user (background, relationships, high-level context)
+- ~/.pi/MEMORY.md — facts about the user: Portrait (who they are), Durable (permanent background), Recent (volatile, time-sensitive)
 - ~/.pi/PREFERENCES.md — tone, collaboration style, coding preferences
-- ~/.pi/Notes/ — useful information that may matter later but does not belong in active memory
-- ~/.pi/Reflections/ — longer observations about how to better support the user
+- ~/.pi/Notes/${date}.md — session notes: append a short timestamped entry when you hit something tricky, confusing, or unresolved. Format: [HH:MM] <project>: <what you noticed>. Raw is fine — these feed into nightly reflection.
 - ~/.pi/Projects/${promptCwd.split("/").at(-1)}/PROJECT.md — context for the current project
+- ~/.pi/WORKING.md — ephemeral working context: current task focus, open files, blockers, recent actions. Updated in real-time; cleared when a task completes.
 
-The ### Memory and ### Project sections at the end of this prompt are loaded directly from ~/.pi/MEMORY.md and the project file above. Update those files to persist what you learn.
+The ### Memory, ### Project, and ### Working Context sections at the end of this prompt are loaded directly from ~/.pi/MEMORY.md and the project file above. Update those files to persist what you learn.
+
+Maintaining WORKING.md:
+- When you read a file, begin work on a new task, encounter a blocker, or the user pauses with "let's continue later" — update WORKING.md immediately
+- Start the file with a timestamp: "Last updated: YYYY-MM-DD HH:MM:SS TZ"
+- Keep it concise: current focus (1 line), open files with line numbers/state, active blockers/questions, last action taken
+- Use the write tool to overwrite (not append) — this file represents current state, not history
+- When a task completes or you switch to something unrelated, clear the file with writeWorkingContent("") or leave a minimal "No active task" note
+
+When working on a task, if you encounter a genuine gotcha, an open question you don't have the answer to, or something architecturally surprising — write a brief note to ~/.pi/Notes/${date}.md before moving on.
 
 Available tools:
 ${toolsList}
@@ -226,11 +264,12 @@ Pi documentation (read only when the user asks about pi itself, its SDK, extensi
 		prompt += formatSkillsForPrompt(skills);
 	}
 
-	// Add date and working directory last
+	// Add date, time, and working directory last
 	prompt += `\nCurrent date: ${date}`;
+	prompt += `\nCurrent time: ${time}`;
 	prompt += `\nCurrent working directory: ${promptCwd}`;
 	prompt += `\n${WAKE_CONTEXT_GUIDANCE}`;
-	prompt += formatMemorySection(memoryContent, projectContent);
+	prompt += formatMemorySection(memoryContent, preferencesContent, projectContent, workingContent);
 
 	return prompt;
 }
