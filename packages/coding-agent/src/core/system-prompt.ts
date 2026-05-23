@@ -5,6 +5,9 @@
 import { getDocsPath, getExamplesPath, getReadmePath } from "../config.ts";
 import { formatSkillsForPrompt, type Skill } from "./skills.ts";
 
+const WAKE_CONTEXT_GUIDANCE =
+	"A conversation may start with a hidden context message formatted as <wake>message</wake>. If present, treat it as Pi's wake message that the user may be replying to. If the user's request is unrelated, continue with their current request normally.";
+
 export interface BuildSystemPromptOptions {
 	/** Custom system prompt (replaces default). */
 	customPrompt?: string;
@@ -22,6 +25,10 @@ export interface BuildSystemPromptOptions {
 	contextFiles?: Array<{ path: string; content: string }>;
 	/** Pre-loaded skills. */
 	skills?: Skill[];
+	/** Contents of ~/.pi/MEMORY.md, injected at the end of the prompt. */
+	memoryContent?: string | null;
+	/** Contents of ~/.pi/Projects/<project>/PROJECT.md, injected at the end of the prompt. */
+	projectContent?: string | null;
 }
 
 function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content: string }>): string {
@@ -49,6 +56,21 @@ function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content
 	return lines.join("\n");
 }
 
+function formatMemorySection(memoryContent?: string | null, projectContent?: string | null): string {
+	if (!memoryContent && !projectContent) return "";
+	const lines = ["\n\n---\n"];
+	if (memoryContent) {
+		lines.push("### Memory\n");
+		lines.push(memoryContent);
+	}
+	if (projectContent) {
+		if (memoryContent) lines.push("\n");
+		lines.push("### Project\n");
+		lines.push(projectContent);
+	}
+	return lines.join("\n");
+}
+
 /** Build the system prompt with tools, guidelines, and context */
 export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const {
@@ -60,6 +82,8 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		cwd,
 		contextFiles: providedContextFiles,
 		skills: providedSkills,
+		memoryContent,
+		projectContent,
 	} = options;
 	const resolvedCwd = cwd;
 	const promptCwd = resolvedCwd.replace(/\\/g, "/");
@@ -93,6 +117,8 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		// Add date and working directory last
 		prompt += `\nCurrent date: ${date}`;
 		prompt += `\nCurrent working directory: ${promptCwd}`;
+		prompt += `\n${WAKE_CONTEXT_GUIDANCE}`;
+		prompt += formatMemorySection(memoryContent, projectContent);
 
 		return prompt;
 	}
@@ -142,6 +168,9 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 
 	// Always include these
 	addGuideline("Be concise in your responses");
+	addGuideline(
+		"Before using tools while working, briefly say what you are about to inspect or do; after a few tool calls, pause with a short update on what you learned and what you will check next",
+	);
 	addGuideline("Show file paths clearly when working with files");
 
 	const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
@@ -158,9 +187,16 @@ Memory is central to how you work. Your goal is to understand the user over time
 
 Use memory quietly and naturally. Do not constantly announce that you remembered something. Let remembered context improve your judgment, timing, tone, and initiative.
 
-When you learn something durable and useful about the user, their preferences, collaborators, or projects, consider whether it belongs in Pi memory. Do not save trivial, temporary, sensitive, or uncertain information without asking.
+When you learn something durable and useful about the user, their preferences, collaborators, or projects, write it to the appropriate memory file below. Do not save trivial, temporary, sensitive, or uncertain information without asking.
 
-Prefer simple Markdown files under ~/.pi over databases, schemas, or complex protocols unless the user asks otherwise.
+Memory files:
+- ~/.pi/MEMORY.md — durable facts about the user (background, relationships, high-level context)
+- ~/.pi/PREFERENCES.md — tone, collaboration style, coding preferences
+- ~/.pi/Notes/ — useful information that may matter later but does not belong in active memory
+- ~/.pi/Reflections/ — longer observations about how to better support the user
+- ~/.pi/Projects/${promptCwd.split("/").at(-1)}/PROJECT.md — context for the current project
+
+The ### Memory and ### Project sections at the end of this prompt are loaded directly from ~/.pi/MEMORY.md and the project file above. Update those files to persist what you learn.
 
 Available tools:
 ${toolsList}
@@ -193,6 +229,8 @@ Pi documentation (read only when the user asks about pi itself, its SDK, extensi
 	// Add date and working directory last
 	prompt += `\nCurrent date: ${date}`;
 	prompt += `\nCurrent working directory: ${promptCwd}`;
+	prompt += `\n${WAKE_CONTEXT_GUIDANCE}`;
+	prompt += formatMemorySection(memoryContent, projectContent);
 
 	return prompt;
 }

@@ -39,6 +39,28 @@ describe("buildSystemPrompt", () => {
 			expect(prompt).toContain("You should feel like a capable person beside the user");
 		});
 
+		test("instructs models to provide brief tool-use progress updates", () => {
+			const prompt = buildSystemPrompt({
+				contextFiles: [],
+				skills: [],
+				cwd: process.cwd(),
+			});
+
+			expect(prompt).toContain("Before using tools while working");
+			expect(prompt).toContain("after a few tool calls");
+		});
+
+		test("explains wake context messages", () => {
+			const prompt = buildSystemPrompt({
+				contextFiles: [],
+				skills: [],
+				cwd: process.cwd(),
+			});
+
+			expect(prompt).toContain("<wake>message</wake>");
+			expect(prompt).toContain("the user may be replying to");
+		});
+
 		test("includes all default tools when snippets are provided", () => {
 			const prompt = buildSystemPrompt({
 				toolSnippets: {

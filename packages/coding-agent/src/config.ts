@@ -466,7 +466,7 @@ export function getShareViewerUrl(gistId: string): string {
 }
 
 // =============================================================================
-// User Config Paths (~/.pi/agent/*)
+// User Config Paths (~/.pi/*)
 // =============================================================================
 
 /** Get the agent config directory (e.g., ~/.pi/agent/) */
@@ -476,6 +476,17 @@ export function getAgentDir(): string {
 		return expandTildePath(envDir);
 	}
 	return join(homedir(), CONFIG_DIR_NAME, "agent");
+}
+
+/** Get the personal Pi directory that stores memory, reflections, wakes, and skills. */
+export function getPiDir(agentDir = getAgentDir()): string {
+	const resolvedAgentDir = resolve(agentDir);
+	return basename(resolvedAgentDir) === "agent" ? dirname(resolvedAgentDir) : resolvedAgentDir;
+}
+
+/** Get the global personal skills directory (e.g., ~/.pi/SKILLS/). */
+export function getSkillsDir(agentDir = getAgentDir()): string {
+	return join(getPiDir(agentDir), "SKILLS");
 }
 
 /** Get path to user's custom themes directory */

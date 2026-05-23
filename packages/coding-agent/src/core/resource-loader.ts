@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve, sep } from "node:path";
 import chalk from "chalk";
-import { CONFIG_DIR_NAME } from "../config.ts";
+import { CONFIG_DIR_NAME, getSkillsDir } from "../config.ts";
 import { loadThemeFromPath, type Theme } from "../modes/interactive/theme/theme.ts";
 import type { ResourceDiagnostic } from "./diagnostics.ts";
 
@@ -625,13 +625,12 @@ export class DefaultResourceLoader implements ResourceLoader {
 
 		const normalizedPath = resolve(filePath);
 		const agentRoots = [
-			join(this.agentDir, "skills"),
+			getSkillsDir(this.agentDir),
 			join(this.agentDir, "prompts"),
 			join(this.agentDir, "themes"),
 			join(this.agentDir, "extensions"),
 		];
 		const projectRoots = [
-			join(this.cwd, CONFIG_DIR_NAME, "skills"),
 			join(this.cwd, CONFIG_DIR_NAME, "prompts"),
 			join(this.cwd, CONFIG_DIR_NAME, "themes"),
 			join(this.cwd, CONFIG_DIR_NAME, "extensions"),

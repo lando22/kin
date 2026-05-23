@@ -298,6 +298,60 @@ export async function showDeprecationWarnings(warnings: string[]): Promise<void>
 }
 
 /**
+ * Migrate sessions from per-cwd subdirectories to the global flat sessions directory.
+ *
+ * Old layout: ~/.pi/agent/sessions/--Users-landongarrison-myproject--/*.jsonl
+ * New layout: ~/.pi/agent/sessions/*.jsonl
+ *
+ * The cwd is stored in the session header, so the directory grouping is no longer needed.
+ */
+export function migrateSessionsToGlobalDir(): void {
+	const agentDir = getAgentDir();
+	const sessionsDir = join(agentDir, "sessions");
+
+	if (!existsSync(sessionsDir)) return;
+
+	let entries: string[];
+	try {
+		entries = readdirSync(sessionsDir);
+	} catch {
+		return;
+	}
+
+	// Per-cwd subdirs use the --encoded-path-- naming convention
+	const subdirs = entries.filter((e) => e.startsWith("--") && e.endsWith("--")).map((e) => join(sessionsDir, e));
+
+	if (subdirs.length === 0) return;
+
+	for (const subdir of subdirs) {
+		try {
+			const files = readdirSync(subdir).filter((f) => f.endsWith(".jsonl"));
+			for (const file of files) {
+				const src = join(subdir, file);
+				const dst = join(sessionsDir, file);
+				if (!existsSync(dst)) {
+					try {
+						renameSync(src, dst);
+					} catch {
+						// skip files that can't be moved
+					}
+				}
+			}
+			// Remove the subdir if now empty
+			try {
+				if (readdirSync(subdir).length === 0) {
+					rmSync(subdir, { recursive: true, force: true });
+				}
+			} catch {
+				// skip
+			}
+		} catch {
+			// skip unreadable subdirs
+		}
+	}
+}
+
+/**
  * Run all migrations. Called once on startup.
  *
  * @returns Object with migration results and deprecation warnings
@@ -308,6 +362,7 @@ export function runMigrations(cwd: string): {
 } {
 	const migratedAuthProviders = migrateAuthToAuthJson();
 	migrateSessionsFromAgentRoot();
+	migrateSessionsToGlobalDir();
 	migrateToolsToBin();
 	migrateKeybindingsConfigFile();
 	const deprecationWarnings = migrateExtensionSystem(cwd);

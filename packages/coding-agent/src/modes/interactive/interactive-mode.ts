@@ -45,6 +45,7 @@ import {
 	Text,
 	TruncatedText,
 	TUI,
+	truncateToWidth,
 	visibleWidth,
 } from "@earendil-works/pi-tui";
 import { spawn, spawnSync } from "child_process";
@@ -56,6 +57,7 @@ import {
 	getAuthPath,
 	getDebugLogPath,
 	getDocsPath,
+	getSessionsDir,
 	getShareViewerUrl,
 	VERSION,
 } from "../../config.ts";
@@ -76,8 +78,17 @@ import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.t
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider, findExactModelReferenceMatch, resolveModelScope } from "../../core/model-resolver.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
-import { resetPiMemory } from "../../core/pi-memory.ts";
+import { readMemoryContent, readProjectContent, resetPiMemory } from "../../core/pi-memory.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-names.ts";
+import {
+	findSessionsForDate,
+	generateReflection,
+	getReflectionPath,
+	parseReflectionUpdates,
+	writeMemoryContent,
+	writeProjectContent,
+	writeReflection,
+} from "../../core/reflect.ts";
 import type { ResourceDiagnostic } from "../../core/resource-loader.ts";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-cwd.ts";
 import { type SessionContext, SessionManager } from "../../core/session-manager.ts";
@@ -85,6 +96,7 @@ import { BUILTIN_SLASH_COMMANDS, createInitOnboardingPrompt } from "../../core/s
 import type { SourceInfo } from "../../core/source-info.ts";
 import { isInstallTelemetryEnabled } from "../../core/telemetry.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
+import { formatWakeContextMessage, markWakeSeen, readUnseenWake } from "../../core/wake.ts";
 import { getChangelogPath, getNewEntries, parseChangelog } from "../../utils/changelog.ts";
 import { copyToClipboard } from "../../utils/clipboard.ts";
 import { extensionForImageMimeType, readClipboardImage } from "../../utils/clipboard-image.ts";
@@ -122,6 +134,7 @@ import { ToolExecutionComponent } from "./components/tool-execution.ts";
 import { TreeSelectorComponent } from "./components/tree-selector.ts";
 import { UserMessageComponent } from "./components/user-message.ts";
 import { UserMessageSelectorComponent } from "./components/user-message-selector.ts";
+import { WakeMessageComponent } from "./components/wake-message.ts";
 import {
 	getAvailableThemes,
 	getAvailableThemesWithPaths,
@@ -248,6 +261,52 @@ function hasDefaultModelProvider(providerId: string): providerId is keyof typeof
 const BEDROCK_PROVIDER_ID = "amazon-bedrock";
 
 const BUILT_IN_MODEL_PROVIDERS = new Set<string>(getProviders());
+const ROOT_PADDING_X = 2;
+
+function splitLeadingControlSequences(line: string): { controls: string; content: string } {
+	let controls = "";
+	let index = 0;
+
+	while (line.startsWith("\x1b]", index) || line.startsWith("\x1b_", index)) {
+		const terminator = line.indexOf("\x07", index + 2);
+		if (terminator < 0) {
+			break;
+		}
+		controls += line.slice(index, terminator + 1);
+		index = terminator + 1;
+	}
+
+	return { controls, content: line.slice(index) };
+}
+
+class RootInsetContainer extends Container {
+	private readonly paddingX: number;
+
+	constructor(paddingX: number) {
+		super();
+		this.paddingX = paddingX;
+	}
+
+	override render(width: number): string[] {
+		if (this.paddingX <= 0) {
+			return super.render(width);
+		}
+
+		const effectivePaddingX = Math.min(this.paddingX, Math.max(0, Math.floor((width - 1) / 2)));
+		const contentWidth = Math.max(1, width - effectivePaddingX * 2);
+		const leftPad = " ".repeat(effectivePaddingX);
+
+		return super.render(contentWidth).map((line) => {
+			const { controls, content } = splitLeadingControlSequences(line);
+			const padded = `${controls}${leftPad}${content}`;
+			const paddedWidth = visibleWidth(padded);
+			if (paddedWidth <= width) {
+				return padded + " ".repeat(width - paddedWidth);
+			}
+			return truncateToWidth(padded, width, "");
+		});
+	}
+}
 
 export function isApiKeyLoginProvider(
 	providerId: string,
@@ -284,6 +343,7 @@ export interface InteractiveModeOptions {
 export class InteractiveMode {
 	private runtimeHost: AgentSessionRuntime;
 	private ui: TUI;
+	private rootContainer: RootInsetContainer;
 	private chatContainer: Container;
 	private pendingMessagesContainer: Container;
 	private statusContainer: Container;
@@ -312,6 +372,8 @@ export class InteractiveMode {
 	private lastSigintTime = 0;
 	private lastEscapeTime = 0;
 	private changelogMarkdown: string | undefined = undefined;
+	private wakeMarkdown: string | undefined = undefined;
+	private wakeContextQueued = false;
 	private startupNoticesShown = false;
 	private anthropicSubscriptionWarningShown = false;
 
@@ -415,6 +477,8 @@ export class InteractiveMode {
 		this.version = VERSION;
 		this.ui = new TUI(new ProcessTerminal(), this.settingsManager.getShowHardwareCursor());
 		this.ui.setClearOnShrink(this.settingsManager.getClearOnShrink());
+		this.rootContainer = new RootInsetContainer(ROOT_PADDING_X);
+		this.ui.addChild(this.rootContainer);
 		this.headerContainer = new Container();
 		this.chatContainer = new Container();
 		this.pendingMessagesContainer = new Container();
@@ -588,28 +652,40 @@ export class InteractiveMode {
 		}
 		this.startupNoticesShown = true;
 
-		if (!this.changelogMarkdown) {
+		if (!this.changelogMarkdown && !this.wakeMarkdown) {
 			return;
 		}
 
 		if (this.chatContainer.children.length > 0) {
 			this.chatContainer.addChild(new Spacer(1));
 		}
-		this.chatContainer.addChild(new DynamicBorder());
-		if (this.settingsManager.getCollapseChangelog()) {
-			const versionMatch = this.changelogMarkdown.match(/##\s+\[?(\d+\.\d+\.\d+)\]?/);
-			const latestVersion = versionMatch ? versionMatch[1] : this.version;
-			const condensedText = `Updated to v${latestVersion}. Use ${theme.bold("/changelog")} to view full changelog.`;
-			this.chatContainer.addChild(new Text(condensedText, 1, 0));
-		} else {
-			this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
-			this.chatContainer.addChild(new Spacer(1));
+
+		if (this.wakeMarkdown) {
 			this.chatContainer.addChild(
-				new Markdown(this.changelogMarkdown.trim(), 1, 0, this.getMarkdownThemeWithSettings()),
+				new WakeMessageComponent(this.ui, this.wakeMarkdown, this.getMarkdownThemeWithSettings()),
 			);
 			this.chatContainer.addChild(new Spacer(1));
+			this.queueWakeForNextTurn();
+			markWakeSeen();
 		}
-		this.chatContainer.addChild(new DynamicBorder());
+
+		if (this.changelogMarkdown) {
+			this.chatContainer.addChild(new DynamicBorder());
+			if (this.settingsManager.getCollapseChangelog()) {
+				const versionMatch = this.changelogMarkdown.match(/##\s+\[?(\d+\.\d+\.\d+)\]?/);
+				const latestVersion = versionMatch ? versionMatch[1] : this.version;
+				const condensedText = `Updated to v${latestVersion}. Use ${theme.bold("/changelog")} to view full changelog.`;
+				this.chatContainer.addChild(new Text(condensedText, 1, 0));
+			} else {
+				this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
+				this.chatContainer.addChild(new Spacer(1));
+				this.chatContainer.addChild(
+					new Markdown(this.changelogMarkdown.trim(), 1, 0, this.getMarkdownThemeWithSettings()),
+				);
+				this.chatContainer.addChild(new Spacer(1));
+			}
+			this.chatContainer.addChild(new DynamicBorder());
+		}
 	}
 
 	async init(): Promise<void> {
@@ -619,6 +695,7 @@ export class InteractiveMode {
 
 		// Load changelog (only show new entries, skip for resumed sessions)
 		this.changelogMarkdown = this.getChangelogForDisplay();
+		this.wakeMarkdown = this.getWakeForDisplay();
 
 		// Ensure fd and rg are available (downloads if missing, adds to PATH via getBinDir)
 		// Both are needed: fd for autocomplete, rg for grep tool and bash commands
@@ -641,7 +718,7 @@ export class InteractiveMode {
 		}
 
 		// Add header container as first child
-		this.ui.addChild(this.headerContainer);
+		this.rootContainer.addChild(this.headerContainer);
 
 		// Add header with keybindings from config (unless silenced)
 		if (this.options.verbose || !this.settingsManager.getQuietStartup()) {
@@ -701,14 +778,14 @@ export class InteractiveMode {
 			this.headerContainer.addChild(this.builtInHeader);
 		}
 
-		this.ui.addChild(this.chatContainer);
-		this.ui.addChild(this.pendingMessagesContainer);
-		this.ui.addChild(this.statusContainer);
+		this.rootContainer.addChild(this.chatContainer);
+		this.rootContainer.addChild(this.pendingMessagesContainer);
+		this.rootContainer.addChild(this.statusContainer);
 		this.renderWidgets(); // Initialize with default spacer
-		this.ui.addChild(this.widgetContainerAbove);
-		this.ui.addChild(this.editorContainer);
-		this.ui.addChild(this.widgetContainerBelow);
-		this.ui.addChild(this.footer);
+		this.rootContainer.addChild(this.widgetContainerAbove);
+		this.rootContainer.addChild(this.editorContainer);
+		this.rootContainer.addChild(this.widgetContainerBelow);
+		this.rootContainer.addChild(this.footer);
 		this.ui.setFocus(this.editor);
 
 		this.setupKeyHandlers();
@@ -926,6 +1003,34 @@ export class InteractiveMode {
 		}
 
 		return undefined;
+	}
+
+	/**
+	 * Get today's unseen wake message to display on startup.
+	 */
+	private getWakeForDisplay(): string | undefined {
+		if (this.session.state.messages.length > 0) {
+			return undefined;
+		}
+
+		const wake = readUnseenWake();
+		return wake?.content.trim() || undefined;
+	}
+
+	private queueWakeForNextTurn(): void {
+		if (!this.wakeMarkdown || this.wakeContextQueued) {
+			return;
+		}
+		this.wakeContextQueued = true;
+		void this.session.sendCustomMessage(
+			{
+				customType: "wake",
+				content: formatWakeContextMessage(this.wakeMarkdown),
+				display: false,
+				details: {},
+			},
+			{ deliverAs: "nextTurn" },
+		);
 	}
 
 	private reportInstallTelemetry(version: string): void {
@@ -1921,19 +2026,19 @@ export class InteractiveMode {
 
 		// Remove current footer from UI
 		if (this.customFooter) {
-			this.ui.removeChild(this.customFooter);
+			this.rootContainer.removeChild(this.customFooter);
 		} else {
-			this.ui.removeChild(this.footer);
+			this.rootContainer.removeChild(this.footer);
 		}
 
 		if (factory) {
 			// Create and add custom footer, passing the data provider
 			this.customFooter = factory(this.ui, theme, this.footerDataProvider);
-			this.ui.addChild(this.customFooter);
+			this.rootContainer.addChild(this.customFooter);
 		} else {
 			// Restore built-in footer
 			this.customFooter = undefined;
-			this.ui.addChild(this.footer);
+			this.rootContainer.addChild(this.footer);
 		}
 
 		this.ui.requestRender();
@@ -2633,6 +2738,11 @@ export class InteractiveMode {
 				this.editor.setText("");
 				return;
 			}
+			if (text === "/reflect") {
+				this.editor.setText("");
+				this.handleReflectCommand();
+				return;
+			}
 			if (text === "/quit") {
 				this.editor.setText("");
 				await this.shutdown();
@@ -2840,6 +2950,9 @@ export class InteractiveMode {
 					this.streamingComponent = undefined;
 					this.streamingMessage = undefined;
 					this.footer.invalidate();
+					if (!event.message.content.some((content) => content.type === "toolCall")) {
+						this.stopWorkingLoader();
+					}
 				}
 				this.ui.requestRender();
 				break;
@@ -4068,11 +4181,78 @@ export class InteractiveMode {
 			await this.session.sendCustomMessage(
 				{
 					customType: "onboarding_init",
-					content: createInitOnboardingPrompt(),
+					content: createInitOnboardingPrompt(this.sessionManager.getCwd()),
 					display: false,
 				},
 				{ triggerTurn: true },
 			);
+		} catch (error) {
+			this.showError(error instanceof Error ? error.message : String(error));
+		}
+	}
+
+	private async handleReflectCommand(): Promise<void> {
+		this.showWarning("Generating reflection...");
+		try {
+			const sessionDir = this.settingsManager.getSessionDir() ?? getSessionsDir();
+			// Prefer deepseek-v4-flash for reflections (Gemini produces empty responses)
+			const model =
+				this.session.modelRegistry.find("openrouter", "deepseek/deepseek-v4-flash") ??
+				this.runtimeHost.session.model;
+			if (!model) {
+				this.showError("No model configured for reflection.");
+				return;
+			}
+			const sessions = findSessionsForDate(sessionDir);
+			if (sessions.length === 0) {
+				this.showWarning("No sessions found for today. Nothing to reflect on.");
+				return;
+			}
+
+			const uniqueCwds = [...new Set(sessions.map((s) => s.cwd).filter((c) => c && c !== "unknown"))];
+			this.showWarning(`Reading ${sessions.length} session(s) across ${uniqueCwds.length} project(s)...`);
+
+			// Read current memory and all project contexts
+			const currentMemory = readMemoryContent();
+			const projectContexts = uniqueCwds.map((projectCwd) => ({
+				name: path.basename(projectCwd),
+				content: readProjectContent(projectCwd),
+			}));
+
+			const rawResponse = await generateReflection(model, sessions, {
+				date: new Date(),
+				currentMemory,
+				projectContexts,
+			});
+
+			// Parse out optional memory/project updates
+			const { reflectionText, memoryUpdate, projectUpdates } = parseReflectionUpdates(rawResponse);
+
+			// Write reflection
+			writeReflection(reflectionText);
+
+			// Write memory update if present
+			if (memoryUpdate !== null) {
+				writeMemoryContent(memoryUpdate);
+				this.showWarning("Memory updated in ~/.pi/MEMORY.md!");
+			}
+
+			// Write named project updates
+			for (const [projectName, content] of Object.entries(projectUpdates)) {
+				if (!projectName) continue;
+				const targetCwd = uniqueCwds.find((c) => path.basename(c) === projectName);
+				if (targetCwd) {
+					writeProjectContent(targetCwd, content);
+					this.showWarning(`Project context updated for "${projectName}"!`);
+				}
+			}
+
+			const refPath = getReflectionPath();
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(theme.fg("success", `Reflection written to ${refPath}`), 1, 0));
+			this.chatContainer.addChild(new Text(reflectionText, 1, 0));
+			this.chatContainer.addChild(new Spacer(1));
+			this.ui.requestRender();
 		} catch (error) {
 			this.showError(error instanceof Error ? error.message : String(error));
 		}

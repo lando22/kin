@@ -14,15 +14,16 @@ describe("built-in slash commands", () => {
 	});
 
 	it("keeps init onboarding conversational and memory-focused", () => {
-		const prompt = createInitOnboardingPrompt();
+		const prompt = createInitOnboardingPrompt(process.cwd());
 
 		expect(prompt).toContain("Introduce yourself as Pi");
-		expect(prompt).toContain("Ask only one question at a time");
-		expect(prompt).toContain("Do not run a checklist");
+		expect(prompt).toContain("one question at a time");
+		expect(prompt).toContain("don't run a checklist");
 		expect(prompt).toContain("~/.pi");
 		expect(prompt).toContain("MEMORY.md");
 		expect(prompt).toContain("PREFERENCES.md");
-		expect(prompt).toContain("have just been cleared");
+		expect(prompt).toContain("Memory has just been cleared");
+		expect(prompt).toContain("Phase 1: Get to know the user");
 	});
 
 	it("clears only the Pi memory files and note folders used by init onboarding", () => {

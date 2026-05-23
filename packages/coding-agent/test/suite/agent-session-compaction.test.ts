@@ -314,6 +314,21 @@ describe("AgentSession compaction characterization", () => {
 		expect(runAutoCompactionSpy).toHaveBeenCalledWith("threshold", false);
 	});
 
+	it("triggers threshold compaction when turn prompt tokens exceed 75k", async () => {
+		const harness = await createHarness({
+			models: [{ id: "faux-1", contextWindow: 1_000_000 }],
+		});
+		harnesses.push(harness);
+		const sessionInternals = harness.session as unknown as SessionWithCompactionInternals;
+		const runAutoCompactionSpy = vi.spyOn(sessionInternals, "_runAutoCompaction").mockResolvedValue(false);
+
+		await sessionInternals._checkCompaction(
+			createAssistant(harness, { stopReason: "stop", totalTokens: 75_001, timestamp: Date.now() }),
+		);
+
+		expect(runAutoCompactionSpy).toHaveBeenCalledWith("threshold", false);
+	});
+
 	it("does not trigger threshold compaction for error messages when no prior usage exists", async () => {
 		const harness = await createHarness();
 		harnesses.push(harness);

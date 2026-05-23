@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import ignore from "ignore";
 import { homedir } from "os";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "path";
-import { CONFIG_DIR_NAME, getAgentDir } from "../config.ts";
+import { getAgentDir, getSkillsDir } from "../config.ts";
 import { parseFrontmatter } from "../utils/frontmatter.ts";
 import { canonicalizePath } from "../utils/paths.ts";
 import type { ResourceDiagnostic } from "./diagnostics.ts";
@@ -163,8 +163,8 @@ function createSkillSourceInfo(filePath: string, baseDir: string, source: string
  *
  * Discovery rules:
  * - if a directory contains SKILL.md, treat it as a skill root and do not recurse further
- * - otherwise, load direct .md children in the root
- * - recurse into subdirectories to find SKILL.md
+ * - otherwise, load direct .md children in the root for explicit directory loads
+ * - recurse into subdirectories to find folder-based skills
  */
 export function loadSkillsFromDir(options: LoadSkillsFromDirOptions): LoadSkillsResult {
 	const { dir, source } = options;
@@ -371,13 +371,13 @@ function escapeXml(str: string): string {
 }
 
 export interface LoadSkillsOptions {
-	/** Working directory for project-local skills. */
+	/** Working directory for resolving explicit relative skill paths. */
 	cwd: string;
-	/** Agent config directory for global skills. */
+	/** Agent config directory; its parent is the personal Pi directory. */
 	agentDir: string;
 	/** Explicit skill paths (files or directories) */
 	skillPaths: string[];
-	/** Include default skills directories. */
+	/** Include the global personal skills directory. */
 	includeDefaults: boolean;
 }
 
@@ -395,7 +395,7 @@ function resolveSkillPath(p: string, cwd: string): string {
 }
 
 /**
- * Load skills from all configured locations.
+ * Load skills from the global personal skills directory and any explicit paths.
  * Returns skills and any validation diagnostics.
  */
 export function loadSkills(options: LoadSkillsOptions): LoadSkillsResult {
@@ -403,6 +403,7 @@ export function loadSkills(options: LoadSkillsOptions): LoadSkillsResult {
 
 	// Resolve agentDir - if not provided, use default from config
 	const resolvedAgentDir = agentDir ?? getAgentDir();
+	const personalSkillsDir = getSkillsDir(resolvedAgentDir);
 
 	const skillMap = new Map<string, Skill>();
 	const realPathSet = new Set<string>();
@@ -441,12 +442,10 @@ export function loadSkills(options: LoadSkillsOptions): LoadSkillsResult {
 	}
 
 	if (includeDefaults) {
-		addSkills(loadSkillsFromDirInternal(join(resolvedAgentDir, "skills"), "user", true));
-		addSkills(loadSkillsFromDirInternal(resolve(cwd, CONFIG_DIR_NAME, "skills"), "project", true));
+		addSkills(loadSkillsFromDirInternal(personalSkillsDir, "user", false));
 	}
 
-	const userSkillsDir = join(resolvedAgentDir, "skills");
-	const projectSkillsDir = resolve(cwd, CONFIG_DIR_NAME, "skills");
+	const userSkillsDir = personalSkillsDir;
 
 	const isUnderPath = (target: string, root: string): boolean => {
 		const normalizedRoot = resolve(root);
@@ -457,11 +456,8 @@ export function loadSkills(options: LoadSkillsOptions): LoadSkillsResult {
 		return target.startsWith(prefix);
 	};
 
-	const getSource = (resolvedPath: string): "user" | "project" | "path" => {
-		if (!includeDefaults) {
-			if (isUnderPath(resolvedPath, userSkillsDir)) return "user";
-			if (isUnderPath(resolvedPath, projectSkillsDir)) return "project";
-		}
+	const getSource = (resolvedPath: string): "user" | "path" => {
+		if (!includeDefaults && isUnderPath(resolvedPath, userSkillsDir)) return "user";
 		return "path";
 	};
 

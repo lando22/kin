@@ -21,45 +21,23 @@ Pi implements the [Agent Skills standard](https://agentskills.io/specification),
 
 > **Security:** Skills can instruct the model to perform any action and may include executable code the model invokes. Review skill content before use.
 
-Pi loads skills from:
+Pi's default skills live in the personal Pi directory alongside memory, reflections, and wakes:
 
-- Global:
-  - `~/.pi/agent/skills/`
-  - `~/.agents/skills/`
-- Project:
-  - `.pi/skills/`
-  - `.agents/skills/` in `cwd` and ancestor directories (up to git repo root, or filesystem root when not in a repo)
-- Packages: `skills/` directories or `pi.skills` entries in `package.json`
-- Settings: `skills` array with files or directories
-- CLI: `--skill <path>` (repeatable, additive even with `--no-skills`)
+```text
+~/.pi/SKILLS/
+  skill-name/
+    SKILL.md
+    skill.py
+    ...supporting files
+```
 
 Discovery rules:
-- In `~/.pi/agent/skills/` and `.pi/skills/`, direct root `.md` files are discovered as individual skills
-- In all skill locations, directories containing `SKILL.md` are discovered recursively
-- In `~/.agents/skills/` and project `.agents/skills/`, root `.md` files are ignored
+- Each skill is a folder under `~/.pi/SKILLS/`
+- A folder becomes a skill when it contains `SKILL.md`
+- Supporting files live beside `SKILL.md` and are referenced by the instructions in that file
+- Root markdown files directly under `~/.pi/SKILLS/` are ignored by default
 
-Disable discovery with `--no-skills` (explicit `--skill` paths still load).
-
-### Using Skills from Other Harnesses
-
-To use skills from Claude Code or OpenAI Codex, add their directories to settings:
-
-```json
-{
-  "skills": [
-    "~/.claude/skills",
-    "~/.codex/skills"
-  ]
-}
-```
-
-For project-level Claude Code skills, add to `.pi/settings.json`:
-
-```json
-{
-  "skills": ["../.claude/skills"]
-}
-```
+Explicit skills can still be loaded with `--skill <path>` or the `skills` settings array. Disable default discovery with `--no-skills`.
 
 ## How Skills Work
 
@@ -94,11 +72,11 @@ Toggle skill commands via `/settings` in interactive mode or in `settings.json`:
 A skill is a directory with a `SKILL.md` file. Everything else is freeform.
 
 ```
-my-skill/
+~/.pi/SKILLS/my-skill/
 ├── SKILL.md              # Required: frontmatter + instructions
-├── scripts/              # Helper scripts
-│   └── process.sh
-├── references/           # Detailed docs loaded on-demand
+├── skill.py              # Optional helper script
+├── skill.ts              # Optional helper script
+├── references/           # Optional detailed docs
 │   └── api-reference.md
 └── assets/
     └── template.json

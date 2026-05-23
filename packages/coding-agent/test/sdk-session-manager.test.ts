@@ -35,8 +35,8 @@ describe("createAgentSession session manager defaults", () => {
 			model: model!,
 		});
 
-		const safePath = `--${cwd.replace(/^[/\\]/, "").replace(/[/\\:]/g, "-")}--`;
-		const expectedSessionDir = join(agentDir, "sessions", safePath);
+		// Sessions are now stored in a flat global directory, not per-cwd subdirs
+		const expectedSessionDir = join(agentDir, "sessions");
 		const sessionDir = session.sessionManager.getSessionDir();
 		const sessionFile = session.sessionManager.getSessionFile();
 

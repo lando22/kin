@@ -79,6 +79,7 @@ import {
 import { emitSessionShutdownEvent } from "./extensions/runner.ts";
 import type { BashExecutionMessage, CustomMessage } from "./messages.ts";
 import type { ModelRegistry } from "./model-registry.ts";
+import { readMemoryContent, readProjectContent } from "./pi-memory.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";
 import type { ResourceExtensionPaths, ResourceLoader } from "./resource-loader.ts";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "./session-manager.ts";
@@ -243,6 +244,7 @@ interface ToolDefinitionEntry {
 
 /** Standard thinking levels */
 const THINKING_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high"];
+const AUTO_COMPACTION_PROMPT_TOKEN_THRESHOLD = 75_000;
 
 // ============================================================================
 // AgentSession Class
@@ -906,6 +908,8 @@ export class AgentSession {
 			selectedTools: validToolNames,
 			toolSnippets,
 			promptGuidelines,
+			memoryContent: readMemoryContent(),
+			projectContent: readProjectContent(this._cwd),
 		};
 		return buildSystemPrompt(this._baseSystemPromptOptions);
 	}
@@ -1050,8 +1054,14 @@ export class AgentSession {
 				}
 			}
 
-			// Build messages array (custom message if any, then user message)
+			// Build messages array (pending context first, then the user message)
 			messages = [];
+
+			// Inject any pending "nextTurn" messages as context before the user message
+			for (const msg of this._pendingNextTurnMessages) {
+				messages.push(msg);
+			}
+			this._pendingNextTurnMessages = [];
 
 			// Add user message
 			const userContent: (TextContent | ImageContent)[] = [{ type: "text", text: expandedText }];
@@ -1063,12 +1073,6 @@ export class AgentSession {
 				content: userContent,
 				timestamp: Date.now(),
 			});
-
-			// Inject any pending "nextTurn" messages as context alongside the user message
-			for (const msg of this._pendingNextTurnMessages) {
-				messages.push(msg);
-			}
-			this._pendingNextTurnMessages = [];
 
 			// Emit before_agent_start extension event
 			const result = await this._extensionRunner.emitBeforeAgentStart(
@@ -1838,7 +1842,12 @@ export class AgentSession {
 		} else {
 			contextTokens = calculateContextTokens(assistantMessage.usage);
 		}
-		if (shouldCompact(contextTokens, contextWindow, settings)) {
+		const promptTokens =
+			assistantMessage.usage.input + assistantMessage.usage.cacheRead + assistantMessage.usage.cacheWrite;
+		if (
+			promptTokens > AUTO_COMPACTION_PROMPT_TOKEN_THRESHOLD ||
+			shouldCompact(contextTokens, contextWindow, settings)
+		) {
 			return await this._runAutoCompaction("threshold", false);
 		}
 		return false;

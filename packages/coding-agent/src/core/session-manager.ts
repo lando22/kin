@@ -421,12 +421,12 @@ export function buildSessionContext(
 }
 
 /**
- * Compute the default session directory for a cwd.
- * Encodes cwd into a safe directory name under ~/.pi/agent/sessions/.
+ * Compute the default session directory.
+ * All sessions are stored in a single flat directory: ~/.pi/agent/sessions/
+ * The cwd is stored in the session header, not in the directory structure.
  */
-export function getDefaultSessionDir(cwd: string, agentDir: string = getDefaultAgentDir()): string {
-	const safePath = `--${cwd.replace(/^[/\\]/, "").replace(/[/\\:]/g, "-")}--`;
-	const sessionDir = join(agentDir, "sessions", safePath);
+export function getDefaultSessionDir(_cwd: string, agentDir: string = getDefaultAgentDir()): string {
+	const sessionDir = join(agentDir, "sessions");
 	if (!existsSync(sessionDir)) {
 		mkdirSync(sessionDir, { recursive: true });
 	}
@@ -461,32 +461,32 @@ export function loadEntriesFromFile(filePath: string): FileEntry[] {
 	return entries;
 }
 
-function isValidSessionFile(filePath: string): boolean {
-	try {
-		const fd = openSync(filePath, "r");
-		const buffer = Buffer.alloc(512);
-		const bytesRead = readSync(fd, buffer, 0, 512, 0);
-		closeSync(fd);
-		const firstLine = buffer.toString("utf8", 0, bytesRead).split("\n")[0];
-		if (!firstLine) return false;
-		const header = JSON.parse(firstLine);
-		return header.type === "session" && typeof header.id === "string";
-	} catch {
-		return false;
-	}
-}
-
 /** Exported for testing */
-export function findMostRecentSession(sessionDir: string): string | null {
+export function findMostRecentSession(sessionDir: string, cwdFilter?: string): string | null {
 	try {
-		const files = readdirSync(sessionDir)
-			.filter((f) => f.endsWith(".jsonl"))
-			.map((f) => join(sessionDir, f))
-			.filter(isValidSessionFile)
-			.map((path) => ({ path, mtime: statSync(path).mtime }))
-			.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+		const candidates: Array<{ path: string; mtime: Date }> = [];
 
-		return files[0]?.path || null;
+		for (const name of readdirSync(sessionDir)) {
+			if (!name.endsWith(".jsonl")) continue;
+			const filePath = join(sessionDir, name);
+			try {
+				const fd = openSync(filePath, "r");
+				const buffer = Buffer.alloc(512);
+				const bytesRead = readSync(fd, buffer, 0, 512, 0);
+				closeSync(fd);
+				const firstLine = buffer.toString("utf8", 0, bytesRead).split("\n")[0];
+				if (!firstLine) continue;
+				const header = JSON.parse(firstLine);
+				if (header.type !== "session" || typeof header.id !== "string") continue;
+				if (cwdFilter && header.cwd !== cwdFilter) continue;
+				candidates.push({ path: filePath, mtime: statSync(filePath).mtime });
+			} catch {
+				// skip unreadable or malformed files
+			}
+		}
+
+		candidates.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+		return candidates[0]?.path || null;
 	} catch {
 		return null;
 	}
@@ -1325,13 +1325,13 @@ export class SessionManager {
 	}
 
 	/**
-	 * Continue the most recent session, or create new if none.
+	 * Continue the most recent session for the given cwd, or create new if none.
 	 * @param cwd Working directory
-	 * @param sessionDir Optional session directory. If omitted, uses default (~/.pi/agent/sessions/<encoded-cwd>/).
+	 * @param sessionDir Optional session directory. If omitted, uses global sessions dir.
 	 */
 	static continueRecent(cwd: string, sessionDir?: string): SessionManager {
 		const dir = sessionDir ?? getDefaultSessionDir(cwd);
-		const mostRecent = findMostRecentSession(dir);
+		const mostRecent = findMostRecentSession(dir, cwd);
 		if (mostRecent) {
 			return new SessionManager(cwd, dir, mostRecent, true);
 		}
@@ -1394,20 +1394,23 @@ export class SessionManager {
 	}
 
 	/**
-	 * List all sessions for a directory.
-	 * @param cwd Working directory (used to compute default session directory)
-	 * @param sessionDir Optional session directory. If omitted, uses default (~/.pi/agent/sessions/<encoded-cwd>/).
+	 * List sessions for a given cwd from the global sessions directory.
+	 * @param cwd Working directory to filter sessions by
+	 * @param sessionDir Optional session directory override.
 	 * @param onProgress Optional callback for progress updates (loaded, total)
 	 */
 	static async list(cwd: string, sessionDir?: string, onProgress?: SessionListProgress): Promise<SessionInfo[]> {
 		const dir = sessionDir ?? getDefaultSessionDir(cwd);
-		const sessions = await listSessionsFromDir(dir, onProgress);
+		const all = await listSessionsFromDir(dir, onProgress);
+		// Filter to sessions matching this cwd (empty cwd from old sessions is treated as any)
+		const sessions = all.filter((s) => !s.cwd || s.cwd === cwd);
 		sessions.sort((a, b) => b.modified.getTime() - a.modified.getTime());
 		return sessions;
 	}
 
 	/**
-	 * List all sessions across all project directories.
+	 * List all sessions across all projects from the global sessions directory.
+	 * Also scans legacy per-cwd subdirectories for unmigrated sessions.
 	 * @param onProgress Optional callback for progress updates (loaded, total)
 	 */
 	static async listAll(onProgress?: SessionListProgress): Promise<SessionInfo[]> {
@@ -1417,38 +1420,37 @@ export class SessionManager {
 			if (!existsSync(sessionsDir)) {
 				return [];
 			}
-			const entries = await readdir(sessionsDir, { withFileTypes: true });
-			const dirs = entries.filter((e) => e.isDirectory()).map((e) => join(sessionsDir, e.name));
 
-			// Count total files first for accurate progress
-			let totalFiles = 0;
-			const dirFiles: string[][] = [];
-			for (const dir of dirs) {
-				try {
-					const files = (await readdir(dir)).filter((f) => f.endsWith(".jsonl"));
-					dirFiles.push(files.map((f) => join(dir, f)));
-					totalFiles += files.length;
-				} catch {
-					dirFiles.push([]);
+			const entries = await readdir(sessionsDir, { withFileTypes: true });
+			const allFiles: string[] = [];
+
+			for (const entry of entries) {
+				const fullPath = join(sessionsDir, entry.name);
+				if (entry.isFile() && entry.name.endsWith(".jsonl")) {
+					// Flat global session file
+					allFiles.push(fullPath);
+				} else if (entry.isDirectory()) {
+					// Legacy per-cwd subdir — scan for unmigrated sessions
+					try {
+						const subFiles = await readdir(fullPath);
+						for (const f of subFiles) {
+							if (f.endsWith(".jsonl")) {
+								allFiles.push(join(fullPath, f));
+							}
+						}
+					} catch {
+						// skip unreadable subdirs
+					}
 				}
 			}
 
-			// Process all files with progress tracking
 			let loaded = 0;
-			const sessions: SessionInfo[] = [];
-			const allFiles = dirFiles.flat();
-
 			const results = await buildSessionInfosWithConcurrency(allFiles, () => {
 				loaded++;
-				onProgress?.(loaded, totalFiles);
+				onProgress?.(loaded, allFiles.length);
 			});
 
-			for (const info of results) {
-				if (info) {
-					sessions.push(info);
-				}
-			}
-
+			const sessions = results.filter((s): s is SessionInfo => s !== null);
 			sessions.sort((a, b) => b.modified.getTime() - a.modified.getTime());
 			return sessions;
 		} catch {

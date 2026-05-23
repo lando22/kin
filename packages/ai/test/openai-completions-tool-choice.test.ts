@@ -1148,4 +1148,70 @@ describe("openai-completions tool_choice", () => {
 		expect(params.reasoning).toEqual({ effort: "high" });
 		expect(params.reasoning_effort).toBeUndefined();
 	});
+
+	it("pins OpenRouter Kimi K2.6 to the WandB fp4 provider", async () => {
+		const model = getModel("openrouter", "moonshotai/kimi-k2.6")!;
+		let payload: unknown;
+
+		await streamSimple(
+			model,
+			{
+				messages: [
+					{
+						role: "user",
+						content: "Hi",
+						timestamp: Date.now(),
+					},
+				],
+			},
+			{
+				apiKey: "test",
+				onPayload: (params: unknown) => {
+					payload = params;
+				},
+			},
+		).result();
+
+		const params = (payload ?? mockState.lastParams) as {
+			model?: string;
+			provider?: { only?: string[]; allow_fallbacks?: boolean };
+		};
+		expect(model.compat?.openRouterRouting).toEqual({ only: ["wandb/fp4"], allow_fallbacks: false });
+		expect(params.model).toBe("moonshotai/kimi-k2.6");
+		expect(params.provider).toEqual({ only: ["wandb/fp4"], allow_fallbacks: false });
+	});
+
+	it("pins OpenRouter DeepSeek V4 Pro to the DeepSeek provider", async () => {
+		const model = getModel("openrouter", "deepseek/deepseek-v4-pro")!;
+		let payload: unknown;
+
+		await streamSimple(
+			model,
+			{
+				messages: [
+					{
+						role: "user",
+						content: "Hi",
+						timestamp: Date.now(),
+					},
+				],
+			},
+			{
+				apiKey: "test",
+				onPayload: (params: unknown) => {
+					payload = params;
+				},
+			},
+		).result();
+
+		const params = (payload ?? mockState.lastParams) as {
+			model?: string;
+			provider?: { only?: string[]; allow_fallbacks?: boolean };
+		};
+		expect(model.compat?.openRouterRouting).toEqual({ only: ["deepseek"], allow_fallbacks: false });
+		expect(model.compat?.requiresReasoningContentOnAssistantMessages).toBe(true);
+		expect(model.compat?.thinkingFormat).toBe("deepseek");
+		expect(params.model).toBe("deepseek/deepseek-v4-pro");
+		expect(params.provider).toEqual({ only: ["deepseek"], allow_fallbacks: false });
+	});
 });

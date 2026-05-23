@@ -44,6 +44,8 @@ import { runMigrations, showDeprecationWarnings } from "./migrations.ts";
 import { InteractiveMode, runPrintMode, runRpcMode } from "./modes/index.ts";
 import { ExtensionSelectorComponent } from "./modes/interactive/components/extension-selector.ts";
 import { initTheme, stopThemeWatcher } from "./modes/interactive/theme/theme.ts";
+import { isReflectCommand, runReflectMode } from "./modes/reflect-mode.ts";
+import { isWakeCommand, runWakeMode } from "./modes/wake-mode.ts";
 import { handleConfigCommand, handlePackageCommand } from "./package-manager-cli.ts";
 import { isLocalPath } from "./utils/paths.ts";
 import { cleanupWindowsSelfUpdateQuarantine } from "./utils/windows-self-update.ts";
@@ -439,6 +441,24 @@ export async function main(args: string[], options?: MainOptions) {
 
 	if (await handleConfigCommand(args)) {
 		return;
+	}
+
+	if (isReflectCommand(args)) {
+		const reflectDate =
+			args.includes("--date") && args[args.indexOf("--date") + 1]
+				? new Date(args[args.indexOf("--date") + 1])
+				: undefined;
+		const exitCode = await runReflectMode(args, { date: reflectDate });
+		process.exit(exitCode);
+	}
+
+	if (isWakeCommand(args)) {
+		const wakeDate =
+			args.includes("--date") && args[args.indexOf("--date") + 1]
+				? new Date(args[args.indexOf("--date") + 1])
+				: undefined;
+		const exitCode = await runWakeMode(args, { date: wakeDate });
+		process.exit(exitCode);
 	}
 
 	const parsed = parseArgs(args);

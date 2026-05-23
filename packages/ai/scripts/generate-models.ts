@@ -148,6 +148,11 @@ const OPENAI_RESPONSES_NONE_REASONING_MODELS = new Set([
 	"gpt-5.5",
 ]);
 
+const OPENROUTER_ROUTING_OVERRIDES: Record<string, NonNullable<OpenAICompletionsCompat["openRouterRouting"]>> = {
+	"deepseek/deepseek-v4-pro": { only: ["deepseek"], allow_fallbacks: false },
+	"moonshotai/kimi-k2.6": { only: ["wandb/fp4"], allow_fallbacks: false },
+};
+
 function mergeThinkingLevelMap(model: Model<any>, map: NonNullable<Model<any>["thinkingLevelMap"]>): void {
 	model.thinkingLevelMap = { ...model.thinkingLevelMap, ...map };
 }
@@ -307,6 +312,9 @@ async function fetchOpenRouterModels(): Promise<Model<any>[]> {
 				},
 				contextWindow: model.context_length || 4096,
 				maxTokens: model.top_provider?.max_completion_tokens || 4096,
+				...(OPENROUTER_ROUTING_OVERRIDES[modelKey]
+					? { compat: { openRouterRouting: OPENROUTER_ROUTING_OVERRIDES[modelKey] } }
+					: {}),
 			};
 			models.push(normalizedModel);
 		}

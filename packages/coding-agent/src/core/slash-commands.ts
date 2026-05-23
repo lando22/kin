@@ -1,3 +1,4 @@
+import { basename } from "node:path";
 import { APP_NAME } from "../config.ts";
 import type { SourceInfo } from "./source-info.ts";
 
@@ -15,25 +16,36 @@ export interface BuiltinSlashCommand {
 	description: string;
 }
 
-export function createInitOnboardingPrompt(): string {
-	return `Start Pi's onboarding conversation.
+export function createInitOnboardingPrompt(cwd: string): string {
+	const projectName = basename(cwd);
+	return `Start Pi's onboarding. Memory has just been cleared — treat it as blank.
 
-The current Pi memory files and note folders have just been cleared for this fresh onboarding. Treat memory as blank unless the user tells you otherwise during this conversation.
+## Phase 1: Get to know the user
 
-Introduce yourself as Pi in a friendly, grounded way. Briefly explain that you are a personal coding and computer-use agent, and that memory is central to how you become useful over time: you learn the user's background, preferences, projects, collaborators, and working style.
+Introduce yourself as Pi in a friendly, grounded way. Explain that you are a personal coding and computer-use agent, and that memory is how you become genuinely useful over time.
 
-Then ask the user to introduce themselves.
+Ask the user to introduce themselves. Keep it conversational — one question at a time, follow the thread, don't run a checklist. You are trying to understand who they are as a person and a developer: their background, how they like to work, what they care about, who they collaborate with.
 
-Keep it conversational. Ask only one question at a time. Do not run a checklist, do not interrogate, and do not try to extract every detail up front. Follow the conversation wherever it naturally goes.
+When you feel you have a real picture of the person — not just a list of facts — write what you've learned:
+- ~/.pi/MEMORY.md — durable facts (background, relationships, high-level context)
+- ~/.pi/PREFERENCES.md — tone, collaboration style, coding preferences
 
-As the conversation develops, notice durable facts and preferences that would help future sessions. When it feels like you have enough useful context, you may create or update simple Markdown memory under ~/.pi:
-- MEMORY.md for durable facts about the user, their background, relationships, and high-level context
-- PREFERENCES.md for tone, collaboration, coding style, and working preferences
-- Notes/ for useful information that may matter later but does not belong in active memory yet
-- Reflections/ for longer-term observations about how to better support the user
-- Projects/ for durable project context
+## Phase 2: Understand the current project
 
-If the ~/.pi folder or relevant files do not exist, create them when you are ready to save useful memory. Do not save trivial, temporary, sensitive, or uncertain information without asking.`;
+Once you have a solid sense of the user, tell them you'd like to take a look at what they're working on. Then explore the current project at: ${cwd}
+
+Use your tools to build a picture of it: read the README, package.json or equivalent config, scan the directory structure, check recent git history. You are trying to understand what the project is, what it does, its current state, and anything non-obvious about how it's structured.
+
+When you have a clear picture, write your findings to:
+- ~/.pi/Projects/${projectName}/PROJECT.md
+
+Then ask the user 2–3 targeted questions about the project — things that would meaningfully change how you help, that you couldn't answer from the code alone. Things like: what's the current focus, what's broken or unfinished, who else is involved, what constraints matter.
+
+Update PROJECT.md with anything useful from their answers.
+
+---
+
+The whole flow should feel like one natural conversation, not two separate interviews. You decide when to move from the person to the project — there is no hard boundary.`;
 }
 
 export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
@@ -58,5 +70,6 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "compact", description: "Manually compact the session context" },
 	{ name: "resume", description: "Resume a different session" },
 	{ name: "reload", description: "Reload keybindings, extensions, skills, prompts, and themes" },
+	{ name: "reflect", description: "Generate a reflection on today's work" },
 	{ name: "quit", description: `Quit ${APP_NAME}` },
 ];
