@@ -30,6 +30,13 @@ import {
 	withFileMutationQueue,
 } from "./tools/index.ts";
 
+/**
+ * Options for programmatic session creation.
+ *
+ * This is the SDK-level entry point used by CLI modes and external callers.
+ * Callers can either provide fully constructed services (auth/model/session/resource
+ * objects) or let the SDK create the default cwd-bound ones.
+ */
 export interface CreateAgentSessionOptions {
 	/** Working directory for project-local discovery. Default: process.cwd() */
 	cwd?: string;
@@ -79,7 +86,7 @@ export interface CreateAgentSessionOptions {
 	sessionStartEvent?: SessionStartEvent;
 }
 
-/** Result from createAgentSession */
+/** Result from createAgentSession. */
 export interface CreateAgentSessionResult {
 	/** The created session */
 	session: AgentSession;
@@ -89,7 +96,8 @@ export interface CreateAgentSessionResult {
 	modelFallbackMessage?: string;
 }
 
-// Re-exports
+// Public SDK re-exports. Keep this surface intentionally small; root src/index.ts
+// re-exports the full package API, while sdk.ts focuses on programmatic session use.
 
 export * from "./agent-session-runtime.ts";
 export type {
@@ -119,12 +127,13 @@ export {
 	createLsTool,
 };
 
-// Helper Functions
+// Helper functions kept private so the public SDK surface stays centered on session creation.
 
 function getDefaultAgentDir(): string {
 	return getAgentDir();
 }
 
+/** Provider-specific attribution headers used only when install telemetry is enabled. */
 function getAttributionHeaders(
 	model: Model<any>,
 	settingsManager: SettingsManager,
@@ -191,6 +200,7 @@ function getAttributionHeaders(
  * ```
  */
 export async function createAgentSession(options: CreateAgentSessionOptions = {}): Promise<CreateAgentSessionResult> {
+	// Resolve cwd first because settings, resources, sessions, and tools are all cwd-bound.
 	const cwd = options.cwd ?? options.sessionManager?.getCwd() ?? process.cwd();
 	const agentDir = options.agentDir ?? getDefaultAgentDir();
 	let resourceLoader = options.resourceLoader;
@@ -205,12 +215,15 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	const sessionManager = options.sessionManager ?? SessionManager.create(cwd, getDefaultSessionDir(cwd, agentDir));
 
 	if (!resourceLoader) {
+		// Resource loading discovers extensions, skills, prompt templates, themes, and context files.
+		// Callers that already loaded resources can inject their loader to avoid duplicate discovery.
 		resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
 		await resourceLoader.reload();
 		time("resourceLoader.reload");
 	}
 
-	// Check if session has existing data to restore
+	// Build persisted session context before choosing model/thinking so resumed sessions can restore
+	// their prior state when the saved model is still available.
 	const existingSession = sessionManager.buildSessionContext();
 	const hasExistingSession = existingSession.messages.length > 0;
 	const hasThinkingEntry = sessionManager.getBranch().some((entry) => entry.type === "thinking_level_change");
@@ -268,6 +281,9 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		thinkingLevel = clampThinkingLevel(model, thinkingLevel) as ThinkingLevel;
 	}
 
+	// Tool activation has two separate concepts:
+	// - allowedToolNames limits the registry to an allowlist.
+	// - initialActiveToolNames controls what starts enabled for the first turn.
 	const defaultActiveToolNames: ToolName[] = ["read", "bash", "edit", "write"];
 	const allowedToolNames = options.tools ?? (options.noTools === "all" ? [] : undefined);
 	const initialActiveToolNames: string[] = options.tools
@@ -315,6 +331,8 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		});
 	};
 
+	// Agent-core is constructed before AgentSession creates the ExtensionRunner.
+	// This mutable ref lets provider/context hooks always call the currently bound runner.
 	const extensionRunnerRef: { current?: ExtensionRunner } = {};
 
 	agent = new Agent({
@@ -389,6 +407,8 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		sessionManager.appendThinkingLevelChange(thinkingLevel);
 	}
 
+	// AgentSession wraps agent-core with persistence, extensions, tools, compaction,
+	// queueing, and user-facing session controls.
 	const session = new AgentSession({
 		agent,
 		sessionManager,

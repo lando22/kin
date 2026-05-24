@@ -1,5 +1,10 @@
 /**
- * Core modules shared between all run modes.
+ * Core runtime barrel.
+ *
+ * This exports the shared building blocks used by interactive, print, RPC,
+ * and SDK entry points. Prefer importing from here inside coding-agent when a
+ * mode needs core session/runtime/extension primitives without pulling in the
+ * full public package surface from `src/index.ts`.
  */
 
 export {
@@ -28,7 +33,8 @@ export {
 export { type BashExecutorOptions, type BashResult, executeBashWithOperations } from "./bash-executor.ts";
 export type { CompactionResult } from "./compaction/index.ts";
 export { createEventBus, type EventBus, type EventBusController } from "./event-bus.ts";
-// Extensions system
+
+// Extension API surface shared by runtime code and SDK consumers.
 export {
 	type AgentEndEvent,
 	type AgentStartEvent,

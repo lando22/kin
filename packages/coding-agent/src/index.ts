@@ -1,7 +1,15 @@
-// Core session management
+/**
+ * Public package entry point for @earendil-works/pi-coding-agent.
+ *
+ * This barrel intentionally exposes the broad API used by external SDK users,
+ * extensions, custom tools, and tests. Internal runtime code should prefer
+ * narrower module imports or `core/index.ts` where possible.
+ */
 
-// Config paths
+// Package metadata and config paths.
 export { getAgentDir, VERSION } from "./config.ts";
+
+// Core session abstraction used by every run mode.
 export {
 	AgentSession,
 	type AgentSessionConfig,
@@ -13,7 +21,8 @@ export {
 	parseSkillBlock,
 	type SessionStats,
 } from "./core/agent-session.ts";
-// Auth and model registry
+
+// Auth and model registry primitives for custom hosts and login flows.
 export {
 	type ApiKeyCredential,
 	type AuthCredential,
@@ -24,7 +33,9 @@ export {
 	InMemoryAuthStorageBackend,
 	type OAuthCredential,
 } from "./core/auth-storage.ts";
-// Compaction
+
+// Compaction helpers used by session management and external hosts that want
+// to inspect or drive context compression themselves.
 export {
 	type BranchPreparation,
 	type BranchSummaryResult,
@@ -48,7 +59,9 @@ export {
 	shouldCompact,
 } from "./core/compaction/index.ts";
 export { createEventBus, type EventBus, type EventBusController } from "./core/event-bus.ts";
-// Extension system
+
+// Extension system types. These form the stable API surface extension authors
+// import from when registering handlers, commands, UI, tools, and providers.
 export type {
 	AgentEndEvent,
 	AgentStartEvent,
@@ -129,6 +142,8 @@ export type {
 	WorkingIndicatorOptions,
 	WriteToolCallEvent,
 } from "./core/extensions/index.ts";
+
+// Extension runtime helpers and type guards.
 export {
 	createExtensionRuntime,
 	defineTool,
@@ -145,7 +160,8 @@ export {
 	wrapRegisteredTool,
 	wrapRegisteredTools,
 } from "./core/extensions/index.ts";
-// Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
+
+// Footer data provider (git branch + extension statuses - data not otherwise available to extensions).
 export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
 export { convertToLlm } from "./core/messages.ts";
 export { ModelRegistry } from "./core/model-registry.ts";
@@ -160,7 +176,9 @@ export type {
 export { DefaultPackageManager } from "./core/package-manager.ts";
 export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "./core/resource-loader.ts";
 export { DefaultResourceLoader, loadProjectContextFiles } from "./core/resource-loader.ts";
-// SDK for programmatic usage
+
+// SDK for programmatic usage. These are the primary exports for embedding Pi in
+// another Node process without launching the CLI.
 export {
 	AgentSessionRuntime,
 	type AgentSessionRuntimeDiagnostic,
@@ -211,6 +229,8 @@ export {
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
 } from "./core/session-manager.ts";
+
+// Persisted user/project settings.
 export {
 	type CompactionSettings,
 	type ImageSettings,
@@ -218,7 +238,8 @@ export {
 	type RetrySettings,
 	SettingsManager,
 } from "./core/settings-manager.ts";
-// Skills
+
+// Skills and prompt resources.
 export {
 	formatSkillsForPrompt,
 	type LoadSkillsFromDirOptions,
@@ -229,7 +250,8 @@ export {
 	type SkillFrontmatter,
 } from "./core/skills.ts";
 export { createSyntheticSourceInfo } from "./core/source-info.ts";
-// Tools
+
+// Built-in coding tools and helper utilities for custom tool hosts.
 export {
 	type BashOperations,
 	type BashSpawnContext,
@@ -279,9 +301,11 @@ export {
 	type WriteToolOptions,
 	withFileMutationQueue,
 } from "./core/tools/index.ts";
-// Main entry point
+
+// CLI entry point.
 export { type MainOptions, main } from "./main.ts";
-// Run modes for programmatic SDK usage
+
+// Run modes for programmatic SDK usage.
 export {
 	InteractiveMode,
 	type InteractiveModeOptions,
@@ -296,7 +320,8 @@ export {
 	runPrintMode,
 	runRpcMode,
 } from "./modes/index.ts";
-// UI components for extensions
+
+// Interactive TUI components exposed so extensions can compose native-looking UI.
 export {
 	ArminComponent,
 	AssistantMessageComponent,
@@ -335,7 +360,8 @@ export {
 	UserMessageSelectorComponent,
 	type VisualTruncateResult,
 } from "./modes/interactive/components/index.ts";
-// Theme utilities for custom tools and extensions
+
+// Theme utilities for custom tools and extensions.
 export {
 	getLanguageFromPath,
 	getMarkdownTheme,
@@ -346,9 +372,9 @@ export {
 	Theme,
 	type ThemeColor,
 } from "./modes/interactive/theme/theme.ts";
-// Clipboard utilities
+
+// Utility helpers exposed for extension authors and custom hosts.
 export { copyToClipboard } from "./utils/clipboard.ts";
 export { parseFrontmatter, stripFrontmatter } from "./utils/frontmatter.ts";
 export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
-// Shell utilities
 export { getShellConfig } from "./utils/shell.ts";

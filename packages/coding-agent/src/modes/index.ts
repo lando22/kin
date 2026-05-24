@@ -1,5 +1,8 @@
 /**
- * Run modes for the coding agent.
+ * Public run-mode barrel.
+ *
+ * Modes are thin hosts around AgentSession: interactive owns the TUI, print owns
+ * one-shot CLI output, and RPC owns the programmatic command/event protocol.
  */
 
 export { InteractiveMode, type InteractiveModeOptions } from "./interactive/interactive-mode.ts";
