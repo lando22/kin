@@ -45,7 +45,8 @@ function extractFileOperations(
 ): FileOperations {
 	const fileOps = createFileOps();
 
-	// Collect from previous compaction's details (if pi-generated)
+	// Carry forward file lists from the previous pi-generated compaction so each
+	// new summary preserves files touched before the newest summarization window.
 	if (prevCompactionIndex >= 0) {
 		const prevCompaction = entries[prevCompactionIndex] as CompactionEntry;
 		if (!prevCompaction.fromHook && prevCompaction.details) {
@@ -201,6 +202,8 @@ export function estimateContextTokens(messages: AgentMessage[]): ContextUsageEst
 
 	const usageTokens = calculateContextTokens(usageInfo.usage);
 	let trailingTokens = 0;
+	// Provider usage already includes everything up to the assistant response;
+	// only estimate messages appended after that point.
 	for (let i = usageInfo.index + 1; i < messages.length; i++) {
 		trailingTokens += estimateTokens(messages[i]);
 	}
@@ -662,6 +665,7 @@ export function prepareCompaction(
 	if (prevCompactionIndex >= 0) {
 		const prevCompaction = pathEntries[prevCompactionIndex] as CompactionEntry;
 		previousSummary = prevCompaction.summary;
+		// Re-summarize only the region after the previous kept-history boundary.
 		const firstKeptEntryIndex = pathEntries.findIndex((entry) => entry.id === prevCompaction.firstKeptEntryId);
 		boundaryStart = firstKeptEntryIndex >= 0 ? firstKeptEntryIndex : prevCompactionIndex + 1;
 	}
@@ -769,7 +773,8 @@ export async function compact(
 	let summary: string;
 
 	if (isSplitTurn && turnPrefixMessages.length > 0) {
-		// Generate both summaries in parallel
+		// Split-turn compaction needs two summaries: old history and the prefix
+		// of the current turn that cannot fit beside the kept suffix.
 		const [historyResult, turnPrefixResult] = await Promise.all([
 			messagesToSummarize.length > 0
 				? generateSummary(

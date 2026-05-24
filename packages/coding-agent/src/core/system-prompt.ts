@@ -90,6 +90,24 @@ function formatMemorySection(
 	return lines.join("\n");
 }
 
+/** Keep date/time local to the user; UTC dates make memory and reflection files hard to line up. */
+function formatLocalDateTime(date: Date): { date: string; time: string } {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	const hour = String(date.getHours()).padStart(2, "0");
+	const minute = String(date.getMinutes()).padStart(2, "0");
+	const second = String(date.getSeconds()).padStart(2, "0");
+	const timeZone = new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
+		.formatToParts(date)
+		.find((part) => part.type === "timeZoneName")?.value;
+
+	return {
+		date: `${year}-${month}-${day}`,
+		time: `${hour}:${minute}:${second}${timeZone ? ` ${timeZone}` : ""}`,
+	};
+}
+
 /** Build the system prompt with tools, guidelines, and context */
 export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const {
@@ -109,23 +127,21 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const resolvedCwd = cwd;
 	const promptCwd = resolvedCwd.replace(/\\/g, "/");
 
-	const now = new Date();
-	const year = now.getFullYear();
-	const month = String(now.getMonth() + 1).padStart(2, "0");
-	const day = String(now.getDate()).padStart(2, "0");
-	const date = `${year}-${month}-${day}`;
-	const hour = String(now.getHours()).padStart(2, "0");
-	const minute = String(now.getMinutes()).padStart(2, "0");
-	const second = String(now.getSeconds()).padStart(2, "0");
-	const timeZone = new Intl.DateTimeFormat(undefined, { timeZoneName: "short" })
-		.formatToParts(now)
-		.find((part) => part.type === "timeZoneName")?.value;
-	const time = `${hour}:${minute}:${second}${timeZone ? ` ${timeZone}` : ""}`;
+	const { date, time } = formatLocalDateTime(new Date());
 
 	const appendSection = appendSystemPrompt ? `\n\n${appendSystemPrompt}` : "";
 
 	const contextFiles = providedContextFiles ?? [];
 	const skills = providedSkills ?? [];
+
+	// Runtime context stays last so custom prompts, skills, and memory all share the same footer shape.
+	const appendRuntimeContext = (prompt: string): string =>
+		prompt +
+		`\nCurrent date: ${date}` +
+		`\nCurrent time: ${time}` +
+		`\nCurrent working directory: ${promptCwd}` +
+		`\n${WAKE_CONTEXT_GUIDANCE}` +
+		formatMemorySection(memoryContent, preferencesContent, projectContent, workingContent);
 
 	if (customPrompt) {
 		let prompt = customPrompt;
@@ -142,14 +158,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 			prompt += formatSkillsForPrompt(skills);
 		}
 
-		// Add date, time, and working directory last
-		prompt += `\nCurrent date: ${date}`;
-		prompt += `\nCurrent time: ${time}`;
-		prompt += `\nCurrent working directory: ${promptCwd}`;
-		prompt += `\n${WAKE_CONTEXT_GUIDANCE}`;
-		prompt += formatMemorySection(memoryContent, preferencesContent, projectContent, workingContent);
-
-		return prompt;
+		return appendRuntimeContext(prompt);
 	}
 
 	// Get absolute paths to documentation and examples
@@ -164,7 +173,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const toolsList =
 		visibleTools.length > 0 ? visibleTools.map((name) => `- ${name}: ${toolSnippets![name]}`).join("\n") : "(none)";
 
-	// Build guidelines based on which tools are actually available
+	// Build guidelines from the actual tool set so custom/read-only sessions do not get impossible instructions.
 	const guidelinesList: string[] = [];
 	const guidelinesSet = new Set<string>();
 	const addGuideline = (guideline: string): void => {
@@ -223,16 +232,16 @@ Memory files:
 - ~/.pi/PREFERENCES.md — tone, collaboration style, coding preferences
 - ~/.pi/Notes/${date}.md — session notes: append a short timestamped entry when you hit something tricky, confusing, or unresolved. Format: [HH:MM] <project>: <what you noticed>. Raw is fine — these feed into nightly reflection.
 - ~/.pi/Projects/${promptCwd.split("/").at(-1)}/PROJECT.md — context for the current project
-- ~/.pi/WORKING.md — ephemeral working context: current task focus, open files, blockers, recent actions. Updated in real-time; cleared when a task completes.
+- ~/.pi/WORKING.md — ephemeral working context: current task focus, open files, blockers, recent actions. Update it during active work; clear it when the task completes.
 
-The ### Memory, ### Project, and ### Working Context sections at the end of this prompt are loaded directly from ~/.pi/MEMORY.md and the project file above. Update those files to persist what you learn.
+The memory sections at the end of this prompt are loaded directly from the files above. Update those files only when the information is worth keeping.
 
 Maintaining WORKING.md:
 - When you read a file, begin work on a new task, encounter a blocker, or the user pauses with "let's continue later" — update WORKING.md immediately
 - Start the file with a timestamp: "Last updated: YYYY-MM-DD HH:MM:SS TZ"
 - Keep it concise: current focus (1 line), open files with line numbers/state, active blockers/questions, last action taken
 - Use the write tool to overwrite (not append) — this file represents current state, not history
-- When a task completes or you switch to something unrelated, clear the file with writeWorkingContent("") or leave a minimal "No active task" note
+- When a task completes or you switch to something unrelated, clear the file or leave a minimal "No active task" note
 
 When working on a task, if you encounter a genuine gotcha, an open question you don't have the answer to, or something architecturally surprising — write a brief note to ~/.pi/Notes/${date}.md before moving on.
 
@@ -264,12 +273,5 @@ Pi documentation (read only when the user asks about pi itself, its SDK, extensi
 		prompt += formatSkillsForPrompt(skills);
 	}
 
-	// Add date, time, and working directory last
-	prompt += `\nCurrent date: ${date}`;
-	prompt += `\nCurrent time: ${time}`;
-	prompt += `\nCurrent working directory: ${promptCwd}`;
-	prompt += `\n${WAKE_CONTEXT_GUIDANCE}`;
-	prompt += formatMemorySection(memoryContent, preferencesContent, projectContent, workingContent);
-
-	return prompt;
+	return appendRuntimeContext(prompt);
 }

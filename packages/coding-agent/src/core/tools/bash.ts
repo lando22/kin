@@ -200,7 +200,7 @@ function rebuildBashResultRenderComponent(
 	const state = component.state;
 	component.clear();
 
-	const output = getTextOutput(result as any, showImages).trim();
+	const output = getTextOutput(result, showImages).trim();
 
 	if (output) {
 		const styledOutput = output
@@ -424,7 +424,7 @@ export function createBashToolDefinition(
 				(context.lastComponent as BashResultRenderComponent | undefined) ?? new BashResultRenderComponent();
 			rebuildBashResultRenderComponent(
 				component,
-				result as any,
+				result,
 				options,
 				context.showImages,
 				state.startedAt,

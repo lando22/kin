@@ -140,7 +140,7 @@ describe("path-utils", () => {
 			// User provides regular space path
 			const result = resolveReadPath(userName, tempDir);
 
-			// This works because tryMacOSScreenshotPath() handles this case
+			// This works because resolveReadPath handles this macOS screenshot variant
 			expect(result).toBe(join(tempDir, macosName));
 		});
 
@@ -155,7 +155,7 @@ describe("path-utils", () => {
 			// User provides regular space path
 			const result = resolveReadPath(userName, tempDir);
 
-			// This works because tryMacOSScreenshotPath() uses case-insensitive matching
+			// This works because resolveReadPath uses case-insensitive matching for this variant
 			expect(result).toBe(join(tempDir, macosName));
 		});
 	});

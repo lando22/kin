@@ -143,11 +143,11 @@ function tryMatchModel(modelPattern: string, availableModels: Model<Api>[]): Mod
 		// Prefer alias - if multiple aliases, pick the one that sorts highest
 		aliases.sort((a, b) => b.id.localeCompare(a.id));
 		return aliases[0];
-	} else {
-		// No alias found, pick latest dated version
-		datedVersions.sort((a, b) => b.id.localeCompare(a.id));
-		return datedVersions[0];
 	}
+
+	// No alias found, pick latest dated version
+	datedVersions.sort((a, b) => b.id.localeCompare(a.id));
+	return datedVersions[0];
 }
 
 export interface ParsedModelResult {
@@ -161,6 +161,7 @@ function buildFallbackModel(provider: string, modelId: string, availableModels: 
 	const providerModels = availableModels.filter((m) => m.provider === provider);
 	if (providerModels.length === 0) return undefined;
 
+	// Unknown model IDs inherit provider defaults so --provider x --model custom-id still has sane metadata.
 	const defaultId = defaultModelPerProvider[provider as KnownProvider];
 	const baseModel = defaultId
 		? (providerModels.find((m) => m.id === defaultId) ?? providerModels[0])
@@ -171,6 +172,27 @@ function buildFallbackModel(provider: string, modelId: string, availableModels: 
 		id: modelId,
 		name: modelId,
 	};
+}
+
+function findExactModelIdOrReference(modelReference: string, availableModels: Model<Api>[]): Model<Api> | undefined {
+	const lower = modelReference.toLowerCase();
+	// Try both raw IDs and provider/model references because some providers expose slashful model IDs.
+	return availableModels.find(
+		(model) => model.id.toLowerCase() === lower || `${model.provider}/${model.id}`.toLowerCase() === lower,
+	);
+}
+
+function findDefaultAvailableModel(availableModels: Model<Api>[]): Model<Api> | undefined {
+	// Prefer curated provider defaults before falling back to registry order.
+	for (const provider of Object.keys(defaultModelPerProvider) as KnownProvider[]) {
+		const defaultId = defaultModelPerProvider[provider];
+		const match = availableModels.find((model) => model.provider === provider && model.id === defaultId);
+		if (match) {
+			return match;
+		}
+	}
+
+	return availableModels[0];
 }
 
 /**
@@ -395,10 +417,7 @@ export function resolveCliModel(options: {
 	// If no provider was inferred from the slash, try exact matches without provider inference.
 	// This handles models whose IDs naturally contain slashes (e.g. OpenRouter-style IDs).
 	if (!provider) {
-		const lower = cliModel.toLowerCase();
-		const exact = availableModels.find(
-			(m) => m.id.toLowerCase() === lower || `${m.provider}/${m.id}`.toLowerCase() === lower,
-		);
+		const exact = findExactModelIdOrReference(cliModel, availableModels);
 		if (exact) {
 			return { model: exact, warning: undefined, thinkingLevel: undefined, error: undefined };
 		}
@@ -426,10 +445,7 @@ export function resolveCliModel(options: {
 	// This handles OpenRouter-style IDs like "openai/gpt-4o:extended" where "openai"
 	// looks like a provider but the full string is actually a model id on openrouter.
 	if (inferredProvider) {
-		const lower = cliModel.toLowerCase();
-		const exact = availableModels.find(
-			(m) => m.id.toLowerCase() === lower || `${m.provider}/${m.id}`.toLowerCase() === lower,
-		);
+		const exact = findExactModelIdOrReference(cliModel, availableModels);
 		if (exact) {
 			return { model: exact, warning: undefined, thinkingLevel: undefined, error: undefined };
 		}
@@ -543,19 +559,10 @@ export async function findInitialModel(options: {
 
 	// 4. Try first available model with valid API key
 	const availableModels = await modelRegistry.getAvailable();
+	const availableModel = findDefaultAvailableModel(availableModels);
 
-	if (availableModels.length > 0) {
-		// Try to find a default model from known providers
-		for (const provider of Object.keys(defaultModelPerProvider) as KnownProvider[]) {
-			const defaultId = defaultModelPerProvider[provider];
-			const match = availableModels.find((m) => m.provider === provider && m.id === defaultId);
-			if (match) {
-				return { model: match, thinkingLevel: DEFAULT_THINKING_LEVEL, fallbackMessage: undefined };
-			}
-		}
-
-		// If no default found, use first available
-		return { model: availableModels[0], thinkingLevel: DEFAULT_THINKING_LEVEL, fallbackMessage: undefined };
+	if (availableModel) {
+		return { model: availableModel, thinkingLevel: DEFAULT_THINKING_LEVEL, fallbackMessage: undefined };
 	}
 
 	// 5. No model found
@@ -604,24 +611,9 @@ export async function restoreModelFromSession(
 
 	// Try to find any available model
 	const availableModels = await modelRegistry.getAvailable();
+	const fallbackModel = findDefaultAvailableModel(availableModels);
 
-	if (availableModels.length > 0) {
-		// Try to find a default model from known providers
-		let fallbackModel: Model<Api> | undefined;
-		for (const provider of Object.keys(defaultModelPerProvider) as KnownProvider[]) {
-			const defaultId = defaultModelPerProvider[provider];
-			const match = availableModels.find((m) => m.provider === provider && m.id === defaultId);
-			if (match) {
-				fallbackModel = match;
-				break;
-			}
-		}
-
-		// If no default found, use first available
-		if (!fallbackModel) {
-			fallbackModel = availableModels[0];
-		}
-
+	if (fallbackModel) {
 		if (shouldPrintMessages) {
 			console.log(chalk.dim(`Falling back to: ${fallbackModel.provider}/${fallbackModel.id}`));
 		}

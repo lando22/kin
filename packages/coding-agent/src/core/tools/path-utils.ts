@@ -8,10 +8,6 @@ function normalizeUnicodeSpaces(str: string): string {
 	return str.replace(UNICODE_SPACES, " ");
 }
 
-function tryMacOSScreenshotPath(filePath: string): string {
-	return filePath.replace(/ (AM|PM)\./gi, `${NARROW_NO_BREAK_SPACE}$1.`);
-}
-
 function tryNFDVariant(filePath: string): string {
 	// macOS stores filenames in NFD (decomposed) form, try converting user input to NFD
 	return filePath.normalize("NFD");
@@ -66,8 +62,10 @@ export function resolveReadPath(filePath: string, cwd: string): string {
 		return resolved;
 	}
 
+	// The variants below smooth over common Finder/Screenshot filename normalization mismatches.
+
 	// Try macOS AM/PM variant (narrow no-break space before AM/PM)
-	const amPmVariant = tryMacOSScreenshotPath(resolved);
+	const amPmVariant = resolved.replace(/ (AM|PM)\./gi, `${NARROW_NO_BREAK_SPACE}$1.`);
 	if (amPmVariant !== resolved && fileExists(amPmVariant)) {
 		return amPmVariant;
 	}

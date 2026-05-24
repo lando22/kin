@@ -145,8 +145,9 @@ export function createLsToolDefinition(
 						let entries: string[];
 						try {
 							entries = await ops.readdir(dirPath);
-						} catch (e: any) {
-							reject(new Error(`Cannot read directory: ${e.message}`));
+						} catch (error) {
+							const message = error instanceof Error ? error.message : String(error);
+							reject(new Error(`Cannot read directory: ${message}`));
 							return;
 						}
 
@@ -204,7 +205,7 @@ export function createLsToolDefinition(
 							content: [{ type: "text", text: output }],
 							details: Object.keys(details).length > 0 ? details : undefined,
 						});
-					} catch (e: any) {
+					} catch (e) {
 						signal?.removeEventListener("abort", onAbort);
 						reject(e);
 					}
@@ -218,7 +219,7 @@ export function createLsToolDefinition(
 		},
 		renderResult(result, options, theme, context) {
 			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
-			text.setText(formatLsResult(result as any, options, theme, context.showImages));
+			text.setText(formatLsResult(result, options, theme, context.showImages));
 			return text;
 		},
 	};

@@ -226,7 +226,8 @@ function migrateV1ToV2(entries: FileEntry[]): void {
 		entry.parentId = prevId;
 		prevId = entry.id;
 
-		// Convert firstKeptEntryIndex to firstKeptEntryId for compaction
+		// Compactions used to point at an array index; v2+ stores stable entry IDs
+		// so branch edits do not invalidate the kept-history marker.
 		if (entry.type === "compaction") {
 			const comp = entry as CompactionEntry & { firstKeptEntryIndex?: number };
 			if (typeof comp.firstKeptEntryIndex === "number") {
@@ -350,7 +351,8 @@ export function buildSessionContext(
 		current = current.parentId ? byId.get(current.parentId) : undefined;
 	}
 
-	// Extract settings and find compaction
+	// Later entries win for settings. The latest compaction on the active branch
+	// defines the summary boundary for context reconstruction.
 	let thinkingLevel = "off";
 	let model: { provider: string; modelId: string } | null = null;
 	let compaction: CompactionEntry | null = null;
@@ -393,7 +395,8 @@ export function buildSessionContext(
 		// Find compaction index in path
 		const compactionIdx = path.findIndex((e) => e.type === "compaction" && e.id === compaction.id);
 
-		// Emit kept messages (before compaction, starting from firstKeptEntryId)
+		// The summary replaces old history, but messages between firstKeptEntryId
+		// and the compaction entry are intentionally replayed after it.
 		let foundFirstKept = false;
 		for (let i = 0; i < compactionIdx; i++) {
 			const entry = path[i];
@@ -627,6 +630,8 @@ async function buildSessionInfosWithConcurrency(
 	const inFlight = new Set<Promise<void>>();
 	let nextIndex = 0;
 
+	// Loading every JSONL file at once can spike descriptors on large histories,
+	// so keep a small promise pool while preserving result order.
 	const startNext = (): void => {
 		const index = nextIndex++;
 		const file = files[index];
@@ -840,7 +845,8 @@ export class SessionManager {
 
 		const hasAssistant = this.fileEntries.some((e) => e.type === "message" && e.message.role === "assistant");
 		if (!hasAssistant) {
-			// Mark as not flushed so when assistant arrives, all entries get written
+			// Do not create a visible session file for one-sided drafts; flush the
+			// whole buffer once an assistant response makes the session worth listing.
 			this.flushed = false;
 			return;
 		}

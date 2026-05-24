@@ -15,6 +15,7 @@ import { basename, join } from "node:path";
 import type { Model } from "@earendil-works/pi-ai";
 import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
+import { getNotesPath } from "./pi-memory.ts";
 import { formatLocalDate, getAgendaPath, getReflectionPath } from "./reflect.ts";
 import { SessionManager } from "./session-manager.ts";
 
@@ -38,11 +39,12 @@ interface SessionSummary {
 }
 
 function scanSessionFile(filePath: string): SessionSummary | null {
+	let fd: number | null = null;
 	try {
-		const fd = openSync(filePath, "r");
+		fd = openSync(filePath, "r");
+		// Reflection only needs enough of each session to decide whether to inspect the full file.
 		const buffer = Buffer.alloc(4096);
 		const bytesRead = readSync(fd, buffer, 0, 4096, 0);
-		closeSync(fd);
 
 		const text = buffer.toString("utf8", 0, bytesRead);
 		const lines = text.split("\n").filter((l) => l.trim());
@@ -89,6 +91,10 @@ function scanSessionFile(filePath: string): SessionSummary | null {
 		};
 	} catch {
 		return null;
+	} finally {
+		if (fd !== null) {
+			closeSync(fd);
+		}
 	}
 }
 
@@ -198,12 +204,8 @@ function buildReflectTaskMessage(sessionIndex: string, reflectionPath: string, a
 	const memoryPath = join(homedir(), ".pi", "MEMORY.md");
 	const prefsPath = join(homedir(), ".pi", "PREFERENCES.md");
 
-	const notesDir = join(homedir(), ".pi", "Notes");
-	const todayNotesPath = join(notesDir, `${dateStr}.md`);
 	const yesterdayDate = new Date(date);
 	yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-	const yesterdayStr = formatLocalDate(yesterdayDate);
-	const yesterdayNotesPath = join(notesDir, `${yesterdayStr}.md`);
 
 	return `You are Pi in a reflective state — not responding to a user, just thinking on your own.
 
@@ -218,8 +220,8 @@ Your memory files:
 - ${prefsPath}
 
 Your session notes (raw observations written during work — check these first):
-- Today:     ${todayNotesPath}
-- Yesterday: ${yesterdayNotesPath}
+- Today:     ${getNotesPath(date)}
+- Yesterday: ${getNotesPath(yesterdayDate)}
 
 ---
 

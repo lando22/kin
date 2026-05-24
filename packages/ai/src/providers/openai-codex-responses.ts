@@ -182,6 +182,9 @@ export const streamOpenAICodexResponses: StreamFunction<"openai-codex-responses"
 			if (transport !== "sse" && !websocketDisabledForSession) {
 				let websocketStarted = false;
 				try {
+					// Prefer websocket for lower latency, but only fall back to SSE
+					// before any message events are emitted. Mid-stream fallback would
+					// duplicate or drop provider events.
 					await processWebSocketStream(
 						resolveCodexWebSocketUrl(model.baseUrl),
 						body,
@@ -535,6 +538,8 @@ async function* mapCodexEvents(events: AsyncIterable<Record<string, unknown>>): 
 
 		if (type === "response.done" || type === "response.completed" || type === "response.incomplete") {
 			const response = (event as { response?: { status?: unknown } }).response;
+			// The shared Responses parser expects response.completed; Codex can
+			// send equivalent terminal event names.
 			const normalizedResponse = response
 				? { ...response, status: normalizeCodexStatus(response.status) }
 				: response;
@@ -570,6 +575,8 @@ async function* parseSSE(response: Response): AsyncGenerator<Record<string, unkn
 
 			let idx = buffer.indexOf("\n\n");
 			while (idx !== -1) {
+				// SSE events can arrive split across chunks, so retain the remainder
+				// in buffer until the next blank-line delimiter.
 				const chunk = buffer.slice(0, idx);
 				buffer = buffer.slice(idx + 2);
 

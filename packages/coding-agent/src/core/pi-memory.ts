@@ -25,26 +25,26 @@ export function resetPiMemory(homeDir = homedir()): void {
 	}
 }
 
+function readTrimmedFile(path: string): string | null {
+	if (!existsSync(path)) return null;
+	const content = readFileSync(path, "utf-8").trim();
+	return content.length > 0 ? content : null;
+}
+
+/** Durable user-level memory loaded into every agent session. */
 export function readMemoryContent(homeDir = homedir()): string | null {
-	const memoryPath = join(getPiMemoryDir(homeDir), "MEMORY.md");
-	if (!existsSync(memoryPath)) return null;
-	const content = readFileSync(memoryPath, "utf-8").trim();
-	return content.length > 0 ? content : null;
+	return readTrimmedFile(join(getPiMemoryDir(homeDir), "MEMORY.md"));
 }
 
+/** User preferences are separate from MEMORY.md so tone/style updates can stay targeted. */
 export function readPreferencesContent(homeDir = homedir()): string | null {
-	const prefsPath = join(getPiMemoryDir(homeDir), "PREFERENCES.md");
-	if (!existsSync(prefsPath)) return null;
-	const content = readFileSync(prefsPath, "utf-8").trim();
-	return content.length > 0 ? content : null;
+	return readTrimmedFile(join(getPiMemoryDir(homeDir), "PREFERENCES.md"));
 }
 
+/** Project memory is keyed by cwd basename, matching how session/project context is displayed elsewhere. */
 export function readProjectContent(cwd: string, homeDir = homedir()): string | null {
 	const projectName = basename(cwd);
-	const projectPath = join(getPiMemoryDir(homeDir), "Projects", projectName, "PROJECT.md");
-	if (!existsSync(projectPath)) return null;
-	const content = readFileSync(projectPath, "utf-8").trim();
-	return content.length > 0 ? content : null;
+	return readTrimmedFile(join(getPiMemoryDir(homeDir), "Projects", projectName, "PROJECT.md"));
 }
 
 export function getNotesPath(date?: Date, homeDir = homedir()): string {
@@ -52,10 +52,7 @@ export function getNotesPath(date?: Date, homeDir = homedir()): string {
 }
 
 export function readNotesContent(date?: Date, homeDir = homedir()): string | null {
-	const notesPath = getNotesPath(date, homeDir);
-	if (!existsSync(notesPath)) return null;
-	const content = readFileSync(notesPath, "utf-8").trim();
-	return content.length > 0 ? content : null;
+	return readTrimmedFile(getNotesPath(date, homeDir));
 }
 
 export function getWorkingPath(homeDir = homedir()): string {
@@ -63,24 +60,16 @@ export function getWorkingPath(homeDir = homedir()): string {
 }
 
 export function readWorkingContent(homeDir = homedir()): string | null {
-	const workingPath = getWorkingPath(homeDir);
-	if (!existsSync(workingPath)) return null;
-	const content = readFileSync(workingPath, "utf-8").trim();
-	return content.length > 0 ? content : null;
+	return readTrimmedFile(getWorkingPath(homeDir));
 }
 
+/** WORKING.md is a current-state file, so callers overwrite it instead of appending history. */
 export function writeWorkingContent(content: string, homeDir = homedir()): void {
 	const workingPath = getWorkingPath(homeDir);
-	const dir = dirname(workingPath);
-	if (!existsSync(dir)) {
-		mkdirSync(dir, { recursive: true });
-	}
+	mkdirSync(dirname(workingPath), { recursive: true });
 	writeFileSync(workingPath, content, "utf-8");
 }
 
 export function clearWorkingContent(homeDir = homedir()): void {
-	const workingPath = getWorkingPath(homeDir);
-	if (existsSync(workingPath)) {
-		rmSync(workingPath, { force: true });
-	}
+	rmSync(getWorkingPath(homeDir), { force: true });
 }

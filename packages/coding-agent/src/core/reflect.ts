@@ -9,7 +9,7 @@
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import type { Message, Model } from "@earendil-works/pi-ai";
 import { completeSimple } from "@earendil-works/pi-ai";
 
@@ -164,7 +164,8 @@ export function buildReflectionContext(
 	systemPrompt: string;
 	messages: Message[];
 } {
-	const dateStr = date.toISOString().split("T")[0];
+	// Reflections are grouped by local day, matching session discovery and ~/.pi/Notes filenames.
+	const dateStr = formatLocalDate(date);
 	let systemPrompt = REFLECTION_SYSTEM_PROMPT.replace("YYYY-MM-DD", dateStr);
 
 	const hasMemory = options?.currentMemory !== undefined;
@@ -374,18 +375,18 @@ export function findSessionsForDate(
 
 /** Get the path for today's reflection file. */
 export function getReflectionPath(date?: Date): string {
-	const d = date ?? new Date();
-	const dateStr = formatLocalDate(d);
-	const home = homedir();
-	return join(home, ".pi", "Reflections", dateStr, "REFLECTION.md");
+	return getReflectionFilePath("REFLECTION.md", date);
 }
 
 /** Get the path for today's agenda file (Pi's optional notes-to-self for tomorrow). */
 export function getAgendaPath(date?: Date): string {
+	return getReflectionFilePath("AGENDA.md", date);
+}
+
+function getReflectionFilePath(fileName: string, date?: Date): string {
 	const d = date ?? new Date();
 	const dateStr = formatLocalDate(d);
-	const home = homedir();
-	return join(home, ".pi", "Reflections", dateStr, "AGENDA.md");
+	return join(homedir(), ".pi", "Reflections", dateStr, fileName);
 }
 
 /** Check if an agenda exists for the given date. */
@@ -415,12 +416,7 @@ export function readReflection(date?: Date): string | null {
 /** Write a reflection to the file system. */
 export function writeReflection(content: string, date?: Date): void {
 	const path = getReflectionPath(date);
-	const dir = join(path, "..");
-
-	if (!existsSync(dir)) {
-		mkdirSync(dir, { recursive: true });
-	}
-
+	mkdirSync(dirname(path), { recursive: true });
 	writeFileSync(path, content, "utf-8");
 }
 

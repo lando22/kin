@@ -163,7 +163,8 @@ async function runLoop(
 	let currentContext = initialContext;
 	let config = initialConfig;
 	let firstTurn = true;
-	// Check for steering messages at start (user may have typed while waiting)
+	// Steering messages are injected before the next provider call, while follow-ups
+	// are only checked after the agent would otherwise stop.
 	let pendingMessages: AgentMessage[] = (await config.getSteeringMessages?.()) || [];
 
 	// Outer loop: continues when queued follow-up messages arrive after agent would stop
@@ -313,6 +314,8 @@ async function streamAssistantResponse(
 	for await (const event of response) {
 		switch (event.type) {
 			case "start":
+				// Keep the streaming assistant message in context so tool-call deltas
+				// and UI updates observe the same mutable turn state.
 				partialMessage = event.partial;
 				context.messages.push(partialMessage);
 				addedPartial = true;
@@ -381,6 +384,7 @@ async function executeToolCalls(
 	const hasSequentialToolCall = toolCalls.some(
 		(tc) => currentContext.tools?.find((t) => t.name === tc.name)?.executionMode === "sequential",
 	);
+	// A single sequential tool forces the whole batch to preserve side-effect ordering.
 	if (config.toolExecution === "sequential" || hasSequentialToolCall) {
 		return executeToolCallsSequential(currentContext, assistantMessage, toolCalls, config, signal, emit);
 	}
@@ -499,6 +503,8 @@ async function executeToolCallsParallel(
 		}
 	}
 
+	// Tool execution can run concurrently, but tool result messages must keep the
+	// assistant's original tool-call order for provider replay.
 	const orderedFinalizedCalls = await Promise.all(
 		finalizedCalls.map((entry) => (typeof entry === "function" ? entry() : Promise.resolve(entry))),
 	);
@@ -549,6 +555,7 @@ function prepareToolCallArguments(tool: AgentTool<any>, toolCall: AgentToolCall)
 	if (!tool.prepareArguments) {
 		return toolCall;
 	}
+	// Compatibility shims normalize legacy tool arguments before schema validation.
 	const preparedArguments = tool.prepareArguments(toolCall.arguments);
 	if (preparedArguments === toolCall.arguments) {
 		return toolCall;
@@ -651,6 +658,8 @@ async function executePreparedToolCall(
 				);
 			},
 		);
+		// Flush queued update events before ending so consumers never see an end
+		// event before the final partial render.
 		await Promise.all(updateEvents);
 		return { result, isError: false };
 	} catch (error) {

@@ -43,6 +43,15 @@ export interface GrepToolDetails {
 	linesTruncated?: boolean;
 }
 
+interface RipgrepMatchEvent {
+	type: "match";
+	data?: {
+		path?: { text?: string };
+		line_number?: number;
+		lines?: { text?: string };
+	};
+}
+
 /**
  * Pluggable operations for the grep tool.
  * Override these to delegate search to remote systems (for example SSH).
@@ -270,13 +279,13 @@ export function createGrepToolDefinition(
 						const matches: Array<{ filePath: string; lineNumber: number; lineText?: string }> = [];
 						rl.on("line", (line) => {
 							if (!line.trim() || matchCount >= effectiveLimit) return;
-							let event: any;
+							let event: unknown;
 							try {
 								event = JSON.parse(line);
 							} catch {
 								return;
 							}
-							if (event.type === "match") {
+							if (isRipgrepMatchEvent(event)) {
 								matchCount++;
 								const filePath = event.data?.path?.text;
 								const lineNumber = event.data?.line_number;
@@ -360,8 +369,8 @@ export function createGrepToolDefinition(
 								}),
 							);
 						});
-					} catch (err) {
-						settle(() => reject(err as Error));
+					} catch (error) {
+						settle(() => reject(error));
 					}
 				})();
 			});
@@ -373,10 +382,17 @@ export function createGrepToolDefinition(
 		},
 		renderResult(result, options, theme, context) {
 			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
-			text.setText(formatGrepResult(result as any, options, theme, context.showImages));
+			text.setText(formatGrepResult(result, options, theme, context.showImages));
 			return text;
 		},
 	};
+}
+
+// Ripgrep emits several JSON event shapes; the tool only needs match payloads.
+function isRipgrepMatchEvent(event: unknown): event is RipgrepMatchEvent {
+	return (
+		typeof event === "object" && event !== null && "type" in event && (event as { type: unknown }).type === "match"
+	);
 }
 
 export function createGrepTool(cwd: string, options?: GrepToolOptions): AgentTool<typeof grepSchema> {

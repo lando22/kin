@@ -358,6 +358,8 @@ function normalizeKittyFunctionalCodepoint(codepoint: number): number {
 }
 
 function normalizeShiftedLetterIdentityCodepoint(codepoint: number, modifier: number): number {
+	// Kitty may report Shift+A as codepoint A with shift set; normalize to the
+	// logical key "a" so keybindings do not need separate uppercase IDs.
 	const effectiveModifier = modifier & ~LOCK_MASK;
 	if ((effectiveModifier & MODIFIERS.shift) !== 0 && codepoint >= 65 && codepoint <= 90) {
 		return codepoint + 32;
@@ -656,7 +658,7 @@ function matchesKittySequence(data: string, expectedCodepoint: number, expectedM
 	const actualMod = parsed.modifier & ~LOCK_MASK;
 	const expectedMod = expectedModifier & ~LOCK_MASK;
 
-	// Check if modifiers match
+	// Caps/Num lock are reported as modifier bits but should not affect shortcuts.
 	if (actualMod !== expectedMod) return false;
 
 	const normalizedCodepoint = normalizeShiftedLetterIdentityCodepoint(
@@ -1251,6 +1253,8 @@ function formatParsedKey(codepoint: number, modifier: number, baseLayoutKey?: nu
 export function parseKey(data: string): string | undefined {
 	const kitty = parseKittySequence(data);
 	if (kitty) {
+		// Prefer protocol-level parsing before legacy bytes; release/repeat events
+		// use the same key names as presses.
 		return formatParsedKey(kitty.codepoint, kitty.modifier, kitty.baseLayoutKey);
 	}
 

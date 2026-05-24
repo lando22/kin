@@ -139,6 +139,8 @@ function finalizeTruncatedResult(
 	const visibleWidth = prefixWidth + ellipsisWidth;
 	let result: string;
 
+	// Reset before and after the ellipsis so truncated styled text cannot leak
+	// into the marker or following padded cells.
 	if (ellipsis.length > 0) {
 		result = `${prefix}${reset}${ellipsis}${reset}`;
 	} else {
@@ -335,6 +337,7 @@ function parseOsc8Hyperlink(ansiCode: string): ActiveHyperlink | null | undefine
 	const params = body.slice(0, separatorIndex);
 	const url = body.slice(separatorIndex + 1);
 	if (!url) {
+		// OSC 8 with an empty URL closes the active hyperlink.
 		return null;
 	}
 	return { params, url, terminator };
@@ -770,8 +773,8 @@ function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): s
 	let currentLine = tracker.getActiveCodes();
 	let currentWidth = 0;
 
-	// First, separate ANSI codes from visible content
-	// We need to handle ANSI codes specially since they're not graphemes
+	// Separate ANSI codes from visible content. ANSI codes must update style
+	// state but must not be counted as graphemes or columns.
 	let i = 0;
 	const segments: Array<{ type: "ansi" | "grapheme"; value: string }> = [];
 
@@ -1083,7 +1086,8 @@ export function extractSegments(
 	let afterStarted = false;
 	const afterEnd = afterStart + afterLen;
 
-	// Track styling state so "after" inherits styling from before the overlay
+	// Track styling state so text after an overlay inherits styles that began
+	// before the hidden middle segment.
 	pooledStyleTracker.clear();
 
 	while (i < line.length) {
