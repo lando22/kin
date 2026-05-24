@@ -41,6 +41,7 @@ import { SessionManager } from "./core/session-manager.ts";
 import { SettingsManager } from "./core/settings-manager.ts";
 import { printTimings, resetTimings, time } from "./core/timings.ts";
 import { runMigrations, showDeprecationWarnings } from "./migrations.ts";
+import { isContextTransferCommand, runContextTransferMode } from "./modes/context-transfer-mode.ts";
 import { InteractiveMode, runPrintMode, runRpcMode } from "./modes/index.ts";
 import { ExtensionSelectorComponent } from "./modes/interactive/components/extension-selector.ts";
 import { initTheme, stopThemeWatcher } from "./modes/interactive/theme/theme.ts";
@@ -441,6 +442,11 @@ export async function main(args: string[], options?: MainOptions) {
 
 	if (await handleConfigCommand(args)) {
 		return;
+	}
+
+	if (isContextTransferCommand(args)) {
+		const exitCode = await runContextTransferMode(args);
+		process.exit(exitCode);
 	}
 
 	if (isReflectCommand(args)) {

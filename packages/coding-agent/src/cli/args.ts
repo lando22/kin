@@ -211,7 +211,9 @@ ${chalk.bold("Commands:")}
   ${APP_NAME} update [source|self|pi]   Update pi and installed extensions
   ${APP_NAME} list                      List installed extensions from settings
   ${APP_NAME} config                    Open TUI to enable/disable package resources
-  ${APP_NAME} <command> --help          Show help for install/remove/uninstall/update/list
+  ${APP_NAME} export [output.tar.gz]    Export Pi context for another computer
+  ${APP_NAME} import [archive.tar.gz]   Import Pi context from an archive
+  ${APP_NAME} <command> --help          Show help for a command
 
 ${chalk.bold("Options:")}
   --provider <name>              Provider name (default: google)
