@@ -26,7 +26,8 @@ export async function runWakeMode(args: string[], { date }: { date?: Date } = {}
 	const agentDir = getAgentDir();
 	const settingsManager = SettingsManager.create(cwd, agentDir);
 
-	// Create services to get a model
+	// Create only the services needed to resolve auth/settings/models; wake generation does not need
+	// extensions, skills, themes, prompt templates, or project context discovery.
 	const services = await createAgentSessionServices({
 		cwd,
 		agentDir,
@@ -66,7 +67,7 @@ export async function runWakeMode(args: string[], { date }: { date?: Date } = {}
 	const showModel = `${model.provider}/${model.id}`;
 	console.error(chalk.dim(`Waking using ${showModel}...`));
 
-	// Find the latest reflection
+	// Wake is based on the latest available reflection, not necessarily today's.
 	const latestReflection = findLatestReflection();
 	if (!latestReflection) {
 		console.error(chalk.yellow("No reflections found yet. Run `pi reflect` first."));
@@ -110,7 +111,7 @@ export async function runWakeMode(args: string[], { date }: { date?: Date } = {}
 		return 1;
 	}
 
-	// Check for <NONE> or empty response
+	// Do not write a WAKE.md for empty/<NONE>; startup should stay quiet in that case.
 	if (!rawWake || isNoneResponse(rawWake)) {
 		console.error(chalk.dim("Pi has nothing to wake about today. <NONE>"));
 		return 0;
@@ -131,7 +132,7 @@ async function resolveWakeModel(
 	settingsManager: SettingsManager,
 	modelRegistry: ModelRegistry,
 ): Promise<Model<any> | undefined> {
-	// 1. Always prefer deepseek-v4-flash for wake
+	// 1. Always prefer deepseek-v4-flash for wake; it mirrors reflection's stable default.
 	const preferred = modelRegistry.find("openrouter", "deepseek/deepseek-v4-flash");
 	if (preferred) return preferred;
 

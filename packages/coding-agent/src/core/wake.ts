@@ -74,6 +74,7 @@ export function isWakeSeen(date?: Date, homeDir = homedir()): boolean {
 	const wakePath = getWakePath(date, homeDir);
 	const seenPath = getWakeSeenPath(date, homeDir);
 	if (!existsSync(wakePath) || !existsSync(seenPath)) return false;
+	// If WAKE.md is rewritten after the marker, it should be surfaced again.
 	return statSync(seenPath).mtimeMs >= statSync(wakePath).mtimeMs;
 }
 
@@ -106,6 +107,7 @@ export function writeWake(content: string, date?: Date, homeDir = homedir()): vo
 		mkdirSync(dir, { recursive: true });
 	}
 	writeFileSync(path, content, "utf-8");
+	// A new wake should be shown once even if an older wake for the same day was already seen.
 	const seenPath = getWakeSeenPath(date, homeDir);
 	if (existsSync(seenPath)) {
 		unlinkSync(seenPath);
@@ -164,6 +166,7 @@ export interface WakeContext {
 
 /** Build the LLM context for wake generation. */
 export function buildWakeContext(context: WakeContext): { systemPrompt: string; messages: Message[] } {
+	// Agenda is optional; reflection is the primary input and keeps wake grounded in real sessions.
 	const agendaSection = context.agenda ? `---\n\nAgenda I left for myself:\n\n${context.agenda}\n\n` : "";
 
 	const userPrompt = WAKE_USER_TEMPLATE.replace("{{DATE}}", context.reflectionDate)

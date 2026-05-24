@@ -35,6 +35,10 @@ export interface BuildSystemPromptOptions {
 	workingContent?: string | null;
 }
 
+/**
+ * Show available project context files without inlining their full contents.
+ * The model can decide which files to read based on the path and first heading/line.
+ */
 function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content: string }>): string {
 	if (contextFiles.length === 0) {
 		return "";
@@ -60,6 +64,10 @@ function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content
 	return lines.join("\n");
 }
 
+/**
+ * Append personal context as the final prompt section.
+ * Keeping memory last makes it easy to inspect and keeps durable/user context close to runtime facts.
+ */
 function formatMemorySection(
 	memoryContent?: string | null,
 	preferencesContent?: string | null,
@@ -134,7 +142,8 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const contextFiles = providedContextFiles ?? [];
 	const skills = providedSkills ?? [];
 
-	// Runtime context stays last so custom prompts, skills, and memory all share the same footer shape.
+	// Runtime context stays last for both default and custom prompts.
+	// That gives every session the same date/cwd/wake/memory footer shape.
 	const appendRuntimeContext = (prompt: string): string =>
 		prompt +
 		`\nCurrent date: ${date}` +
@@ -161,7 +170,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		return appendRuntimeContext(prompt);
 	}
 
-	// Get absolute paths to documentation and examples
+	// Resolve docs paths at prompt-build time so packaged and source runs both point to the right files.
 	const readmePath = getReadmePath();
 	const docsPath = getDocsPath();
 	const examplesPath = getExamplesPath();
@@ -204,7 +213,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		}
 	}
 
-	// Always include these
+	// These baseline guidelines define the interaction style even when callers provide custom additions.
 	addGuideline("Be concise in your responses");
 	addGuideline(
 		"Before using tools while working, briefly say what you are about to inspect or do; after a few tool calls, pause with a short update on what you learned and what you will check next",

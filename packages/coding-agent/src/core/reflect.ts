@@ -39,7 +39,10 @@ export interface ParsedSession {
 	summary: string | null;
 }
 
-/** Read a single JSONL session file and extract the conversation. */
+/**
+ * Parse a JSONL session file and extract the conversation.
+ * Only text blocks are kept; tool calls/results are ignored to keep reflection input small.
+ */
 export function parseSessionFile(filePath: string): ParsedSession {
 	const lines = readFileSync(filePath, "utf-8").trim().split("\n");
 	const session: ParsedSession = {
@@ -176,6 +179,8 @@ export function buildReflectionContext(
 			: []);
 
 	if (hasMemory || projectContexts.length > 0) {
+		// Update blocks are an escape hatch: the reflection remains readable markdown,
+		// while machine-parseable fenced blocks let the CLI apply memory/project edits.
 		const projectNames = projectContexts.map((p) => p.name).join(", ");
 		systemPrompt += `\n\nAdditionally, you have the ability to update the user's long-term memory (~/.pi/MEMORY.md) and per-project context files based on today's sessions and learnings.
 
@@ -195,7 +200,7 @@ You may include one update-memory block and one update-project block per project
 Only include blocks for files you actually want to update. Make targeted, surgical changes — don't rewrite files that don't need updating.`;
 	}
 
-	// Serialize conversations into the user prompt
+	// Serialize conversations into compact markdown so the model can compare threads across sessions.
 	const conversationBlocks = sessions.map((s, i) => {
 		const lines: string[] = [];
 		const projectLabel = s.cwd ? ` [project: ${s.cwd.split("/").at(-1)}]` : "";
@@ -310,6 +315,7 @@ export function findSessionsForDate(
 	const dateStrs = [formatLocalDate(d)];
 
 	if (opts?.includePreviousDay) {
+		// CLI reflection can run after midnight; include yesterday so late sessions are not lost.
 		const prev = new Date(d);
 		prev.setDate(prev.getDate() - 1);
 		dateStrs.push(formatLocalDate(prev));
@@ -342,7 +348,7 @@ export function findSessionsForDate(
 		}
 	};
 
-	// Scan flat global dir
+	// Newer sessions live in the flat global directory.
 	scanDir(sessionBaseDir);
 
 	// Also scan legacy per-cwd subdirs for any unmigrated sessions
@@ -433,7 +439,7 @@ export function parseReflectionUpdates(rawReflection: string): ExtractedUpdates 
 	let memoryUpdate: string | null = null;
 	const projectUpdates: Record<string, string> = {};
 
-	// Extract update-memory block
+	// Remove update blocks from the saved reflection so REFLECTION.md stays human-readable.
 	const memoryRegex = /```update-memory\r?\n([\s\S]*?)\r?\n```/;
 	const memoryMatch = memoryRegex.exec(reflectionText);
 	if (memoryMatch) {
@@ -441,7 +447,7 @@ export function parseReflectionUpdates(rawReflection: string): ExtractedUpdates 
 		reflectionText = reflectionText.replace(memoryMatch[0], "").trim();
 	}
 
-	// Extract all update-project:<name> blocks (named, new format)
+	// Extract all update-project:<name> blocks. The name is the project directory basename.
 	const namedProjectRegex = /```update-project:(\S+)\r?\n([\s\S]*?)\r?\n```/g;
 	let match = namedProjectRegex.exec(reflectionText);
 	const namedMatches: Array<{ full: string; name: string; content: string }> = [];

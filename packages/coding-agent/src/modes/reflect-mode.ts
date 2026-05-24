@@ -35,7 +35,8 @@ export async function runReflectMode(
 	// Resolve sessions directory
 	const sessionDir = sessionsDir ?? settingsManager.getSessionDir() ?? getSessionsDir();
 
-	// Create services — allow extensions this time since Pi may want to use them during reflection
+	// Create services with a minimal resource load. Extensions stay enabled so reflection can use
+	// installed tools, but ambient prompt assets are disabled to keep the headless task focused.
 	const services = await createAgentSessionServices({
 		cwd,
 		agentDir,
@@ -121,7 +122,7 @@ async function resolveReflectionModel(
 		}
 	}
 
-	// Always prefer deepseek-v4-flash for reflection
+	// Always prefer deepseek-v4-flash for reflection; Gemini has produced empty files here.
 	const preferred = modelRegistry.find("openrouter", "deepseek/deepseek-v4-flash");
 	if (preferred) return preferred;
 
@@ -132,7 +133,7 @@ async function resolveReflectionModel(
 		return modelRegistry.find(provider, modelId);
 	}
 
-	// Fall back to scoped models
+	// Fall back to scoped models so scheduled reflection still has a chance to run.
 	const enabledModels = settingsManager.getEnabledModels();
 	if (enabledModels && enabledModels.length > 0) {
 		const first = enabledModels[0];
