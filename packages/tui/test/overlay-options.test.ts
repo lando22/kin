@@ -200,6 +200,33 @@ describe("TUI overlay options", () => {
 		});
 	});
 
+	describe("opaque overlays", () => {
+		it("should render over blank terminal content", async () => {
+			const terminal = new VirtualTerminal(20, 6);
+			const tui = new TUI(terminal);
+
+			class BaseContent implements Component {
+				render(): string[] {
+					return ["BASE", "BASE", "BASE"];
+				}
+				invalidate(): void {}
+			}
+
+			tui.addChild(new BaseContent());
+			tui.showOverlay(new StaticOverlay(["SPLASH"]), { anchor: "center", opaque: true, width: 10 });
+			tui.start();
+			await renderAndFlush(tui, terminal);
+
+			const viewport = terminal.getViewport();
+			assert.ok(
+				viewport.some((line) => line.includes("SPLASH")),
+				"Expected opaque overlay to render",
+			);
+			assert.ok(!viewport.some((line) => line.includes("BASE")), "Expected base content to be hidden");
+			tui.stop();
+		});
+	});
+
 	describe("anchor positioning", () => {
 		it("should position overlay at top-left", async () => {
 			const terminal = new VirtualTerminal(80, 24);

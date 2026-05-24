@@ -50,6 +50,8 @@ The whole flow should feel like one natural conversation, not two separate inter
 
 export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "init", description: "Start Pi onboarding" },
+	{ name: "pi", description: "Show Pi onboarding splash" },
+	{ name: "demo", description: "Preview the onboarding splash animation" },
 	{ name: "settings", description: "Open settings menu" },
 	{ name: "model", description: "Select model (opens selector UI)" },
 	{ name: "scoped-models", description: "Enable/disable models for Ctrl+P cycling" },

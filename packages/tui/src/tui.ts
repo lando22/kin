@@ -174,6 +174,8 @@ export interface OverlayOptions {
 	visible?: (termWidth: number, termHeight: number) => boolean;
 	/** If true, don't capture keyboard focus when shown */
 	nonCapturing?: boolean;
+	/** If true, render this overlay over a blank terminal instead of compositing over existing content. */
+	opaque?: boolean;
 }
 
 /**
@@ -757,15 +759,24 @@ export class TUI extends Container {
 	/** Composite all overlays into content lines (sorted by focusOrder, higher = on top). */
 	private compositeOverlays(lines: string[], termWidth: number, termHeight: number): string[] {
 		if (this.overlayStack.length === 0) return lines;
-		const result = [...lines];
 
 		// Pre-render all visible overlays and calculate positions
 		const rendered: { overlayLines: string[]; row: number; col: number; w: number }[] = [];
-		let minLinesNeeded = result.length;
 
 		const visibleEntries = this.overlayStack.filter((e) => this.isOverlayVisible(e));
 		visibleEntries.sort((a, b) => a.focusOrder - b.focusOrder);
-		for (const entry of visibleEntries) {
+		let topOpaqueIndex = -1;
+		for (let i = visibleEntries.length - 1; i >= 0; i--) {
+			if (visibleEntries[i]?.options?.opaque === true) {
+				topOpaqueIndex = i;
+				break;
+			}
+		}
+		const entriesToRender = topOpaqueIndex === -1 ? visibleEntries : visibleEntries.slice(topOpaqueIndex);
+		const result = topOpaqueIndex === -1 ? [...lines] : Array.from({ length: termHeight }, () => "");
+		let minLinesNeeded = result.length;
+
+		for (const entry of entriesToRender) {
 			const { component, options } = entry;
 
 			// Get layout with height=0 first to determine width and maxHeight

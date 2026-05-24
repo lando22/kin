@@ -78,7 +78,13 @@ import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.t
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider, findExactModelReferenceMatch, resolveModelScope } from "../../core/model-resolver.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
-import { readMemoryContent, readNotesContent, readProjectContent, resetPiMemory } from "../../core/pi-memory.ts";
+import {
+	getPiMemoryDir,
+	readMemoryContent,
+	readNotesContent,
+	readProjectContent,
+	resetPiMemory,
+} from "../../core/pi-memory.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-names.ts";
 import {
 	findSessionsForDate,
@@ -126,6 +132,7 @@ import { formatKeyText, keyDisplayText, keyHint, keyText, rawKeyHint } from "./c
 import { LoginDialogComponent } from "./components/login-dialog.ts";
 import { ModelSelectorComponent } from "./components/model-selector.ts";
 import { type AuthSelectorProvider, OAuthSelectorComponent } from "./components/oauth-selector.ts";
+import { OnboardingSplashComponent } from "./components/onboarding-splash.ts";
 import { ScopedModelsSelectorComponent } from "./components/scoped-models-selector.ts";
 import { SessionSelectorComponent } from "./components/session-selector.ts";
 import { SettingsSelectorComponent } from "./components/settings-selector.ts";
@@ -793,6 +800,7 @@ export class InteractiveMode {
 
 		// Start the UI before initializing extensions so session_start handlers can use interactive dialogs
 		this.ui.start();
+
 		this.isInitialized = true;
 
 		// Initialize extensions first so resources are shown before messages
@@ -800,6 +808,13 @@ export class InteractiveMode {
 
 		// Render initial messages AFTER showing loaded resources
 		this.renderInitialMessages();
+
+		// Show first-run onboarding splash if Pi has never been set up
+		if (this.isFirstRun()) {
+			await this.showOnboardingSplash();
+			// Auto-trigger onboarding after splash
+			await this.handleInitCommand();
+		}
 
 		// Set up theme file watcher
 		onThemeChange(() => {
@@ -2621,6 +2636,11 @@ export class InteractiveMode {
 				await this.handleInitCommand();
 				return;
 			}
+			if (text === "/demo" || text === "/pi") {
+				this.editor.setText("");
+				await this.handleDemoCommand();
+				return;
+			}
 			if (text === "/settings") {
 				this.showSettingsSelector();
 				this.editor.setText("");
@@ -4172,6 +4192,33 @@ export class InteractiveMode {
 		}
 
 		this.showModelSelector(searchTerm);
+	}
+
+	/** Returns true if Pi has never been set up on this machine (no ~/.pi/ directory). */
+	private isFirstRun(): boolean {
+		return !fs.existsSync(getPiMemoryDir());
+	}
+
+	private async showOnboardingSplash(): Promise<void> {
+		await new Promise<void>((resolve) => {
+			let handle: OverlayHandle | undefined;
+			const splash = new OnboardingSplashComponent(this.ui, () => {
+				handle?.hide();
+				this.ui.requestRender(true);
+				resolve();
+			});
+			this.ui.requestRender(true);
+			handle = this.ui.showOverlay(splash, {
+				width: "100%",
+				anchor: "top-left",
+				opaque: true,
+			});
+		});
+	}
+
+	private async handleDemoCommand(): Promise<void> {
+		await this.showOnboardingSplash();
+		// No side effects; just dismiss the overlay and return to chat.
 	}
 
 	private async handleInitCommand(): Promise<void> {
