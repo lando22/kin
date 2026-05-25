@@ -21,7 +21,6 @@ import type {
 	AutocompleteItem,
 	AutocompleteProvider,
 	EditorComponent,
-	Keybinding,
 	KeyId,
 	MarkdownTheme,
 	OverlayHandle,
@@ -48,7 +47,7 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@earendil-works/pi-tui";
-import { spawn, spawnSync } from "child_process";
+import { spawn } from "child_process";
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -58,11 +57,10 @@ import {
 	getDebugLogPath,
 	getDocsPath,
 	getSessionsDir,
-	getShareViewerUrl,
 	VERSION,
 } from "../../config.ts";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session.ts";
-import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "../../core/agent-session-runtime.ts";
+import type { AgentSessionRuntime } from "../../core/agent-session-runtime.ts";
 import type {
 	AutocompleteProviderFactory,
 	EditorFactory,
@@ -76,7 +74,7 @@ import type {
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/footer-data-provider.ts";
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
-import { defaultModelPerProvider, findExactModelReferenceMatch, resolveModelScope } from "../../core/model-resolver.ts";
+import { defaultModelPerProvider } from "../../core/model-resolver.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
 import {
 	getPiMemoryDir,
@@ -115,7 +113,6 @@ import { checkForNewPiVersion, type LatestPiRelease } from "../../utils/version-
 import { ArminComponent } from "./components/armin.ts";
 import { AssistantMessageComponent } from "./components/assistant-message.ts";
 import { BashExecutionComponent } from "./components/bash-execution.ts";
-import { BorderedLoader } from "./components/bordered-loader.ts";
 import { BranchSummaryMessageComponent } from "./components/branch-summary-message.ts";
 import { CompactionSummaryMessageComponent } from "./components/compaction-summary-message.ts";
 import { CountdownTimer } from "./components/countdown-timer.ts";
@@ -133,9 +130,7 @@ import { LoginDialogComponent } from "./components/login-dialog.ts";
 import { ModelSelectorComponent } from "./components/model-selector.ts";
 import { type AuthSelectorProvider, OAuthSelectorComponent } from "./components/oauth-selector.ts";
 import { OnboardingSplashComponent } from "./components/onboarding-splash.ts";
-import { ScopedModelsSelectorComponent } from "./components/scoped-models-selector.ts";
 import { SessionSelectorComponent } from "./components/session-selector.ts";
-import { SettingsSelectorComponent } from "./components/settings-selector.ts";
 import { SkillInvocationMessageComponent } from "./components/skill-invocation-message.ts";
 import { ToolExecutionComponent } from "./components/tool-execution.ts";
 import { TreeSelectorComponent } from "./components/tree-selector.ts";
@@ -143,7 +138,6 @@ import { UserMessageComponent } from "./components/user-message.ts";
 import { UserMessageSelectorComponent } from "./components/user-message-selector.ts";
 import { WakeMessageComponent } from "./components/wake-message.ts";
 import {
-	getAvailableThemes,
 	getAvailableThemesWithPaths,
 	getEditorTheme,
 	getMarkdownTheme,
@@ -1706,9 +1700,6 @@ export class InteractiveMode {
 				switchSession: async (sessionPath, options) => {
 					return this.handleResumeSession(sessionPath, options);
 				},
-				reload: async () => {
-					await this.handleReloadCommand();
-				},
 			},
 			shutdownHandler: () => {
 				this.shutdownRequested = true;
@@ -2584,8 +2575,7 @@ export class InteractiveMode {
 		this.defaultEditor.onAction("app.message.followUp", () => this.handleFollowUp());
 		this.defaultEditor.onAction("app.message.dequeue", () => this.handleDequeue());
 		this.defaultEditor.onAction("app.session.new", () => this.handleClearCommand());
-		this.defaultEditor.onAction("app.session.tree", () => this.showTreeSelector());
-		this.defaultEditor.onAction("app.session.fork", () => this.showUserMessageSelector());
+
 		this.defaultEditor.onAction("app.session.resume", () => this.showSessionSelector());
 
 		this.defaultEditor.onChange = (text: string) => {
@@ -2641,37 +2631,7 @@ export class InteractiveMode {
 				await this.handleDemoCommand();
 				return;
 			}
-			if (text === "/settings") {
-				this.showSettingsSelector();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/scoped-models") {
-				this.editor.setText("");
-				await this.showModelsSelector();
-				return;
-			}
-			if (text === "/model" || text.startsWith("/model ")) {
-				const searchTerm = text.startsWith("/model ") ? text.slice(7).trim() : undefined;
-				this.editor.setText("");
-				await this.handleModelCommand(searchTerm);
-				return;
-			}
-			if (text === "/export" || text.startsWith("/export ")) {
-				await this.handleExportCommand(text);
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/import" || text.startsWith("/import ")) {
-				await this.handleImportCommand(text);
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/share") {
-				await this.handleShareCommand();
-				this.editor.setText("");
-				return;
-			}
+
 			if (text === "/copy") {
 				await this.handleCopyCommand();
 				this.editor.setText("");
@@ -2687,31 +2647,7 @@ export class InteractiveMode {
 				this.editor.setText("");
 				return;
 			}
-			if (text === "/changelog") {
-				this.handleChangelogCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/hotkeys") {
-				this.handleHotkeysCommand();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/fork") {
-				this.showUserMessageSelector();
-				this.editor.setText("");
-				return;
-			}
-			if (text === "/clone") {
-				this.editor.setText("");
-				await this.handleCloneCommand();
-				return;
-			}
-			if (text === "/tree") {
-				this.showTreeSelector();
-				this.editor.setText("");
-				return;
-			}
+
 			if (text === "/login") {
 				this.showOAuthSelector("login");
 				this.editor.setText("");
@@ -2733,11 +2669,7 @@ export class InteractiveMode {
 				await this.handleCompactCommand(customInstructions);
 				return;
 			}
-			if (text === "/reload") {
-				this.editor.setText("");
-				await this.handleReloadCommand();
-				return;
-			}
+
 			if (text === "/debug") {
 				this.handleDebugCommand();
 				this.editor.setText("");
@@ -3863,7 +3795,7 @@ export class InteractiveMode {
 				const text = theme.fg("dim", `Follow-up: ${message}`);
 				this.pendingMessagesContainer.addChild(new TruncatedText(text, 1, 0));
 			}
-			const dequeueHint = this.getAppKeyDisplay("app.message.dequeue");
+			const dequeueHint = keyDisplayText("app.message.dequeue");
 			const hintText = theme.fg("dim", `↳ ${dequeueHint} to edit all queued messages`);
 			this.pendingMessagesContainer.addChild(new TruncatedText(hintText, 1, 0));
 		}
@@ -4015,185 +3947,6 @@ export class InteractiveMode {
 		this.ui.requestRender();
 	}
 
-	private showSettingsSelector(): void {
-		this.showSelector((done) => {
-			const selector = new SettingsSelectorComponent(
-				{
-					autoCompact: this.session.autoCompactionEnabled,
-					showImages: this.settingsManager.getShowImages(),
-					imageWidthCells: this.settingsManager.getImageWidthCells(),
-					autoResizeImages: this.settingsManager.getImageAutoResize(),
-					blockImages: this.settingsManager.getBlockImages(),
-					enableSkillCommands: this.settingsManager.getEnableSkillCommands(),
-					steeringMode: this.session.steeringMode,
-					followUpMode: this.session.followUpMode,
-					transport: this.settingsManager.getTransport(),
-					thinkingLevel: this.session.thinkingLevel,
-					availableThinkingLevels: this.session.getAvailableThinkingLevels(),
-					currentTheme: this.settingsManager.getTheme() || "dark",
-					availableThemes: getAvailableThemes(),
-					hideThinkingBlock: this.hideThinkingBlock,
-					collapseChangelog: this.settingsManager.getCollapseChangelog(),
-					enableInstallTelemetry: this.settingsManager.getEnableInstallTelemetry(),
-					doubleEscapeAction: this.settingsManager.getDoubleEscapeAction(),
-					treeFilterMode: this.settingsManager.getTreeFilterMode(),
-					showHardwareCursor: this.settingsManager.getShowHardwareCursor(),
-					editorPaddingX: this.settingsManager.getEditorPaddingX(),
-					autocompleteMaxVisible: this.settingsManager.getAutocompleteMaxVisible(),
-					quietStartup: this.settingsManager.getQuietStartup(),
-					clearOnShrink: this.settingsManager.getClearOnShrink(),
-					showTerminalProgress: this.settingsManager.getShowTerminalProgress(),
-					warnings: this.settingsManager.getWarnings(),
-				},
-				{
-					onAutoCompactChange: (enabled) => {
-						this.session.setAutoCompactionEnabled(enabled);
-						this.footer.setAutoCompactEnabled(enabled);
-					},
-					onShowImagesChange: (enabled) => {
-						this.settingsManager.setShowImages(enabled);
-						for (const child of this.chatContainer.children) {
-							if (child instanceof ToolExecutionComponent) {
-								child.setShowImages(enabled);
-							}
-						}
-					},
-					onImageWidthCellsChange: (width) => {
-						this.settingsManager.setImageWidthCells(width);
-						for (const child of this.chatContainer.children) {
-							if (child instanceof ToolExecutionComponent) {
-								child.setImageWidthCells(width);
-							}
-						}
-					},
-					onAutoResizeImagesChange: (enabled) => {
-						this.settingsManager.setImageAutoResize(enabled);
-					},
-					onBlockImagesChange: (blocked) => {
-						this.settingsManager.setBlockImages(blocked);
-					},
-					onEnableSkillCommandsChange: (enabled) => {
-						this.settingsManager.setEnableSkillCommands(enabled);
-						this.setupAutocompleteProvider();
-					},
-					onSteeringModeChange: (mode) => {
-						this.session.setSteeringMode(mode);
-					},
-					onFollowUpModeChange: (mode) => {
-						this.session.setFollowUpMode(mode);
-					},
-					onTransportChange: (transport) => {
-						this.settingsManager.setTransport(transport);
-						this.session.agent.transport = transport;
-					},
-					onThinkingLevelChange: (level) => {
-						this.session.setThinkingLevel(level);
-						this.footer.invalidate();
-						this.updateEditorBorderColor();
-					},
-					onThemeChange: (themeName) => {
-						const result = setTheme(themeName, true);
-						this.settingsManager.setTheme(themeName);
-						this.ui.invalidate();
-						if (!result.success) {
-							this.showError(`Failed to load theme "${themeName}": ${result.error}\nFell back to dark theme.`);
-						}
-					},
-					onThemePreview: (themeName) => {
-						const result = setTheme(themeName, true);
-						if (result.success) {
-							this.ui.invalidate();
-							this.ui.requestRender();
-						}
-					},
-					onHideThinkingBlockChange: (hidden) => {
-						this.hideThinkingBlock = hidden;
-						this.settingsManager.setHideThinkingBlock(hidden);
-						for (const child of this.chatContainer.children) {
-							if (child instanceof AssistantMessageComponent) {
-								child.setHideThinkingBlock(hidden);
-							}
-						}
-						this.chatContainer.clear();
-						this.rebuildChatFromMessages();
-					},
-					onCollapseChangelogChange: (collapsed) => {
-						this.settingsManager.setCollapseChangelog(collapsed);
-					},
-					onEnableInstallTelemetryChange: (enabled) => {
-						this.settingsManager.setEnableInstallTelemetry(enabled);
-					},
-					onQuietStartupChange: (enabled) => {
-						this.settingsManager.setQuietStartup(enabled);
-					},
-					onDoubleEscapeActionChange: (action) => {
-						this.settingsManager.setDoubleEscapeAction(action);
-					},
-					onTreeFilterModeChange: (mode) => {
-						this.settingsManager.setTreeFilterMode(mode);
-					},
-					onShowHardwareCursorChange: (enabled) => {
-						this.settingsManager.setShowHardwareCursor(enabled);
-						this.ui.setShowHardwareCursor(enabled);
-					},
-					onEditorPaddingXChange: (padding) => {
-						this.settingsManager.setEditorPaddingX(padding);
-						this.defaultEditor.setPaddingX(padding);
-						if (this.editor !== this.defaultEditor && this.editor.setPaddingX !== undefined) {
-							this.editor.setPaddingX(padding);
-						}
-					},
-					onAutocompleteMaxVisibleChange: (maxVisible) => {
-						this.settingsManager.setAutocompleteMaxVisible(maxVisible);
-						this.defaultEditor.setAutocompleteMaxVisible(maxVisible);
-						if (this.editor !== this.defaultEditor && this.editor.setAutocompleteMaxVisible !== undefined) {
-							this.editor.setAutocompleteMaxVisible(maxVisible);
-						}
-					},
-					onClearOnShrinkChange: (enabled) => {
-						this.settingsManager.setClearOnShrink(enabled);
-						this.ui.setClearOnShrink(enabled);
-					},
-					onShowTerminalProgressChange: (enabled) => {
-						this.settingsManager.setShowTerminalProgress(enabled);
-					},
-					onWarningsChange: (warnings) => {
-						this.settingsManager.setWarnings(warnings);
-					},
-					onCancel: () => {
-						done();
-						this.ui.requestRender();
-					},
-				},
-			);
-			return { component: selector, focus: selector.getSettingsList() };
-		});
-	}
-
-	private async handleModelCommand(searchTerm?: string): Promise<void> {
-		if (!searchTerm) {
-			this.showModelSelector();
-			return;
-		}
-
-		const model = await this.findExactModelMatch(searchTerm);
-		if (model) {
-			try {
-				await this.session.setModel(model);
-				this.footer.invalidate();
-				this.updateEditorBorderColor();
-				this.showStatus(`Model: ${model.id}`);
-				void this.maybeWarnAboutAnthropicSubscriptionAuth(model);
-				this.checkDaxnutsEasterEgg(model);
-			} catch (error) {
-				this.showError(error instanceof Error ? error.message : String(error));
-			}
-			return;
-		}
-
-		this.showModelSelector(searchTerm);
-	}
-
 	/** Returns true if Pi has never been set up on this machine (no ~/.pi/ directory). */
 	private isFirstRun(): boolean {
 		return !fs.existsSync(getPiMemoryDir());
@@ -4307,11 +4060,6 @@ export class InteractiveMode {
 		}
 	}
 
-	private async findExactModelMatch(searchTerm: string): Promise<Model<any> | undefined> {
-		const models = await this.getModelCandidates();
-		return findExactModelReferenceMatch(searchTerm, models);
-	}
-
 	private async getModelCandidates(): Promise<Model<any>[]> {
 		if (this.session.scopedModels.length > 0) {
 			return this.session.scopedModels.map((scoped) => scoped.model);
@@ -4396,83 +4144,6 @@ export class InteractiveMode {
 		});
 	}
 
-	private async showModelsSelector(): Promise<void> {
-		// Get all available models
-		this.session.modelRegistry.refresh();
-		const allModels = this.session.modelRegistry.getAvailable();
-
-		if (allModels.length === 0) {
-			this.showStatus("No models available");
-			return;
-		}
-
-		// Check if session has scoped models (from previous session-only changes or CLI --models)
-		const sessionScopedModels = this.session.scopedModels;
-		const hasSessionScope = sessionScopedModels.length > 0;
-
-		// Build enabled model IDs from session state or settings
-		let currentEnabledIds: string[] | null = null;
-
-		if (hasSessionScope) {
-			// Use current session's scoped models
-			currentEnabledIds = sessionScopedModels.map((scoped) => `${scoped.model.provider}/${scoped.model.id}`);
-		} else {
-			// Fall back to settings
-			const patterns = this.settingsManager.getEnabledModels();
-			if (patterns !== undefined && patterns.length > 0) {
-				const scopedModels = await resolveModelScope(patterns, this.session.modelRegistry);
-				currentEnabledIds = scopedModels.map((scoped) => `${scoped.model.provider}/${scoped.model.id}`);
-			}
-		}
-
-		// Helper to update session's scoped models (session-only, no persist)
-		const updateSessionModels = async (enabledIds: string[] | null) => {
-			currentEnabledIds = enabledIds === null ? null : [...enabledIds];
-			if (enabledIds && enabledIds.length > 0 && enabledIds.length < allModels.length) {
-				const newScopedModels = await resolveModelScope(enabledIds, this.session.modelRegistry);
-				this.session.setScopedModels(
-					newScopedModels.map((sm) => ({
-						model: sm.model,
-						thinkingLevel: sm.thinkingLevel,
-					})),
-				);
-			} else {
-				// All enabled or none enabled = no filter
-				this.session.setScopedModels([]);
-			}
-			await this.updateAvailableProviderCount();
-			this.ui.requestRender();
-		};
-
-		this.showSelector((done) => {
-			const selector = new ScopedModelsSelectorComponent(
-				{
-					allModels,
-					enabledModelIds: currentEnabledIds,
-				},
-				{
-					onChange: async (enabledIds) => {
-						await updateSessionModels(enabledIds);
-					},
-					onPersist: (enabledIds) => {
-						// Persist to settings
-						const newPatterns =
-							enabledIds === null || enabledIds.length === allModels.length
-								? undefined // All enabled = clear filter
-								: enabledIds;
-						this.settingsManager.setEnabledModels(newPatterns ? [...newPatterns] : undefined);
-						this.showStatus("Model selection saved to settings");
-					},
-					onCancel: () => {
-						done();
-						this.ui.requestRender();
-					},
-				},
-			);
-			return { component: selector, focus: selector };
-		});
-	}
-
 	private showUserMessageSelector(): void {
 		const userMessages = this.session.getUserMessagesForForking();
 
@@ -4512,28 +4183,6 @@ export class InteractiveMode {
 			);
 			return { component: selector, focus: selector.getMessageList() };
 		});
-	}
-
-	private async handleCloneCommand(): Promise<void> {
-		const leafId = this.sessionManager.getLeafId();
-		if (!leafId) {
-			this.showStatus("Nothing to clone yet");
-			return;
-		}
-
-		try {
-			const result = await this.runtimeHost.fork(leafId, { position: "at" });
-			if (result.cancelled) {
-				this.ui.requestRender();
-				return;
-			}
-
-			this.renderCurrentSessionState();
-			this.editor.setText("");
-			this.showStatus("Cloned to new session");
-		} catch (error: unknown) {
-			this.showError(error instanceof Error ? error.message : String(error));
-		}
 	}
 
 	private showTreeSelector(initialSelectedId?: string): void {
@@ -5148,272 +4797,23 @@ export class InteractiveMode {
 	// Command handlers
 	// =========================================================================
 
-	private async handleReloadCommand(): Promise<void> {
-		if (this.session.isStreaming) {
-			this.showWarning("Wait for the current response to finish before reloading.");
-			return;
+	private async handleClearCommand(): Promise<void> {
+		if (this.loadingAnimation) {
+			this.loadingAnimation.stop();
+			this.loadingAnimation = undefined;
 		}
-		if (this.session.isCompacting) {
-			this.showWarning("Wait for compaction to finish before reloading.");
-			return;
-		}
-
-		this.resetExtensionUI();
-
-		const reloadBox = new Container();
-		const borderColor = (s: string) => theme.fg("border", s);
-		reloadBox.addChild(new DynamicBorder(borderColor));
-		reloadBox.addChild(new Spacer(1));
-		reloadBox.addChild(
-			new Text(theme.fg("muted", "Reloading keybindings, extensions, skills, prompts, themes..."), 1, 0),
-		);
-		reloadBox.addChild(new Spacer(1));
-		reloadBox.addChild(new DynamicBorder(borderColor));
-
-		const previousEditor = this.editor;
-		this.editorContainer.clear();
-		this.editorContainer.addChild(reloadBox);
-		this.ui.setFocus(reloadBox);
-		this.ui.requestRender(true);
-		await new Promise((resolve) => process.nextTick(resolve));
-
-		const dismissReloadBox = (editor: Component) => {
-			this.editorContainer.clear();
-			this.editorContainer.addChild(editor);
-			this.ui.setFocus(editor);
-			this.ui.requestRender();
-		};
-
+		this.statusContainer.clear();
 		try {
-			await this.session.reload();
-			this.keybindings.reload();
-			const activeHeader = this.customHeader ?? this.builtInHeader;
-			if (isExpandable(activeHeader)) {
-				activeHeader.setExpanded(this.toolOutputExpanded);
-			}
-			setRegisteredThemes(this.session.resourceLoader.getThemes().themes);
-			this.hideThinkingBlock = this.settingsManager.getHideThinkingBlock();
-			const themeName = this.settingsManager.getTheme();
-			const themeResult = themeName ? setTheme(themeName, true) : { success: true };
-			if (!themeResult.success) {
-				this.showError(`Failed to load theme "${themeName}": ${themeResult.error}\nFell back to dark theme.`);
-			}
-			const editorPaddingX = this.settingsManager.getEditorPaddingX();
-			const autocompleteMaxVisible = this.settingsManager.getAutocompleteMaxVisible();
-			this.defaultEditor.setPaddingX(editorPaddingX);
-			this.defaultEditor.setAutocompleteMaxVisible(autocompleteMaxVisible);
-			if (this.editor !== this.defaultEditor) {
-				this.editor.setPaddingX?.(editorPaddingX);
-				this.editor.setAutocompleteMaxVisible?.(autocompleteMaxVisible);
-			}
-			this.ui.setShowHardwareCursor(this.settingsManager.getShowHardwareCursor());
-			this.ui.setClearOnShrink(this.settingsManager.getClearOnShrink());
-			this.setupAutocompleteProvider();
-			const runner = this.session.extensionRunner;
-			this.setupExtensionShortcuts(runner);
-			this.rebuildChatFromMessages();
-			dismissReloadBox(this.editor as Component);
-			this.showLoadedResources({
-				force: false,
-				showDiagnosticsWhenQuiet: true,
-			});
-			const modelsJsonError = this.session.modelRegistry.getError();
-			if (modelsJsonError) {
-				this.showError(`models.json error: ${modelsJsonError}`);
-			}
-			this.showStatus("Reloaded keybindings, extensions, skills, prompts, themes");
-		} catch (error) {
-			dismissReloadBox(previousEditor as Component);
-			this.showError(`Reload failed: ${error instanceof Error ? error.message : String(error)}`);
-		}
-	}
-
-	private async handleExportCommand(text: string): Promise<void> {
-		const outputPath = this.getPathCommandArgument(text, "/export");
-
-		try {
-			if (outputPath?.endsWith(".jsonl")) {
-				const filePath = this.session.exportToJsonl(outputPath);
-				this.showStatus(`Session exported to: ${filePath}`);
-			} else {
-				const filePath = await this.session.exportToHtml(outputPath);
-				this.showStatus(`Session exported to: ${filePath}`);
-			}
-		} catch (error: unknown) {
-			this.showError(`Failed to export session: ${error instanceof Error ? error.message : "Unknown error"}`);
-		}
-	}
-
-	private getPathCommandArgument(text: string, command: "/export" | "/import"): string | undefined {
-		if (text === command) {
-			return undefined;
-		}
-		if (!text.startsWith(`${command} `)) {
-			return undefined;
-		}
-
-		const argsString = text.slice(command.length + 1).trimStart();
-		if (!argsString) {
-			return undefined;
-		}
-
-		const firstChar = argsString[0];
-		if (firstChar === '"' || firstChar === "'") {
-			const closingQuoteIndex = argsString.indexOf(firstChar, 1);
-			if (closingQuoteIndex < 0) {
-				return undefined;
-			}
-			return argsString.slice(1, closingQuoteIndex);
-		}
-
-		const firstWhitespaceIndex = argsString.search(/\s/);
-		if (firstWhitespaceIndex < 0) {
-			return argsString;
-		}
-		return argsString.slice(0, firstWhitespaceIndex);
-	}
-
-	private async handleImportCommand(text: string): Promise<void> {
-		const inputPath = this.getPathCommandArgument(text, "/import");
-		if (!inputPath) {
-			this.showError("Usage: /import <path.jsonl>");
-			return;
-		}
-
-		const confirmed = await this.showExtensionConfirm("Import session", `Replace current session with ${inputPath}?`);
-		if (!confirmed) {
-			this.showStatus("Import cancelled");
-			return;
-		}
-
-		try {
-			if (this.loadingAnimation) {
-				this.loadingAnimation.stop();
-				this.loadingAnimation = undefined;
-			}
-			this.statusContainer.clear();
-			const result = await this.runtimeHost.importFromJsonl(inputPath);
+			const result = await this.runtimeHost.newSession();
 			if (result.cancelled) {
-				this.showStatus("Import cancelled");
 				return;
 			}
 			this.renderCurrentSessionState();
-			this.showStatus(`Session imported from: ${inputPath}`);
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(`${theme.fg("accent", "✓ New session started")}`, 1, 1));
+			this.ui.requestRender();
 		} catch (error: unknown) {
-			if (error instanceof MissingSessionCwdError) {
-				const selectedCwd = await this.promptForMissingSessionCwd(error);
-				if (!selectedCwd) {
-					this.showStatus("Import cancelled");
-					return;
-				}
-				const result = await this.runtimeHost.importFromJsonl(inputPath, selectedCwd);
-				if (result.cancelled) {
-					this.showStatus("Import cancelled");
-					return;
-				}
-				this.renderCurrentSessionState();
-				this.showStatus(`Session imported from: ${inputPath}`);
-				return;
-			}
-			if (error instanceof SessionImportFileNotFoundError) {
-				this.showError(`Failed to import session: ${error.message}`);
-				return;
-			}
-			await this.handleFatalRuntimeError("Failed to import session", error);
-		}
-	}
-
-	private async handleShareCommand(): Promise<void> {
-		// Check if gh is available and logged in
-		try {
-			const authResult = spawnSync("gh", ["auth", "status"], { encoding: "utf-8" });
-			if (authResult.status !== 0) {
-				this.showError("GitHub CLI is not logged in. Run 'gh auth login' first.");
-				return;
-			}
-		} catch {
-			this.showError("GitHub CLI (gh) is not installed. Install it from https://cli.github.com/");
-			return;
-		}
-
-		// Export to a temp file
-		const tmpFile = path.join(os.tmpdir(), "session.html");
-		try {
-			await this.session.exportToHtml(tmpFile);
-		} catch (error: unknown) {
-			this.showError(`Failed to export session: ${error instanceof Error ? error.message : "Unknown error"}`);
-			return;
-		}
-
-		// Show cancellable loader, replacing the editor
-		const loader = new BorderedLoader(this.ui, theme, "Creating gist...");
-		this.editorContainer.clear();
-		this.editorContainer.addChild(loader);
-		this.ui.setFocus(loader);
-		this.ui.requestRender();
-
-		const restoreEditor = () => {
-			loader.dispose();
-			this.editorContainer.clear();
-			this.editorContainer.addChild(this.editor);
-			this.ui.setFocus(this.editor);
-			try {
-				fs.unlinkSync(tmpFile);
-			} catch {
-				// Ignore cleanup errors
-			}
-		};
-
-		// Create a secret gist asynchronously
-		let proc: ReturnType<typeof spawn> | null = null;
-
-		loader.onAbort = () => {
-			proc?.kill();
-			restoreEditor();
-			this.showStatus("Share cancelled");
-		};
-
-		try {
-			const result = await new Promise<{ stdout: string; stderr: string; code: number | null }>((resolve) => {
-				proc = spawn("gh", ["gist", "create", "--public=false", tmpFile]);
-				let stdout = "";
-				let stderr = "";
-				proc.stdout?.on("data", (data) => {
-					stdout += data.toString();
-				});
-				proc.stderr?.on("data", (data) => {
-					stderr += data.toString();
-				});
-				proc.on("close", (code) => resolve({ stdout, stderr, code }));
-			});
-
-			if (loader.signal.aborted) return;
-
-			restoreEditor();
-
-			if (result.code !== 0) {
-				const errorMsg = result.stderr?.trim() || "Unknown error";
-				this.showError(`Failed to create gist: ${errorMsg}`);
-				return;
-			}
-
-			// Extract gist ID from the URL returned by gh
-			// gh returns something like: https://gist.github.com/username/GIST_ID
-			const gistUrl = result.stdout?.trim();
-			const gistId = gistUrl?.split("/").pop();
-			if (!gistId) {
-				this.showError("Failed to parse gist ID from gh output");
-				return;
-			}
-
-			// Create the preview URL
-			const previewUrl = getShareViewerUrl(gistId);
-			this.showStatus(`Share URL: ${previewUrl}\nGist: ${gistUrl}`);
-		} catch (error: unknown) {
-			if (!loader.signal.aborted) {
-				restoreEditor();
-				this.showError(`Failed to create gist: ${error instanceof Error ? error.message : "Unknown error"}`);
-			}
+			await this.handleFatalRuntimeError("Failed to create session", error);
 		}
 	}
 
@@ -5487,176 +4887,6 @@ export class InteractiveMode {
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new Text(info, 1, 0));
 		this.ui.requestRender();
-	}
-
-	private handleChangelogCommand(): void {
-		const changelogPath = getChangelogPath();
-		const allEntries = parseChangelog(changelogPath);
-
-		const changelogMarkdown =
-			allEntries.length > 0
-				? allEntries
-						.reverse()
-						.map((e) => e.content)
-						.join("\n\n")
-				: "No changelog entries found.";
-
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new DynamicBorder());
-		this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new Markdown(changelogMarkdown, 1, 1, this.getMarkdownThemeWithSettings()));
-		this.chatContainer.addChild(new DynamicBorder());
-		this.ui.requestRender();
-	}
-
-	/**
-	 * Get capitalized display string for an app keybinding action.
-	 */
-	private getAppKeyDisplay(action: AppKeybinding): string {
-		return keyDisplayText(action);
-	}
-
-	/**
-	 * Get capitalized display string for an editor keybinding action.
-	 */
-	private getEditorKeyDisplay(action: Keybinding): string {
-		return keyDisplayText(action);
-	}
-
-	private handleHotkeysCommand(): void {
-		// Navigation keybindings
-		const cursorUp = this.getEditorKeyDisplay("tui.editor.cursorUp");
-		const cursorDown = this.getEditorKeyDisplay("tui.editor.cursorDown");
-		const cursorLeft = this.getEditorKeyDisplay("tui.editor.cursorLeft");
-		const cursorRight = this.getEditorKeyDisplay("tui.editor.cursorRight");
-		const cursorWordLeft = this.getEditorKeyDisplay("tui.editor.cursorWordLeft");
-		const cursorWordRight = this.getEditorKeyDisplay("tui.editor.cursorWordRight");
-		const cursorLineStart = this.getEditorKeyDisplay("tui.editor.cursorLineStart");
-		const cursorLineEnd = this.getEditorKeyDisplay("tui.editor.cursorLineEnd");
-		const jumpForward = this.getEditorKeyDisplay("tui.editor.jumpForward");
-		const jumpBackward = this.getEditorKeyDisplay("tui.editor.jumpBackward");
-		const pageUp = this.getEditorKeyDisplay("tui.editor.pageUp");
-		const pageDown = this.getEditorKeyDisplay("tui.editor.pageDown");
-
-		// Editing keybindings
-		const submit = this.getEditorKeyDisplay("tui.input.submit");
-		const newLine = this.getEditorKeyDisplay("tui.input.newLine");
-		const deleteWordBackward = this.getEditorKeyDisplay("tui.editor.deleteWordBackward");
-		const deleteWordForward = this.getEditorKeyDisplay("tui.editor.deleteWordForward");
-		const deleteToLineStart = this.getEditorKeyDisplay("tui.editor.deleteToLineStart");
-		const deleteToLineEnd = this.getEditorKeyDisplay("tui.editor.deleteToLineEnd");
-		const yank = this.getEditorKeyDisplay("tui.editor.yank");
-		const yankPop = this.getEditorKeyDisplay("tui.editor.yankPop");
-		const undo = this.getEditorKeyDisplay("tui.editor.undo");
-		const tab = this.getEditorKeyDisplay("tui.input.tab");
-
-		// App keybindings
-		const interrupt = this.getAppKeyDisplay("app.interrupt");
-		const clear = this.getAppKeyDisplay("app.clear");
-		const exit = this.getAppKeyDisplay("app.exit");
-		const suspend = this.getAppKeyDisplay("app.suspend");
-		const cycleThinkingLevel = this.getAppKeyDisplay("app.thinking.cycle");
-		const cycleModelForward = this.getAppKeyDisplay("app.model.cycleForward");
-		const selectModel = this.getAppKeyDisplay("app.model.select");
-		const expandTools = this.getAppKeyDisplay("app.tools.expand");
-		const toggleThinking = this.getAppKeyDisplay("app.thinking.toggle");
-		const externalEditor = this.getAppKeyDisplay("app.editor.external");
-		const cycleModelBackward = this.getAppKeyDisplay("app.model.cycleBackward");
-		const followUp = this.getAppKeyDisplay("app.message.followUp");
-		const dequeue = this.getAppKeyDisplay("app.message.dequeue");
-		const pasteImage = this.getAppKeyDisplay("app.clipboard.pasteImage");
-
-		let hotkeys = `
-**Navigation**
-| Key | Action |
-|-----|--------|
-| \`${cursorUp}\` / \`${cursorDown}\` / \`${cursorLeft}\` / \`${cursorRight}\` | Move cursor / browse history (Up when empty) |
-| \`${cursorWordLeft}\` / \`${cursorWordRight}\` | Move by word |
-| \`${cursorLineStart}\` | Start of line |
-| \`${cursorLineEnd}\` | End of line |
-| \`${jumpForward}\` | Jump forward to character |
-| \`${jumpBackward}\` | Jump backward to character |
-| \`${pageUp}\` / \`${pageDown}\` | Scroll by page |
-
-**Editing**
-| Key | Action |
-|-----|--------|
-| \`${submit}\` | Send message |
-| \`${newLine}\` | New line${process.platform === "win32" ? " (Ctrl+Enter on Windows Terminal)" : ""} |
-| \`${deleteWordBackward}\` | Delete word backwards |
-| \`${deleteWordForward}\` | Delete word forwards |
-| \`${deleteToLineStart}\` | Delete to start of line |
-| \`${deleteToLineEnd}\` | Delete to end of line |
-| \`${yank}\` | Paste the most-recently-deleted text |
-| \`${yankPop}\` | Cycle through the deleted text after pasting |
-| \`${undo}\` | Undo |
-
-**Other**
-| Key | Action |
-|-----|--------|
-| \`${tab}\` | Path completion / accept autocomplete |
-| \`${interrupt}\` | Cancel autocomplete / abort streaming |
-| \`${clear}\` | Clear editor (first) / exit (second) |
-| \`${exit}\` | Exit (when editor is empty) |
-| \`${suspend}\` | Suspend to background |
-| \`${cycleThinkingLevel}\` | Cycle thinking level |
-| \`${cycleModelForward}\` / \`${cycleModelBackward}\` | Cycle models |
-| \`${selectModel}\` | Open model selector |
-| \`${expandTools}\` | Toggle tool output expansion |
-| \`${toggleThinking}\` | Toggle thinking block visibility |
-| \`${externalEditor}\` | Edit message in external editor |
-| \`${followUp}\` | Queue follow-up message |
-| \`${dequeue}\` | Restore queued messages |
-| \`${pasteImage}\` | Paste image from clipboard |
-| \`/\` | Slash commands |
-| \`!\` | Run bash command |
-| \`!!\` | Run bash command (excluded from context) |
-`;
-
-		// Add extension-registered shortcuts
-		const extensionRunner = this.session.extensionRunner;
-		const shortcuts = extensionRunner.getShortcuts(this.keybindings.getEffectiveConfig());
-		if (shortcuts.size > 0) {
-			hotkeys += `
-**Extensions**
-| Key | Action |
-|-----|--------|
-`;
-			for (const [key, shortcut] of shortcuts) {
-				const description = shortcut.description ?? shortcut.extensionPath;
-				const keyDisplay = formatKeyText(key, { capitalize: true });
-				hotkeys += `| \`${keyDisplay}\` | ${description} |\n`;
-			}
-		}
-
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new DynamicBorder());
-		this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "Keyboard Shortcuts")), 1, 0));
-		this.chatContainer.addChild(new Spacer(1));
-		this.chatContainer.addChild(new Markdown(hotkeys.trim(), 1, 1, this.getMarkdownThemeWithSettings()));
-		this.chatContainer.addChild(new DynamicBorder());
-		this.ui.requestRender();
-	}
-
-	private async handleClearCommand(): Promise<void> {
-		if (this.loadingAnimation) {
-			this.loadingAnimation.stop();
-			this.loadingAnimation = undefined;
-		}
-		this.statusContainer.clear();
-		try {
-			const result = await this.runtimeHost.newSession();
-			if (result.cancelled) {
-				return;
-			}
-			this.renderCurrentSessionState();
-			this.chatContainer.addChild(new Spacer(1));
-			this.chatContainer.addChild(new Text(`${theme.fg("accent", "✓ New session started")}`, 1, 1));
-			this.ui.requestRender();
-		} catch (error: unknown) {
-			await this.handleFatalRuntimeError("Failed to create session", error);
-		}
 	}
 
 	private handleDebugCommand(): void {

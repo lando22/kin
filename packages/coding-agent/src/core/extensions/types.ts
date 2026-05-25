@@ -1525,7 +1525,7 @@ export interface ExtensionCommandContextActions {
 		sessionPath: string,
 		options?: { withSession?: (ctx: ReplacedSessionContext) => Promise<void> },
 	) => Promise<{ cancelled: boolean }>;
-	reload: () => Promise<void>;
+	reload?: () => Promise<void>;
 }
 
 /**

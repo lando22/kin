@@ -11,7 +11,7 @@ const COLOR_CYCLE_START = 24;
 const COLOR_CYCLE_RATE = 4;
 const WORDMARK_START = 32;
 const TAGLINE_START = 50;
-const PROMPT_START = 65;
+const PROMPT_START = 88;
 const INTRO_TOTAL = 80;
 const TICK_MS = 70;
 
