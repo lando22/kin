@@ -26,7 +26,7 @@ Updates to project context verified.
 		expect(parsed.reflectionText).not.toContain("```update-project");
 
 		expect(parsed.memoryUpdate).toBe("# Landon — Durable Facts\nHe is a developer and memory is updated.");
-		expect(parsed.projectUpdates.pi).toBe("# Pi Monorepo — Current Project\nUpdates to project context verified.");
+		expect(parsed.projectUpdates.kin).toBe("# Pi Monorepo — Current Project\nUpdates to project context verified.");
 	});
 
 	it("parses legacy unnamed update-project block for backward compat", () => {
@@ -59,7 +59,7 @@ Other app context.
 `.trim();
 
 		const parsed = parseReflectionUpdates(rawResponse);
-		expect(parsed.projectUpdates.pi).toBe("Pi project context.");
+		expect(parsed.projectUpdates.kin).toBe("Pi project context.");
 		expect(parsed.projectUpdates["other-app"]).toBe("Other app context.");
 	});
 

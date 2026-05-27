@@ -7,7 +7,7 @@ This page gets you from install to a useful first pi session.
 Pi is distributed as an npm package:
 
 ```bash
-npm install -g @earendil-works/pi-coding-agent
+npm install -g @earendil-works/kin-coding-agent
 ```
 
 ### Uninstall
@@ -16,19 +16,19 @@ Use the package manager that installed pi. The curl installer uses npm globally,
 
 ```bash
 # curl installer or npm install -g
-npm uninstall -g @earendil-works/pi-coding-agent
+npm uninstall -g @earendil-works/kin-coding-agent
 
 # pnpm
-pnpm remove -g @earendil-works/pi-coding-agent
+pnpm remove -g @earendil-works/kin-coding-agent
 
 # Yarn
-yarn global remove @earendil-works/pi-coding-agent
+yarn global remove @earendil-works/kin-coding-agent
 
 # Bun
-bun uninstall -g @earendil-works/pi-coding-agent
+bun uninstall -g @earendil-works/kin-coding-agent
 ```
 
-Uninstalling pi leaves settings, credentials, sessions, and installed pi packages in `~/.pi/agent/`.
+Uninstalling pi leaves settings, credentials, sessions, and installed pi packages in `~/.kin/agent/`.
 
 Then start pi in the project directory you want it to work on:
 
@@ -39,7 +39,7 @@ pi
 
 ## Authenticate
 
-Pi can use subscription providers through `/login`, or API-key providers through environment variables or the auth file.
+Kin can use subscription providers through `/login`, or API-key providers through environment variables or the auth file.
 
 ### Option 1: subscription login
 
@@ -60,7 +60,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 pi
 ```
 
-You can also run `/login` and select an API-key provider to store the key in `~/.pi/agent/auth.json`.
+You can also run `/login` and select an API-key provider to store the key in `~/.kin/agent/auth.json`.
 
 See [Providers](providers.md) for all supported providers, environment variables, and cloud-provider setup.
 
@@ -95,7 +95,7 @@ Pi loads context files at startup. Add an `AGENTS.md` file to tell it how to wor
 
 Pi loads:
 
-- `~/.pi/agent/AGENTS.md` for global instructions
+- `~/.kin/agent/AGENTS.md` for global instructions
 - `AGENTS.md` or `CLAUDE.md` from parent directories and the current directory
 
 Restart pi, or run `/reload`, after changing context files.

@@ -5,7 +5,7 @@ import {
 	type TUI,
 	truncateToWidth,
 	visibleWidth,
-} from "@earendil-works/pi-tui";
+} from "@earendil-works/kin-tui";
 import { getMarkdownTheme, theme } from "../theme/theme.ts";
 
 const WAKE_BORDER_COLOR = "#ffcd79";
@@ -29,7 +29,7 @@ function padToWidth(text: string, width: number): string {
 	return text + " ".repeat(width - currentWidth);
 }
 
-/** Component that renders Pi's unseen daily wake message. */
+/** Component that renders Kin's unseen daily wake message. */
 export class WakeMessageComponent implements Component {
 	private readonly markdown: Markdown;
 	private readonly tui: TUI;

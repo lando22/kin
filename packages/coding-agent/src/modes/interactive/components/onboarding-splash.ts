@@ -1,26 +1,37 @@
-import { type Component, type Focusable, type TUI, visibleWidth } from "@earendil-works/pi-tui";
+import { type Component, type Focusable, type TUI, visibleWidth } from "@earendil-works/kin-tui";
 
 const BRAND_COLORS = ["#ffcd79", "#ffb887", "#dfa9ff", "#ff9d79"] as const;
-const TILE_WIDTH = 2;
+const WORDMARK_TEXT = "Kin";
 const WORDMARK_GAP = 2;
-const WORDMARK_TOP = "█▀█  ▀";
-const WORDMARK_BOTTOM = "█▀▀  █";
-const LOGO_WIDTH = TILE_WIDTH * 2 + WORDMARK_GAP + WORDMARK_TOP.length;
+const TAGLINE = "Your personal intelligence. Remembers. Learns. Helps.";
+const CONTENT_WIDTH = TAGLINE.length; // widest line — holds centering stable
 const SQUARE_REVEAL_TICKS = 8;
 const COLOR_CYCLE_START = 24;
 const COLOR_CYCLE_RATE = 4;
 const WORDMARK_START = 32;
 const TAGLINE_START = 50;
-const PROMPT_START = 88;
-const INTRO_TOTAL = 80;
+const INTRO_TOTAL = TAGLINE_START + TAGLINE.length;
+const PROMPT_START = INTRO_TOTAL;
 const TICK_MS = 70;
 
-function truecolorBg(hex: string, text: string): string {
+function truecolorFg(hex: string, text: string): string {
 	const cleaned = hex.replace("#", "");
 	const r = parseInt(cleaned.slice(0, 2), 16);
 	const g = parseInt(cleaned.slice(2, 4), 16);
 	const b = parseInt(cleaned.slice(4, 6), 16);
-	return `\x1b[48;2;${r};${g};${b}m${text}\x1b[49m`;
+	return `\x1b[38;2;${r};${g};${b}m${text}\x1b[39m`;
+}
+
+function halfBlock(topHex: string, bottomHex: string): string {
+	const tc = topHex.replace("#", "");
+	const bc = bottomHex.replace("#", "");
+	const tr = parseInt(tc.slice(0, 2), 16),
+		tg = parseInt(tc.slice(2, 4), 16),
+		tb = parseInt(tc.slice(4, 6), 16);
+	const br = parseInt(bc.slice(0, 2), 16),
+		bg = parseInt(bc.slice(2, 4), 16),
+		bb = parseInt(bc.slice(4, 6), 16);
+	return `\x1b[38;2;${tr};${tg};${tb}m\x1b[48;2;${br};${bg};${bb}m▀\x1b[39m\x1b[49m`;
 }
 
 function bold(text: string): string {
@@ -29,14 +40,6 @@ function bold(text: string): string {
 
 function dim(text: string): string {
 	return `\x1b[2m${text}\x1b[22m`;
-}
-
-function padToWidth(text: string, width: number): string {
-	const currentWidth = visibleWidth(text);
-	if (currentWidth >= width) {
-		return text;
-	}
-	return text + " ".repeat(width - currentWidth);
 }
 
 function centeredBlock(contentLines: string[], width: number, minBlockWidth: number): string[] {
@@ -48,15 +51,9 @@ function centeredBlock(contentLines: string[], width: number, minBlockWidth: num
 	});
 }
 
-function renderTileRow(leftVisible: boolean, rightVisible: boolean, leftColor: string, rightColor: string): string {
-	const left = leftVisible ? truecolorBg(leftColor, " ".repeat(TILE_WIDTH)) : " ".repeat(TILE_WIDTH);
-	const right = rightVisible ? truecolorBg(rightColor, " ".repeat(TILE_WIDTH)) : " ".repeat(TILE_WIDTH);
-	return left + right;
-}
-
-function renderScaledWordmarkLine(text: string, progress: number): string {
-	const visibleText = text.slice(0, Math.max(0, Math.min(progress, text.length)));
-	return bold(padToWidth(visibleText, text.length));
+function centeredLine(text: string, width: number): string {
+	const outerPad = Math.max(0, Math.floor((width - visibleWidth(text)) / 2));
+	return " ".repeat(outerPad) + text;
 }
 
 function renderLogo(tick: number, colorOffset: number): string[] {
@@ -66,44 +63,60 @@ function renderLogo(tick: number, colorOffset: number): string[] {
 		(_, index) => BRAND_COLORS[(cycling ? index + colorOffset : index) % BRAND_COLORS.length]!,
 	);
 
-	let wordmarkProgress = 0;
+	// Build the two half-block chars that form the 2×2 color tile
+	const leftBlock =
+		squaresVisible >= 2
+			? halfBlock(squaresVisible >= 1 ? colors[0]! : "#00000000", squaresVisible >= 3 ? colors[2]! : "#00000000")
+			: squaresVisible >= 1
+				? truecolorFg(colors[0]!, "▀")
+				: " ";
+	const rightBlock =
+		squaresVisible >= 4
+			? halfBlock(colors[1]!, colors[3]!)
+			: squaresVisible >= 2
+				? truecolorFg(colors[1]!, "▀")
+				: " ";
+
+	let wordmark = "";
 	if (tick >= WORDMARK_START) {
-		wordmarkProgress = Math.min(Math.floor((tick - WORDMARK_START) / 2) + 1, WORDMARK_TOP.length);
+		const progress = Math.min(Math.floor((tick - WORDMARK_START) / 2) + 1, WORDMARK_TEXT.length);
+		wordmark = bold(truecolorFg("#ffffff", WORDMARK_TEXT.slice(0, progress)));
 	}
 
-	const topSquares = renderTileRow(squaresVisible >= 1, squaresVisible >= 2, colors[0]!, colors[1]!);
-	const bottomSquares = renderTileRow(squaresVisible >= 3, squaresVisible >= 4, colors[2]!, colors[3]!);
-	const topWordmark = renderScaledWordmarkLine(WORDMARK_TOP, wordmarkProgress);
-	const bottomWordmark = renderScaledWordmarkLine(WORDMARK_BOTTOM, wordmarkProgress);
 	const gap = " ".repeat(WORDMARK_GAP);
-
-	return [`${topSquares}${gap}${topWordmark}`, `${bottomSquares}${gap}${bottomWordmark}`];
+	return [`${leftBlock}${rightBlock}${gap}${wordmark}`];
 }
 
 function renderSplashFrame(width: number, height: number, tick: number, colorOffset: number): string {
 	const lines: string[] = [];
 	const contentLines: string[] = renderLogo(tick, colorOffset);
+	const showPrompt = tick >= PROMPT_START;
 
+	// Always reserve tagline rows so block height and width stay stable throughout
+	contentLines.push("");
 	if (tick >= TAGLINE_START) {
-		const tagline = "Your personal agent for work.";
-		const tagProgress = Math.min(Math.floor(tick - TAGLINE_START) + 1, tagline.length);
-		contentLines.push("");
-		contentLines.push(dim(tagline.slice(0, tagProgress)));
+		const tagProgress = Math.min(Math.floor(tick - TAGLINE_START) + 1, TAGLINE.length);
+		contentLines.push(dim(TAGLINE.slice(0, tagProgress)));
+	} else {
+		contentLines.push(""); // placeholder — keeps vertical position locked
 	}
 
-	if (tick >= PROMPT_START) {
-		const promptText = tick % 14 < 7 ? bold("Press Enter to get started") : "Press Enter to get started";
-		contentLines.push("");
-		contentLines.push(promptText);
-	}
-
-	const topPad = Math.max(0, Math.floor((height - contentLines.length) / 2));
+	const bodyHeight = showPrompt ? Math.max(0, height - 2) : height;
+	const topPad = Math.max(0, Math.floor((bodyHeight - contentLines.length) / 2));
 	for (let i = 0; i < topPad; i++) {
 		lines.push("");
 	}
-	lines.push(...centeredBlock(contentLines, width, LOGO_WIDTH));
-	while (lines.length < height) {
+	lines.push(...centeredBlock(contentLines, width, CONTENT_WIDTH));
+	while (lines.length < bodyHeight) {
 		lines.push("");
+	}
+
+	if (showPrompt) {
+		const promptText = tick % 14 < 7 ? bold("Press enter to continue") : "Press enter to continue";
+		while (lines.length < height - 1) {
+			lines.push("");
+		}
+		lines.push(centeredLine(promptText, width));
 	}
 
 	return lines.join("\n");

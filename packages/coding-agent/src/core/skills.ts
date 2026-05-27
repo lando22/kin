@@ -373,7 +373,7 @@ function escapeXml(str: string): string {
 export interface LoadSkillsOptions {
 	/** Working directory for resolving explicit relative skill paths. */
 	cwd: string;
-	/** Agent config directory; its parent is the personal Pi directory. */
+	/** Agent config directory; its parent is the personal Kin directory. */
 	agentDir: string;
 	/** Explicit skill paths (files or directories) */
 	skillPaths: string[];

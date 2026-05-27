@@ -5,17 +5,17 @@
  * change agent behavior based on extension state.
  *
  * Usage:
- * 1. Copy this file to ~/.pi/agent/extensions/ or your project's .pi/extensions/
- * 2. Use /pirate to toggle pirate mode
+ * 1. Copy this file to ~/.kin/agent/extensions/ or your project's .kin/extensions/
+ * 2. Use /kinrate to toggle pirate mode
  * 3. When enabled, the agent will respond like a pirate
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
 
 export default function pirateExtension(pi: ExtensionAPI) {
 	let pirateMode = false;
 
-	// Register /pirate command to toggle pirate mode
+	// Register /kinrate command to toggle pirate mode
 	pi.registerCommand("pirate", {
 		description: "Toggle pirate mode (agent speaks like a pirate)",
 		handler: async (_args, ctx) => {

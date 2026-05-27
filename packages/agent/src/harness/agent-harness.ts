@@ -4,7 +4,7 @@ import {
 	type Model,
 	streamSimple,
 	type UserMessage,
-} from "@earendil-works/pi-ai";
+} from "@earendil-works/kin-ai";
 import { runAgentLoop } from "../agent-loop.ts";
 import type {
 	AgentContext,
@@ -146,7 +146,7 @@ Use memory quietly and naturally. Do not constantly announce that you remembered
 
 When you learn something durable and useful about the user, their preferences, collaborators, or projects, consider whether it belongs in Pi memory. Do not save trivial, temporary, sensitive, or uncertain information without asking.
 
-Prefer simple Markdown files under ~/.pi over databases, schemas, or complex protocols unless the user asks otherwise.`;
+Prefer simple Markdown files under ~/.kin over databases, schemas, or complex protocols unless the user asks otherwise.`;
 
 function normalizeHarnessError(error: unknown, fallbackCode: AgentHarnessError["code"]): AgentHarnessError {
 	if (error instanceof AgentHarnessError) return error;

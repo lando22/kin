@@ -7,8 +7,8 @@ import {
 	expandTildePath,
 	getAgentDir,
 	getCustomThemesDir,
+	getKinDir,
 	getModelsPath,
-	getPiDir,
 	getPromptsDir,
 	getSessionsDir,
 	getSettingsPath,
@@ -84,7 +84,7 @@ function addIfExists(paths: StagedPath[], source: string, target: string): void 
 
 function collectStagedPaths(cwd: string): StagedPath[] {
 	const agentDir = getAgentDir();
-	const piDir = getPiDir(agentDir);
+	const piDir = getKinDir(agentDir);
 	const paths: StagedPath[] = [];
 
 	for (const entry of PERSONAL_ENTRIES) {
@@ -162,7 +162,7 @@ export function exportPiContext(outputPath?: string, cwd = process.cwd()): Conte
 	const archivePath = resolveOutputPath(outputPath, cwd);
 	const stageDir = mkdtempSync(join(tmpdir(), `${APP_NAME}-context-export-`));
 	try {
-		const stagePiDir = join(stageDir, ".pi");
+		const stagePiDir = join(stageDir, ".kin");
 		mkdirSync(stagePiDir, { recursive: true });
 		const paths = collectStagedPaths(cwd);
 		copyIntoStage(stagePiDir, paths);
@@ -179,7 +179,7 @@ export function exportPiContext(outputPath?: string, cwd = process.cwd()): Conte
 		};
 		writeFileSync(join(stageDir, "pi-context-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
 		mkdirSync(dirname(archivePath), { recursive: true });
-		runTar(["-czf", archivePath, ".pi", "pi-context-manifest.json"], stageDir);
+		runTar(["-czf", archivePath, ".kin", "pi-context-manifest.json"], stageDir);
 		return { path: archivePath, ...stats };
 	} finally {
 		rmSync(stageDir, { recursive: true, force: true });
@@ -206,7 +206,7 @@ function findArchiveCandidates(dir: string): string[] {
 		});
 }
 
-export function findLatestPiContextArchive(cwd = process.cwd()): string | undefined {
+export function findLatestKinContextArchive(cwd = process.cwd()): string | undefined {
 	const candidates = [
 		...findArchiveCandidates(cwd),
 		...findArchiveCandidates(join(homedir(), "Downloads")),
@@ -217,7 +217,7 @@ export function findLatestPiContextArchive(cwd = process.cwd()): string | undefi
 
 function resolveInputPath(inputPath: string | undefined, cwd: string): string {
 	if (!inputPath) {
-		const latest = findLatestPiContextArchive(cwd);
+		const latest = findLatestKinContextArchive(cwd);
 		if (!latest) {
 			throw new Error(`No ${APP_NAME} context archive found in the current directory, ~/Downloads, or ~.`);
 		}
@@ -242,12 +242,12 @@ export function importPiContext(inputPath?: string, cwd = process.cwd()): Contex
 	const stageDir = mkdtempSync(join(tmpdir(), `${APP_NAME}-context-import-`));
 	try {
 		runTar(["-xzf", archivePath, "-C", stageDir], cwd);
-		const stagePiDir = join(stageDir, ".pi");
+		const stagePiDir = join(stageDir, ".kin");
 		if (!existsSync(stagePiDir)) {
-			throw new Error("Archive does not contain a .pi context directory.");
+			throw new Error("Archive does not contain a .kin context directory.");
 		}
 		const stats = countFilesAndBytes(stagePiDir);
-		const piDir = getPiDir(getAgentDir());
+		const piDir = getKinDir(getAgentDir());
 		mkdirSync(piDir, { recursive: true });
 		cpSync(stagePiDir, piDir, { recursive: true, force: true });
 		return { path: archivePath, ...stats };

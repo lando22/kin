@@ -16,11 +16,11 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentToolResult } from "@earendil-works/pi-agent-core";
-import type { Message } from "@earendil-works/pi-ai";
-import { StringEnum } from "@earendil-works/pi-ai";
-import { type ExtensionAPI, getMarkdownTheme, withFileMutationQueue } from "@earendil-works/pi-coding-agent";
-import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
+import type { AgentToolResult } from "@earendil-works/kin-agent-core";
+import type { Message } from "@earendil-works/kin-ai";
+import { StringEnum } from "@earendil-works/kin-ai";
+import { type ExtensionAPI, getMarkdownTheme, withFileMutationQueue } from "@earendil-works/kin-coding-agent";
+import { Container, Markdown, Spacer, Text } from "@earendil-works/kin-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.js";
 
@@ -240,7 +240,7 @@ async function writePromptToTempFile(agentName: string, prompt: string): Promise
 	return { dir: tmpDir, filePath };
 }
 
-function getPiInvocation(args: string[]): { command: string; args: string[] } {
+function getKinInvocation(args: string[]): { command: string; args: string[] } {
 	const currentScript = process.argv[1];
 	const isBunVirtualScript = currentScript?.startsWith("/$bunfs/root/");
 	if (currentScript && !isBunVirtualScript && fs.existsSync(currentScript)) {
@@ -325,7 +325,7 @@ async function runSingleAgent(
 		let wasAborted = false;
 
 		const exitCode = await new Promise<number>((resolve) => {
-			const invocation = getPiInvocation(args);
+			const invocation = getKinInvocation(args);
 			const proc = spawn(invocation.command, invocation.args, {
 				cwd: cwd ?? defaultCwd,
 				shell: false,
@@ -458,8 +458,8 @@ export default function (pi: ExtensionAPI) {
 		description: [
 			"Delegate tasks to specialized subagents with isolated context.",
 			"Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder).",
-			'Default agent scope is "user" (from ~/.pi/agent/agents).',
-			'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
+			'Default agent scope is "user" (from ~/.kin/agent/agents).',
+			'To enable project-local agents in .kin/agents, set agentScope: "both" (or "project").',
 		].join(" "),
 		parameters: SubagentParams,
 

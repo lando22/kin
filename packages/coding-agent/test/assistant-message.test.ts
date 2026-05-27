@@ -1,4 +1,4 @@
-import type { AssistantMessage } from "@earendil-works/pi-ai";
+import type { AssistantMessage } from "@earendil-works/kin-ai";
 import { describe, expect, test, vi } from "vitest";
 import { AssistantMessageComponent } from "../src/modes/interactive/components/assistant-message.js";
 import { initTheme } from "../src/modes/interactive/theme/theme.js";

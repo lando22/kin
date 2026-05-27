@@ -1,5 +1,5 @@
 /**
- * Public package entry point for @earendil-works/pi-coding-agent.
+ * Public package entry point for @earendil-works/kin-coding-agent.
  *
  * This barrel intentionally exposes the broad API used by external SDK users,
  * extensions, custom tools, and tests. Internal runtime code should prefer

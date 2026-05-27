@@ -2,7 +2,7 @@
  * CLI argument parsing and help display
  */
 
-import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
+import type { ThinkingLevel } from "@earendil-works/kin-agent-core";
 import chalk from "chalk";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, ENV_SESSION_DIR } from "../config.ts";
 import type { ExtensionFlag } from "../core/extensions/types.ts";
@@ -208,11 +208,11 @@ ${chalk.bold("Commands:")}
   ${APP_NAME} install <source> [-l]     Install extension source and add to settings
   ${APP_NAME} remove <source> [-l]      Remove extension source from settings
   ${APP_NAME} uninstall <source> [-l]   Alias for remove
-  ${APP_NAME} update [source|self|pi]   Update pi and installed extensions
+  ${APP_NAME} update [source|self|kin]  Update kin and installed extensions
   ${APP_NAME} list                      List installed extensions from settings
   ${APP_NAME} config                    Open TUI to enable/disable package resources
-  ${APP_NAME} export [output.tar.gz]    Export Pi context for another computer
-  ${APP_NAME} import [archive.tar.gz]   Import Pi context from an archive
+  ${APP_NAME} export [output.tar.gz]    Export Kin context for another computer
+  ${APP_NAME} import [archive.tar.gz]   Import Kin context from an archive
   ${APP_NAME} <command> --help          Show help for a command
 
 ${chalk.bold("Options:")}
@@ -248,7 +248,7 @@ ${chalk.bold("Options:")}
   --export <file>                Export session file to HTML and exit
   --list-models [search]         List available models (with optional fuzzy search)
   --verbose                      Force verbose startup (overrides quietStartup setting)
-  --offline                      Disable startup network operations (same as PI_OFFLINE=1)
+  --offline                      Disable startup network operations (same as KIN_OFFLINE=1)
   --help, -h                     Show this help
   --version, -v                  Show version number
 
@@ -339,10 +339,10 @@ ${chalk.bold("Environment Variables:")}
   AWS_REGION                       - AWS region for Amazon Bedrock (e.g., us-east-1)
   ${ENV_AGENT_DIR.padEnd(32)} - Config directory (default: ~/${CONFIG_DIR_NAME}/agent)
   ${ENV_SESSION_DIR.padEnd(32)} - Session storage directory (overridden by --session-dir)
-  PI_PACKAGE_DIR                   - Override package directory (for Nix/Guix store paths)
-  PI_OFFLINE                       - Disable startup network operations when set to 1/true/yes
-  PI_TELEMETRY                     - Override install telemetry when set to 1/true/yes or 0/false/no
-  PI_SHARE_VIEWER_URL              - Base URL for /share command (default: https://pi.dev/session/)
+  KIN_PACKAGE_DIR                   - Override package directory (for Nix/Guix store paths)
+  KIN_OFFLINE                       - Disable startup network operations when set to 1/true/yes
+  KIN_TELEMETRY                     - Override install telemetry when set to 1/true/yes or 0/false/no
+  KIN_SHARE_VIEWER_URL              - Base URL for /share command (default: https://kin.dev/session/)
 
 ${chalk.bold("Built-in Tool Names:")}
   read   - Read file contents

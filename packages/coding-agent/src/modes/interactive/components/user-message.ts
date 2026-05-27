@@ -1,4 +1,4 @@
-import { Container, Markdown, type MarkdownTheme, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { Container, Markdown, type MarkdownTheme, truncateToWidth, visibleWidth } from "@earendil-works/kin-tui";
 import { getMarkdownTheme, theme } from "../theme/theme.ts";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";

@@ -7,7 +7,7 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@earendil-works/pi-agent-core";
+import type { AgentMessage } from "@earendil-works/kin-agent-core";
 import {
 	type AssistantMessage,
 	getProviders,
@@ -16,7 +16,7 @@ import {
 	type Model,
 	type OAuthProviderId,
 	type OAuthSelectPrompt,
-} from "@earendil-works/pi-ai";
+} from "@earendil-works/kin-ai";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -26,7 +26,7 @@ import type {
 	OverlayHandle,
 	OverlayOptions,
 	SlashCommand,
-} from "@earendil-works/pi-tui";
+} from "@earendil-works/kin-tui";
 import {
 	CombinedAutocompleteProvider,
 	type Component,
@@ -46,7 +46,7 @@ import {
 	TUI,
 	truncateToWidth,
 	visibleWidth,
-} from "@earendil-works/pi-tui";
+} from "@earendil-works/kin-tui";
 import { spawn } from "child_process";
 import {
 	APP_NAME,
@@ -73,16 +73,16 @@ import type {
 } from "../../core/extensions/index.ts";
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/footer-data-provider.ts";
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
-import { createCompactionSummaryMessage } from "../../core/messages.ts";
-import { defaultModelPerProvider } from "../../core/model-resolver.ts";
-import { DefaultPackageManager } from "../../core/package-manager.ts";
 import {
-	getPiMemoryDir,
+	getKinMemoryDir,
 	readMemoryContent,
 	readNotesContent,
 	readProjectContent,
-	resetPiMemory,
-} from "../../core/pi-memory.ts";
+	resetKinMemory,
+} from "../../core/kin-memory.ts";
+import { createCompactionSummaryMessage } from "../../core/messages.ts";
+import { defaultModelPerProvider } from "../../core/model-resolver.ts";
+import { DefaultPackageManager } from "../../core/package-manager.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-names.ts";
 import {
 	findSessionsForDate,
@@ -96,7 +96,11 @@ import {
 import type { ResourceDiagnostic } from "../../core/resource-loader.ts";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-cwd.ts";
 import { type SessionContext, SessionManager } from "../../core/session-manager.ts";
-import { BUILTIN_SLASH_COMMANDS, createInitOnboardingPrompt } from "../../core/slash-commands.ts";
+import {
+	BUILTIN_SLASH_COMMANDS,
+	createInitOnboardingPrompt,
+	createReinitOnboardingPrompt,
+} from "../../core/slash-commands.ts";
 import type { SourceInfo } from "../../core/source-info.ts";
 import { isInstallTelemetryEnabled } from "../../core/telemetry.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
@@ -105,11 +109,11 @@ import { getChangelogPath, getNewEntries, parseChangelog } from "../../utils/cha
 import { copyToClipboard } from "../../utils/clipboard.ts";
 import { extensionForImageMimeType, readClipboardImage } from "../../utils/clipboard-image.ts";
 import { parseGitUrl } from "../../utils/git.ts";
+import { getKinUserAgent } from "../../utils/kin-user-agent.ts";
 import { getCwdRelativePath } from "../../utils/paths.ts";
-import { getPiUserAgent } from "../../utils/pi-user-agent.ts";
 import { killTrackedDetachedChildren } from "../../utils/shell.ts";
 import { ensureTool } from "../../utils/tools-manager.ts";
-import { checkForNewPiVersion, type LatestPiRelease } from "../../utils/version-check.ts";
+import { checkForNewKinVersion, type LatestKinRelease } from "../../utils/version-check.ts";
 import { ArminComponent } from "./components/armin.ts";
 import { AssistantMessageComponent } from "./components/assistant-message.ts";
 import { BashExecutionComponent } from "./components/bash-execution.ts";
@@ -164,14 +168,6 @@ function isExpandable(obj: unknown): obj is Expandable {
 	return typeof obj === "object" && obj !== null && "setExpanded" in obj && typeof obj.setExpanded === "function";
 }
 
-function truecolorBackground(hex: string, text: string): string {
-	const cleaned = hex.replace("#", "");
-	const r = parseInt(cleaned.slice(0, 2), 16);
-	const g = parseInt(cleaned.slice(2, 4), 16);
-	const b = parseInt(cleaned.slice(4, 6), 16);
-	return `\x1b[48;2;${r};${g};${b}m${text}\x1b[49m`;
-}
-
 function truecolorForeground(hex: string, text: string): string {
 	const cleaned = hex.replace("#", "");
 	const r = parseInt(cleaned.slice(0, 2), 16);
@@ -180,24 +176,28 @@ function truecolorForeground(hex: string, text: string): string {
 	return `\x1b[38;2;${r};${g};${b}m${text}\x1b[39m`;
 }
 
+function truecolorHalfBlock(topHex: string, bottomHex: string): string {
+	const top = topHex.replace("#", "");
+	const bottom = bottomHex.replace("#", "");
+	const tr = parseInt(top.slice(0, 2), 16);
+	const tg = parseInt(top.slice(2, 4), 16);
+	const tb = parseInt(top.slice(4, 6), 16);
+	const br = parseInt(bottom.slice(0, 2), 16);
+	const bg = parseInt(bottom.slice(2, 4), 16);
+	const bb = parseInt(bottom.slice(4, 6), 16);
+	return `\x1b[38;2;${tr};${tg};${tb}m\x1b[48;2;${br};${bg};${bb}m▀\x1b[39m\x1b[49m`;
+}
+
 function formatBrandMark(): string {
-	const topLeft = truecolorBackground(BRAND_COLORS[0], "  ");
-	const topRight = truecolorBackground(BRAND_COLORS[1], "  ");
-	const bottomLeft = truecolorBackground(BRAND_COLORS[2], "  ");
-	const bottomRight = truecolorBackground(BRAND_COLORS[3], "  ");
-	return `${topLeft}${topRight}\n${bottomLeft}${bottomRight}`;
+	const left = truecolorHalfBlock(BRAND_COLORS[0], BRAND_COLORS[2]);
+	const right = truecolorHalfBlock(BRAND_COLORS[1], BRAND_COLORS[3]);
+	return `${left}${right}`;
 }
 
 function formatStartupBrand(): string {
-	const [markTop, markBottom] = formatBrandMark().split("\n");
-	const wordmarkTop = theme.bold("█▀█  ▀");
-	const wordmarkBottom = theme.bold("█▀▀  █");
-	return [
-		`${markTop}  ${wordmarkTop}`,
-		`${markBottom}  ${wordmarkBottom}`,
-		"",
-		theme.fg("text", "Your personal agent for work."),
-	].join("\n");
+	const mark = formatBrandMark();
+	const wordmark = theme.bold(truecolorForeground("#ffffff", APP_TITLE));
+	return [`${mark}  ${wordmark}`, "", theme.fg("text", "Your personal agent for work.")].join("\n");
 }
 
 function brandPromptBorder(text: string): string {
@@ -759,7 +759,7 @@ export class InteractiveMode {
 			const compactOnboarding = theme.fg("dim", `Press ${keyText("app.tools.expand")} to show full startup help.`);
 			const onboarding = theme.fg(
 				"dim",
-				`Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.`,
+				`Kin can explain its own features and look up its docs. Ask it how to use or extend Kin.`,
 			);
 			this.builtInHeader = new ExpandableText(
 				() => `${brand}\n\n${compactInstructions}\n${compactOnboarding}\n\n${onboarding}`,
@@ -803,11 +803,9 @@ export class InteractiveMode {
 		// Render initial messages AFTER showing loaded resources
 		this.renderInitialMessages();
 
-		// Show first-run onboarding splash if Pi has never been set up
+		// Show first-run onboarding splash if Kin has never been set up
 		if (this.isFirstRun()) {
-			await this.showOnboardingSplash();
-			// Auto-trigger onboarding after splash
-			await this.handleInitCommand();
+			await this.runFirstRunOnboarding();
 		}
 
 		// Set up theme file watcher
@@ -847,7 +845,7 @@ export class InteractiveMode {
 		await this.init();
 
 		// Start version check asynchronously
-		checkForNewPiVersion(this.version).then((newRelease) => {
+		checkForNewKinVersion(this.version).then((newRelease) => {
 			if (newRelease) {
 				this.showNewVersionNotification(newRelease);
 			}
@@ -919,7 +917,7 @@ export class InteractiveMode {
 	}
 
 	private async checkForPackageUpdates(): Promise<string[]> {
-		if (process.env.PI_OFFLINE) {
+		if (process.env.KIN_OFFLINE) {
 			return [];
 		}
 
@@ -977,7 +975,7 @@ export class InteractiveMode {
 		}
 
 		if (extendedKeysFormat === "xterm") {
-			return "tmux extended-keys-format is xterm. Pi works best with csi-u. Add `set -g extended-keys-format csi-u` to ~/.tmux.conf and restart tmux.";
+			return "tmux extended-keys-format is xterm. Kin works best with csi-u. Add `set -g extended-keys-format csi-u` to ~/.tmux.conf and restart tmux.";
 		}
 
 		return undefined;
@@ -1043,7 +1041,7 @@ export class InteractiveMode {
 	}
 
 	private reportInstallTelemetry(version: string): void {
-		if (process.env.PI_OFFLINE) {
+		if (process.env.KIN_OFFLINE) {
 			return;
 		}
 
@@ -1051,9 +1049,9 @@ export class InteractiveMode {
 			return;
 		}
 
-		void fetch(`https://pi.dev/api/report-install?version=${encodeURIComponent(version)}`, {
+		void fetch(`https://kin.dev/api/report-install?version=${encodeURIComponent(version)}`, {
 			headers: {
-				"User-Agent": getPiUserAgent(version),
+				"User-Agent": getKinUserAgent(version),
 			},
 			signal: AbortSignal.timeout(5000),
 		})
@@ -2602,7 +2600,7 @@ export class InteractiveMode {
 			// Write to temp file
 			const tmpDir = os.tmpdir();
 			const ext = extensionForImageMimeType(image.mimeType) ?? "png";
-			const fileName = `pi-clipboard-${crypto.randomUUID()}.${ext}`;
+			const fileName = `kin-clipboard-${crypto.randomUUID()}.${ext}`;
 			const filePath = path.join(tmpDir, fileName);
 			fs.writeFileSync(filePath, Buffer.from(image.bytes));
 
@@ -2626,7 +2624,13 @@ export class InteractiveMode {
 				await this.handleInitCommand();
 				return;
 			}
-			if (text === "/demo" || text === "/pi") {
+			if (text === "/reinit") {
+				this.editor.addToHistory?.(text);
+				this.editor.setText("");
+				await this.runReinitOnboardingFlow();
+				return;
+			}
+			if (text === "/demo" || text === "/kin") {
 				this.editor.setText("");
 				await this.handleDemoCommand();
 				return;
@@ -2644,6 +2648,12 @@ export class InteractiveMode {
 			}
 			if (text === "/session") {
 				this.handleSessionCommand();
+				this.editor.setText("");
+				return;
+			}
+			if (text === "/model" || text.startsWith("/model ")) {
+				const initialSearchInput = text.startsWith("/model ") ? text.slice("/model ".length).trim() : undefined;
+				this.showModelSelector(initialSearchInput || undefined);
 				this.editor.setText("");
 				return;
 			}
@@ -3410,7 +3420,7 @@ export class InteractiveMode {
 		try {
 			this.ui.stop();
 		} catch {}
-		console.error("pi exiting due to uncaughtException:");
+		console.error(`${APP_NAME} exiting due to uncaughtException:`);
 		console.error(error);
 		process.exit(1);
 	}
@@ -3631,7 +3641,7 @@ export class InteractiveMode {
 		}
 
 		const currentText = this.editor.getExpandedText?.() ?? this.editor.getText();
-		const tmpFile = path.join(os.tmpdir(), `pi-editor-${Date.now()}.pi.md`);
+		const tmpFile = path.join(os.tmpdir(), `${APP_NAME}-editor-${Date.now()}.${APP_NAME}.md`);
 
 		try {
 			// Write current content to temp file
@@ -3700,7 +3710,7 @@ export class InteractiveMode {
 		this.ui.requestRender();
 	}
 
-	showNewVersionNotification(release: LatestPiRelease): void {
+	showNewVersionNotification(release: LatestKinRelease): void {
 		const action = theme.fg("accent", `${APP_NAME} update`);
 		const updateInstruction = theme.fg("muted", `New version ${release.version} is available. Run `) + action;
 		const changelogLink = getCapabilities().hyperlinks
@@ -3947,9 +3957,138 @@ export class InteractiveMode {
 		this.ui.requestRender();
 	}
 
-	/** Returns true if Pi has never been set up on this machine (no ~/.pi/ directory). */
+	/** Returns true if Kin has never been set up on this machine (no ~/.kin/ directory). */
 	private isFirstRun(): boolean {
-		return !fs.existsSync(getPiMemoryDir());
+		return !fs.existsSync(getKinMemoryDir());
+	}
+
+	/**
+	 * Full first-run flow: splash -> auth -> choice -> onboarding chat or warm welcome.
+	 */
+	private async runFirstRunOnboarding(): Promise<void> {
+		await this.showOnboardingSplash();
+		if (!(await this.ensureOnboardingAuth())) return;
+		await this.runOnboardingChoiceFlow({
+			startStatus: "Starting onboarding chat...",
+			skipHint: "If you ever change your mind about onboarding, type /init.",
+			onStart: () => this.handleInitCommand(),
+		});
+	}
+
+	/**
+	 * Full onboarding preview for existing users. Keeps all memory intact.
+	 */
+	private async runReinitOnboardingFlow(): Promise<void> {
+		await this.showOnboardingSplash();
+		if (!(await this.ensureOnboardingAuth())) return;
+		await this.runOnboardingChoiceFlow({
+			startStatus: "Starting re-onboarding chat...",
+			skipHint: "If you ever want to refresh what I know, type /reinit.",
+			onStart: () => this.handleReinitCommand(),
+		});
+	}
+
+	private async ensureOnboardingAuth(): Promise<boolean> {
+		let candidates = await this.getModelCandidates();
+		if (candidates.length === 0) {
+			await this.showOnboardingAuthSelector();
+			const maxWait = 60;
+			for (let waited = 0; waited < maxWait; waited++) {
+				await new Promise((r) => setTimeout(r, 1000));
+				candidates = await this.getModelCandidates();
+				if (candidates.length > 0) break;
+			}
+		}
+
+		if (candidates.length === 0) {
+			this.chatContainer.addChild(new Spacer(2));
+			this.chatContainer.addChild(
+				new Text(
+					theme.fg(
+						"accent",
+						"Welcome to Kin! You're all set up to chat - just use /login when you're ready to connect a provider.",
+					),
+					1,
+					0,
+				),
+			);
+			this.ui.requestRender();
+			return false;
+		}
+
+		return true;
+	}
+
+	private async runOnboardingChoiceFlow(options: {
+		startStatus: string;
+		skipHint: string;
+		onStart: () => Promise<void>;
+	}): Promise<void> {
+		const startLabel = "Start onboarding chat (~2 min)";
+		const skipLabel = "Skip - start chatting";
+		const wantOnboarding = await new Promise<boolean>((resolve) => {
+			const lines = [
+				theme.fg("accent", theme.bold("Want to get to know each other?")),
+				"",
+				theme.fg(
+					"text",
+					"I learn who you are, how you work, and what you're building - so I can actually be useful over time.",
+				),
+				theme.fg("text", "This isn't a form. It's a conversation. Like meeting a coworker for the first time."),
+				theme.fg("dim", "It takes about 2 minutes, and it pays off immediately."),
+			];
+
+			this.chatContainer.addChild(new Spacer(2));
+			for (const line of lines) {
+				this.chatContainer.addChild(new Text(line, 1, 0));
+			}
+			this.ui.requestRender();
+
+			this.showSelector((done) => {
+				const selector = new ExtensionSelectorComponent(
+					"What would you like to do?",
+					[startLabel, skipLabel],
+					(option) => {
+						done();
+						resolve(option === startLabel);
+					},
+					() => {
+						done();
+						resolve(false);
+					},
+				);
+				return { component: selector, focus: selector };
+			});
+		});
+
+		if (wantOnboarding) {
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(theme.fg("dim", options.startStatus), 1, 0));
+			this.ui.requestRender();
+			await options.onStart();
+		} else {
+			const cwd = this.sessionManager.getCwd();
+			const skipLines = [
+				theme.fg("accent", theme.bold("Hey, I'm Kin - your personal collaborator.")),
+				"",
+				theme.fg(
+					"text",
+					"I remember who you are, what you're working on, and how you like to work - and I get sharper every time we talk.",
+				),
+				theme.fg(
+					"text",
+					"I can read files, run commands, edit code, and help with whatever's relevant to you. Memory is what makes me actually useful.",
+				),
+				"",
+				theme.fg("text", `Right now I'm in ${cwd}. Ask me anything - or just tell me what you're working on.`),
+				theme.fg("dim", options.skipHint),
+			];
+			this.chatContainer.addChild(new Spacer(1));
+			for (const line of skipLines) {
+				this.chatContainer.addChild(new Text(line, 1, 0));
+			}
+			this.ui.requestRender();
+		}
 	}
 
 	private async showOnboardingSplash(): Promise<void> {
@@ -3970,14 +4109,56 @@ export class InteractiveMode {
 	}
 
 	private async handleDemoCommand(): Promise<void> {
-		await this.showOnboardingSplash();
-		// No side effects; just dismiss the overlay and return to chat.
+		await this.runReinitOnboardingFlow();
+	}
+
+	private async showOnboardingAuthSelector(): Promise<void> {
+		const apiKeyLabel = "Log in with an API key";
+		const providerLabel = "Use a supported provider (Codex)";
+		return new Promise((resolve) => {
+			this.showSelector((done) => {
+				const selector = new ExtensionSelectorComponent(
+					"How would you like to get started?",
+					[apiKeyLabel, providerLabel],
+					async (option) => {
+						done();
+						if (option === apiKeyLabel) {
+							this.showLoginProviderSelector("api_key");
+						} else {
+							await this.showLoginDialog("openai-codex", "ChatGPT Plus/Pro (Codex Subscription)");
+						}
+						resolve();
+					},
+					() => {
+						done();
+						resolve();
+					},
+				);
+				return { component: selector, focus: selector };
+			});
+		});
+	}
+
+	private async handleReinitCommand(): Promise<void> {
+		this.flushPendingBashComponents();
+		try {
+			await this.session.sendCustomMessage(
+				{
+					customType: "onboarding_reinit",
+					content: createReinitOnboardingPrompt(this.sessionManager.getCwd()),
+					display: false,
+				},
+				{ triggerTurn: true },
+			);
+		} catch (error) {
+			this.showError(error instanceof Error ? error.message : String(error));
+		}
 	}
 
 	private async handleInitCommand(): Promise<void> {
 		this.flushPendingBashComponents();
 		try {
-			resetPiMemory();
+			resetKinMemory();
 			await this.session.sendCustomMessage(
 				{
 					customType: "onboarding_init",
@@ -4036,7 +4217,7 @@ export class InteractiveMode {
 			// Write memory update if present
 			if (memoryUpdate !== null) {
 				writeMemoryContent(memoryUpdate);
-				this.showWarning("Memory updated in ~/.pi/MEMORY.md!");
+				this.showWarning("Memory updated in ~/.kin/MEMORY.md!");
 			}
 
 			// Write named project updates

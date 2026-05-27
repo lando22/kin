@@ -12,10 +12,10 @@
 import { closeSync, existsSync, openSync, readdirSync, readSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
-import type { Model } from "@earendil-works/pi-ai";
+import type { Model } from "@earendil-works/kin-ai";
 import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
-import { getNotesPath } from "./pi-memory.ts";
+import { getNotesPath } from "./kin-memory.ts";
 import { formatLocalDate, getAgendaPath, getReflectionPath } from "./reflect.ts";
 import { SessionManager } from "./session-manager.ts";
 
@@ -99,7 +99,7 @@ function scanSessionFile(filePath: string): SessionSummary | null {
 }
 
 /**
- * Generate a lightweight session index Pi can use to triage its history.
+ * Generate a lightweight session index Kin can use to triage its history.
  * Pi reads this index first, then selectively reads full session files.
  */
 export function generateSessionIndex(sessionDir: string, date: Date = new Date()): string {
@@ -201,8 +201,8 @@ export function generateSessionIndex(sessionDir: string, date: Date = new Date()
 
 function buildReflectTaskMessage(sessionIndex: string, reflectionPath: string, agendaPath: string, date: Date): string {
 	const dateStr = formatLocalDate(date);
-	const memoryPath = join(homedir(), ".pi", "MEMORY.md");
-	const prefsPath = join(homedir(), ".pi", "PREFERENCES.md");
+	const memoryPath = join(homedir(), ".kin", "MEMORY.md");
+	const prefsPath = join(homedir(), ".kin", "PREFERENCES.md");
 
 	const yesterdayDate = new Date(date);
 	yesterdayDate.setDate(yesterdayDate.getDate() - 1);
@@ -289,7 +289,7 @@ export async function runReflectAgent(options: RunReflectAgentOptions): Promise<
 		services,
 		sessionManager: SessionManager.inMemory(services.cwd),
 		model,
-		// Read + write + bash so Pi can explore and write its reflection
+		// Read + write + bash so Kin can explore and write its reflection
 		tools: ["bash", "read", "write", "grep", "find", "ls"],
 	});
 

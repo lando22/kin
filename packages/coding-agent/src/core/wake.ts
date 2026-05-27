@@ -3,7 +3,7 @@
  *
  * Reads the latest reflection (and optionally deeper history), feeds them through
  * the LLM with memory/project context, and writes a structured wake message to
- * ~/.pi/Wakes/<date>/WAKE.md — or returns <NONE> if there's nothing worth saying.
+ * ~/.kin/Wakes/<date>/WAKE.md — or returns <NONE> if there's nothing worth saying.
  *
  * Used by the `pi wake` CLI command.
  */
@@ -11,8 +11,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { Message, Model } from "@earendil-works/pi-ai";
-import { completeSimple } from "@earendil-works/pi-ai";
+import type { Message, Model } from "@earendil-works/kin-ai";
+import { completeSimple } from "@earendil-works/kin-ai";
 import { formatLocalDate } from "./reflect.ts";
 
 // =============================================================================
@@ -21,22 +21,22 @@ import { formatLocalDate } from "./reflect.ts";
 
 /** Get the path for a reflection directory for a given date. */
 export function getReflectionDir(date: Date = new Date()): string {
-	return join(homedir(), ".pi", "Reflections", formatLocalDate(date));
+	return join(homedir(), ".kin", "Reflections", formatLocalDate(date));
 }
 
 /** Get the path for a wake file for a given date. */
 export function getWakePath(date: Date = new Date(), homeDir = homedir()): string {
-	return join(homeDir, ".pi", "Wakes", formatLocalDate(date), "WAKE.md");
+	return join(homeDir, ".kin", "Wakes", formatLocalDate(date), "WAKE.md");
 }
 
 /** Get the path for the seen marker for a wake message. */
 export function getWakeSeenPath(date: Date = new Date(), homeDir = homedir()): string {
-	return join(homeDir, ".pi", "Wakes", formatLocalDate(date), "WAKE.seen");
+	return join(homeDir, ".kin", "Wakes", formatLocalDate(date), "WAKE.seen");
 }
 
 /** Find the most recent reflection file across all dates. */
 export function findLatestReflection(): { date: Date; content: string; path: string } | null {
-	const reflectionsDir = join(homedir(), ".pi", "Reflections");
+	const reflectionsDir = join(homedir(), ".kin", "Reflections");
 	if (!existsSync(reflectionsDir)) return null;
 
 	const entries = readdirSync(reflectionsDir, { withFileTypes: true })

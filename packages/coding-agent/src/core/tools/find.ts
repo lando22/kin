@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline";
-import type { AgentTool } from "@earendil-works/pi-agent-core";
-import { Text } from "@earendil-works/pi-tui";
+import type { AgentTool } from "@earendil-works/kin-agent-core";
+import { Text } from "@earendil-works/kin-tui";
 import { spawn } from "child_process";
 import { existsSync } from "fs";
 import path from "path";

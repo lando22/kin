@@ -1,10 +1,10 @@
 import { VERSION_CHECK_DISABLED } from "../config.ts";
-import { getPiUserAgent } from "./pi-user-agent.ts";
+import { getKinUserAgent } from "./kin-user-agent.ts";
 
-const LATEST_VERSION_URL = "https://pi.dev/api/latest-version";
+const LATEST_VERSION_URL = "https://kin.dev/api/latest-version";
 const DEFAULT_VERSION_CHECK_TIMEOUT_MS = 10000;
 
-export interface LatestPiRelease {
+export interface LatestKinRelease {
 	version: string;
 	packageName?: string;
 	note?: string;
@@ -54,13 +54,13 @@ export function isNewerPackageVersion(candidateVersion: string, currentVersion: 
 	return candidateVersion.trim() !== currentVersion.trim();
 }
 
-export async function getLatestPiRelease(
+export async function getLatestKinRelease(
 	currentVersion: string,
 	options: { timeoutMs?: number } = {},
-): Promise<LatestPiRelease | undefined> {
+): Promise<LatestKinRelease | undefined> {
 	if (
 		process.env.PI_SKIP_VERSION_CHECK ||
-		process.env.PI_OFFLINE ||
+		process.env.KIN_OFFLINE ||
 		(VERSION_CHECK_DISABLED && !process.env.PI_FORCE_VERSION_CHECK)
 	) {
 		return undefined;
@@ -68,7 +68,7 @@ export async function getLatestPiRelease(
 
 	const response = await fetch(LATEST_VERSION_URL, {
 		headers: {
-			"User-Agent": getPiUserAgent(currentVersion),
+			"User-Agent": getKinUserAgent(currentVersion),
 			accept: "application/json",
 		},
 		signal: AbortSignal.timeout(options.timeoutMs ?? DEFAULT_VERSION_CHECK_TIMEOUT_MS),
@@ -93,16 +93,16 @@ export async function getLatestPiRelease(
 	};
 }
 
-export async function getLatestPiVersion(
+export async function getLatestKinVersion(
 	currentVersion: string,
 	options: { timeoutMs?: number } = {},
 ): Promise<string | undefined> {
-	return (await getLatestPiRelease(currentVersion, options))?.version;
+	return (await getLatestKinRelease(currentVersion, options))?.version;
 }
 
-export async function checkForNewPiVersion(currentVersion: string): Promise<LatestPiRelease | undefined> {
+export async function checkForNewKinVersion(currentVersion: string): Promise<LatestKinRelease | undefined> {
 	try {
-		const latestRelease = await getLatestPiRelease(currentVersion);
+		const latestRelease = await getLatestKinRelease(currentVersion);
 		if (latestRelease && isNewerPackageVersion(latestRelease.version, currentVersion)) {
 			return latestRelease;
 		}

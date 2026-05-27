@@ -1,5 +1,5 @@
-import { type AgentMessage, uuidv7 } from "@earendil-works/pi-agent-core";
-import type { ImageContent, Message, TextContent } from "@earendil-works/pi-ai";
+import { type AgentMessage, uuidv7 } from "@earendil-works/kin-agent-core";
+import type { ImageContent, Message, TextContent } from "@earendil-works/kin-ai";
 import { randomUUID } from "crypto";
 import {
 	appendFileSync,
@@ -425,7 +425,7 @@ export function buildSessionContext(
 
 /**
  * Compute the default session directory.
- * All sessions are stored in a single flat directory: ~/.pi/agent/sessions/
+ * All sessions are stored in a single flat directory: ~/.kin/agent/sessions/
  * The cwd is stored in the session header, not in the directory structure.
  */
 export function getDefaultSessionDir(_cwd: string, agentDir: string = getDefaultAgentDir()): string {
@@ -1307,7 +1307,7 @@ export class SessionManager {
 	/**
 	 * Create a new session.
 	 * @param cwd Working directory (stored in session header)
-	 * @param sessionDir Optional session directory. If omitted, uses default (~/.pi/agent/sessions/<encoded-cwd>/).
+	 * @param sessionDir Optional session directory. If omitted, uses default (~/.kin/agent/sessions/<encoded-cwd>/).
 	 */
 	static create(cwd: string, sessionDir?: string): SessionManager {
 		const dir = sessionDir ?? getDefaultSessionDir(cwd);

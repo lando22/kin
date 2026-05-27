@@ -9,7 +9,7 @@ Onboarding splash built and wired. All checks pass.
 - `packages/coding-agent/src/modes/interactive/interactive-mode.ts` (added isFirstRun check + splash overlay + auto-init)
 
 ## What was built
-**OnboardingSplashComponent** — full-screen branded animation that plays on first run (no `~/.pi/` dir):
+**OnboardingSplashComponent** — full-screen branded animation that plays on first run (no `~/.kin/` dir):
 1. Four colored squares appear one-by-one (8 ticks each)
 2. Colors start cycling through the brand palette
 3. "Pi" wordmark types in character-by-character  
@@ -18,7 +18,7 @@ Onboarding splash built and wired. All checks pass.
 6. On Enter → resolves promise → overlay dismissed → auto-triggers `/init` onboarding
 
 ## Blockers / Questions
-- Need to actually test this visually (launch pi with no ~/.pi/ directory)
+- Need to actually test this visually (launch kin with no ~/.kin/ directory)
 - The animation timing might need tuning after seeing it live
 - Might want to add an API key step between splash and onboarding (currently auto-triggers /init directly)
 

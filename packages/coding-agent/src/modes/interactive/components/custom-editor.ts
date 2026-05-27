@@ -5,7 +5,8 @@ import {
 	type TUI,
 	truncateToWidth,
 	visibleWidth,
-} from "@earendil-works/pi-tui";
+} from "@earendil-works/kin-tui";
+import { APP_NAME } from "../../../config.ts";
 import type { AppKeybinding, KeybindingsManager } from "../../../core/keybindings.ts";
 import { theme } from "../theme/theme.ts";
 
@@ -106,7 +107,7 @@ export class CustomEditor extends Editor {
 		const bottomScrollLabel = extractScrollLabel(baseLines[bottomBorderIndex] ?? "");
 		const contentLines = baseLines.slice(1, bottomBorderIndex);
 		const autocompleteLines = baseLines.slice(bottomBorderIndex + 1);
-		const rightLabel = this.getText().trim().startsWith("!") ? "bash" : "pi";
+		const rightLabel = this.getText().trim().startsWith("!") ? "bash" : APP_NAME;
 		const result: string[] = [buildBorder(width, "╭", "╮", topScrollLabel)];
 		const isEmpty = this.getText().length === 0;
 

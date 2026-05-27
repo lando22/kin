@@ -10,7 +10,7 @@ import { APP_NAME } from "./config.ts";
 import { main } from "./main.ts";
 
 process.title = APP_NAME;
-process.env.PI_CODING_AGENT = "true";
+process.env.KIN_CODING_AGENT = "true";
 process.emitWarning = (() => {}) as typeof process.emitWarning;
 
 // bodyTimeout/headersTimeout default to 300s in undici; long local-LLM stalls

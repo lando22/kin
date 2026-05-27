@@ -1,14 +1,14 @@
 <p align="center">
-  <a href="https://pi.dev">
-    <img alt="pi logo" src="https://pi.dev/logo-auto.svg" width="128">
+  <a href="https://kin.dev">
+    <img alt="pi logo" src="https://kin.dev/logo-auto.svg" width="128">
   </a>
 </p>
 <p align="center">
   <a href="https://discord.com/invite/3cU7Bz4UPx"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
-  <a href="https://www.npmjs.com/package/@earendil-works/pi-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@earendil-works/pi-coding-agent?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/@earendil-works/kin-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@earendil-works/kin-coding-agent?style=flat-square" /></a>
 </p>
 <p align="center">
-  <a href="https://pi.dev">pi.dev</a> domain graciously donated by
+  <a href="https://kin.dev">kin.dev</a> domain graciously donated by
   <br /><br />
   <a href="https://exe.dev"><img src="docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
 </p>
@@ -31,13 +31,13 @@ Public OSS session data helps improve models, prompts, tools, and evaluations us
 
 For the full explanation, see [this post on X](https://x.com/badlogicgames/status/2037811643774652911).
 
-To publish sessions, use [`badlogic/pi-share-hf`](https://github.com/badlogic/pi-share-hf). Read its README.md for setup instructions. All you need is a Hugging Face account, the Hugging Face CLI, and `pi-share-hf`.
+To publish sessions, use [`badlogic/kin-share-hf`](https://github.com/badlogic/kin-share-hf). Read its README.md for setup instructions. All you need is a Hugging Face account, the Hugging Face CLI, and `pi-share-hf`.
 
-You can also watch [this video](https://x.com/badlogicgames/status/2041151967695634619), where I show how I publish my `pi-mono` sessions.
+You can also watch [this video](https://x.com/badlogicgames/status/2041151967695634619), where I show how I publish my `kin-mono` sessions.
 
-I regularly publish my own `pi-mono` work sessions here:
+I regularly publish my own `kin-mono` work sessions here:
 
-- [badlogicgames/pi-mono on Hugging Face](https://huggingface.co/datasets/badlogicgames/pi-mono)
+- [badlogicgames/kin-mono on Hugging Face](https://huggingface.co/datasets/badlogicgames/kin-mono)
 
 ## Table of Contents
 
@@ -68,13 +68,13 @@ I regularly publish my own `pi-mono` work sessions here:
 ## Quick Start
 
 ```bash
-curl -fsSL https://pi.dev/install.sh | sh
+curl -fsSL https://kin.dev/install.sh | sh
 ```
 
 Or with npm:
 
 ```bash
-npm install -g @earendil-works/pi-coding-agent
+npm install -g @earendil-works/kin-coding-agent
 ```
 
 Authenticate with an API key:
@@ -137,7 +137,7 @@ For each built-in provider, pi maintains a list of tool-capable models, updated 
 
 See [docs/providers.md](docs/providers.md) for detailed setup instructions.
 
-**Custom providers & models:** Add providers via `~/.pi/agent/models.json` if they speak a supported API (OpenAI, Anthropic, Google). For custom APIs or OAuth, use extensions. See [docs/models.md](docs/models.md) and [docs/custom-provider.md](docs/custom-provider.md).
+**Custom providers & models:** Add providers via `~/.kin/agent/models.json` if they speak a supported API (OpenAI, Anthropic, Google). For custom APIs or OAuth, use extensions. See [docs/models.md](docs/models.md) and [docs/custom-provider.md](docs/custom-provider.md).
 
 ---
 
@@ -194,7 +194,7 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 
 ### Keyboard Shortcuts
 
-See `/hotkeys` for the full list. Customize via `~/.pi/agent/keybindings.json`. See [docs/keybindings.md](docs/keybindings.md).
+See `/hotkeys` for the full list. Customize via `~/.kin/agent/keybindings.json`. See [docs/keybindings.md](docs/keybindings.md).
 
 **Commonly used:**
 
@@ -231,7 +231,7 @@ Sessions are stored as JSONL files with a tree structure. Each entry has an `id`
 
 ### Management
 
-Sessions auto-save to `~/.pi/agent/sessions/` organized by working directory.
+Sessions auto-save to `~/.kin/agent/sessions/` organized by working directory.
 
 ```bash
 pi -c                  # Continue most recent session
@@ -277,26 +277,26 @@ Use `/settings` to modify common options, or edit JSON files directly:
 
 | Location | Scope |
 |----------|-------|
-| `~/.pi/agent/settings.json` | Global (all projects) |
-| `.pi/settings.json` | Project (overrides global) |
+| `~/.kin/agent/settings.json` | Global (all projects) |
+| `.kin/settings.json` | Project (overrides global) |
 
 See [docs/settings.md](docs/settings.md) for all options.
 
 ### Telemetry and update checks
 
-Pi has two separate startup features:
+Kin has two separate startup features:
 
-- **Update check:** fetches `https://pi.dev/api/latest-version` to check whether a newer Pi version exists. Disable it with `PI_SKIP_VERSION_CHECK=1`. Disabling update checks only turns off this check.
-- **Install/update telemetry:** after first install or a changelog-detected update, sends an anonymous version ping to `https://pi.dev/api/report-install`. Opt out by setting `enableInstallTelemetry` to `false` in `settings.json`, or by setting `PI_TELEMETRY=0`. This does not disable update checks; Pi may still contact `pi.dev` for the latest version unless update checks are disabled or offline mode is enabled.
+- **Update check:** fetches `https://kin.dev/api/latest-version` to check whether a newer Pi version exists. Disable it with `PI_SKIP_VERSION_CHECK=1`. Disabling update checks only turns off this check.
+- **Install/update telemetry:** after first install or a changelog-detected update, sends an anonymous version ping to `https://kin.dev/api/report-install`. Opt out by setting `enableInstallTelemetry` to `false` in `settings.json`, or by setting `KIN_TELEMETRY=0`. This does not disable update checks; Pi may still contact `kin.dev` for the latest version unless update checks are disabled or offline mode is enabled.
 
-Use `--offline` or `PI_OFFLINE=1` to disable all startup network operations described here, including update checks, package update checks, and install/update telemetry.
+Use `--offline` or `KIN_OFFLINE=1` to disable all startup network operations described here, including update checks, package update checks, and install/update telemetry.
 
 ---
 
 ## Context Files
 
 Pi loads `AGENTS.md` (or `CLAUDE.md`) at startup from:
-- `~/.pi/agent/AGENTS.md` (global)
+- `~/.kin/agent/AGENTS.md` (global)
 - Parent directories (walking up from cwd)
 - Current directory
 
@@ -306,7 +306,7 @@ Disable context file loading with `--no-context-files` (or `-nc`).
 
 ### System Prompt
 
-Replace the default system prompt with `.pi/SYSTEM.md` (project) or `~/.pi/agent/SYSTEM.md` (global). Append without replacing via `APPEND_SYSTEM.md`.
+Replace the default system prompt with `.kin/SYSTEM.md` (project) or `~/.kin/agent/SYSTEM.md` (global). Append without replacing via `APPEND_SYSTEM.md`.
 
 ---
 
@@ -317,19 +317,19 @@ Replace the default system prompt with `.pi/SYSTEM.md` (project) or `~/.pi/agent
 Reusable prompts as Markdown files. Type `/name` to expand.
 
 ```markdown
-<!-- ~/.pi/agent/prompts/review.md -->
+<!-- ~/.kin/agent/prompts/review.md -->
 Review this code for bugs, security issues, and performance problems.
 Focus on: {{focus}}
 ```
 
-Place in `~/.pi/agent/prompts/`, `.pi/prompts/`, or a [pi package](#pi-packages) to share with others. See [docs/prompt-templates.md](docs/prompt-templates.md).
+Place in `~/.kin/agent/prompts/`, `.kin/prompts/`, or a [pi package](#pi-packages) to share with others. See [docs/prompt-templates.md](docs/prompt-templates.md).
 
 ### Skills
 
 On-demand capability packages following the [Agent Skills standard](https://agentskills.io). Invoke via `/skill:name` or let the agent load them automatically.
 
 ```markdown
-<!-- ~/.pi/SKILLS/my-skill/SKILL.md -->
+<!-- ~/.kin/SKILLS/my-skill/SKILL.md -->
 # My Skill
 Use this skill when the user asks about X.
 
@@ -338,7 +338,7 @@ Use this skill when the user asks about X.
 2. Then that
 ```
 
-Place personal skills in `~/.pi/SKILLS/<skill-name>/`. See [docs/skills.md](docs/skills.md).
+Place personal skills in `~/.kin/SKILLS/<skill-name>/`. See [docs/skills.md](docs/skills.md).
 
 ### Extensions
 
@@ -370,13 +370,13 @@ The default export can also be `async`. pi waits for async extension factories b
 - Games while waiting (yes, Doom runs)
 - ...anything you can dream up
 
-Place in `~/.pi/agent/extensions/`, `.pi/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions.md](docs/extensions.md) and [examples/extensions/](examples/extensions/).
+Place in `~/.kin/agent/extensions/`, `.kin/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions.md](docs/extensions.md) and [examples/extensions/](examples/extensions/).
 
 ### Themes
 
 Built-in: `dark`, `light`. Themes hot-reload: modify the active theme file and pi immediately applies changes.
 
-Place in `~/.pi/agent/themes/`, `.pi/themes/`, or a [pi package](#pi-packages) to share with others. See [docs/themes.md](docs/themes.md).
+Place in `~/.kin/agent/themes/`, `.kin/themes/`, or a [pi package](#pi-packages) to share with others. See [docs/themes.md](docs/themes.md).
 
 ### Pi Packages
 
@@ -385,8 +385,8 @@ Bundle and share extensions, skills, prompts, and themes via npm or git. Find pa
 > **Security:** Pi packages run with full system access. Extensions execute arbitrary code, and skills can instruct the model to perform any action including running executables. Review source code before installing third-party packages.
 
 ```bash
-pi install npm:@foo/pi-tools
-pi install npm:@foo/pi-tools@1.2.3      # pinned version
+pi install npm:@foo/kin-tools
+pi install npm:@foo/kin-tools@1.2.3      # pinned version
 pi install git:github.com/user/repo
 pi install git:github.com/user/repo@v1  # tag or commit
 pi install git:git@github.com:user/repo
@@ -395,18 +395,18 @@ pi install https://github.com/user/repo
 pi install https://github.com/user/repo@v1      # tag or commit
 pi install ssh://git@github.com/user/repo
 pi install ssh://git@github.com/user/repo@v1    # tag or commit
-pi remove npm:@foo/pi-tools
-pi uninstall npm:@foo/pi-tools          # alias for remove
+pi remove npm:@foo/kin-tools
+pi uninstall npm:@foo/kin-tools          # alias for remove
 pi list
 pi update                               # update pi and packages (skips pinned packages)
 pi update --extensions                  # update packages only
 pi update --self                        # update pi only
 pi update --self --force                # reinstall pi even if current
-pi update npm:@foo/pi-tools             # update one package
+pi update npm:@foo/kin-tools             # update one package
 pi config                               # enable/disable extensions, skills, prompts, themes
 ```
 
-Packages install to `~/.pi/agent/git/` (git) or `~/.pi/agent/npm/` (npm). Use `-l` for project-local installs (`.pi/git/`, `.pi/npm/`). Git packages install dependencies with `npm install --omit=dev` by default, so runtime deps must be listed under `dependencies`; when `npmCommand` is configured, git packages use plain `install` for compatibility with wrappers. If you use a Node version manager and want package installs to reuse a stable npm context, set `npmCommand` in `settings.json`, for example `["mise", "exec", "node@20", "--", "npm"]`.
+Packages install to `~/.kin/agent/git/` (git) or `~/.kin/agent/npm/` (npm). Use `-l` for project-local installs (`.kin/git/`, `.kin/npm/`). Git packages install dependencies with `npm install --omit=dev` by default, so runtime deps must be listed under `dependencies`; when `npmCommand` is configured, git packages use plain `install` for compatibility with wrappers. If you use a Node version manager and want package installs to reuse a stable npm context, set `npmCommand` in `settings.json`, for example `["mise", "exec", "node@20", "--", "npm"]`.
 
 Create a package by adding a `pi` key to `package.json`:
 
@@ -434,7 +434,7 @@ See [docs/packages.md](docs/packages.md).
 ### SDK
 
 ```typescript
-import { AuthStorage, createAgentSession, ModelRegistry, SessionManager } from "@earendil-works/pi-coding-agent";
+import { AuthStorage, createAgentSession, ModelRegistry, SessionManager } from "@earendil-works/kin-coding-agent";
 
 const authStorage = AuthStorage.create();
 const modelRegistry = ModelRegistry.create(authStorage);
@@ -481,7 +481,7 @@ Pi is aggressively extensible so it doesn't have to dictate your workflow. Featu
 
 **No background bash.** Use tmux. Full observability, direct interaction.
 
-Read the [blog post](https://mariozechner.at/posts/2025-11-30-pi-coding-agent/) for the full rationale.
+Read the [blog post](https://mariozechner.at/posts/2025-11-30-kin-coding-agent/) for the full rationale.
 
 ---
 
@@ -625,12 +625,12 @@ pi --thinking high "Solve this complex problem"
 
 | Variable | Description |
 |----------|-------------|
-| `PI_CODING_AGENT_DIR` | Override config directory (default: `~/.pi/agent`) |
-| `PI_CODING_AGENT_SESSION_DIR` | Override session storage directory (overridden by `--session-dir`) |
-| `PI_PACKAGE_DIR` | Override package directory (useful for Nix/Guix where store paths tokenize poorly) |
-| `PI_OFFLINE` | Disable startup network operations, including update checks, package update checks, and install/update telemetry |
-| `PI_SKIP_VERSION_CHECK` | Skip the Pi version update check at startup. This prevents the `pi.dev` latest-version request |
-| `PI_TELEMETRY` | Override install/update telemetry. Use `1`/`true`/`yes` to enable or `0`/`false`/`no` to disable. This does not disable update checks |
+| `KIN_CODING_AGENT_DIR` | Override config directory (default: `~/.kin/agent`) |
+| `KIN_CODING_AGENT_SESSION_DIR` | Override session storage directory (overridden by `--session-dir`) |
+| `KIN_PACKAGE_DIR` | Override package directory (useful for Nix/Guix where store paths tokenize poorly) |
+| `KIN_OFFLINE` | Disable startup network operations, including update checks, package update checks, and install/update telemetry |
+| `PI_SKIP_VERSION_CHECK` | Skip the Pi version update check at startup. This prevents the `kin.dev` latest-version request |
+| `KIN_TELEMETRY` | Override install/update telemetry. Use `1`/`true`/`yes` to enable or `0`/`false`/`no` to disable. This does not disable update checks |
 | `PI_CACHE_RETENTION` | Set to `long` for extended prompt cache (Anthropic: 1h, OpenAI: 24h) |
 | `VISUAL`, `EDITOR` | External editor for Ctrl+G |
 
@@ -648,6 +648,6 @@ MIT
 
 ## See Also
 
-- [@earendil-works/pi-ai](https://www.npmjs.com/package/@earendil-works/pi-ai): Core LLM toolkit
-- [@earendil-works/pi-agent-core](https://www.npmjs.com/package/@earendil-works/pi-agent-core): Agent framework
-- [@earendil-works/pi-tui](https://www.npmjs.com/package/@earendil-works/pi-tui): Terminal UI components
+- [@earendil-works/kin-ai](https://www.npmjs.com/package/@earendil-works/kin-ai): Core LLM toolkit
+- [@earendil-works/kin-agent-core](https://www.npmjs.com/package/@earendil-works/kin-agent-core): Agent framework
+- [@earendil-works/kin-tui](https://www.npmjs.com/package/@earendil-works/kin-tui): Terminal UI components

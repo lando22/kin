@@ -32,7 +32,7 @@ describe("package commands", () => {
 
 		originalCwd = process.cwd();
 		originalAgentDir = process.env[ENV_AGENT_DIR];
-		originalPiPackageDir = process.env.PI_PACKAGE_DIR;
+		originalPiPackageDir = process.env.KIN_PACKAGE_DIR;
 		originalExitCode = process.exitCode;
 		originalExecPath = process.execPath;
 		process.exitCode = undefined;
@@ -50,9 +50,9 @@ describe("package commands", () => {
 			process.env[ENV_AGENT_DIR] = originalAgentDir;
 		}
 		if (originalPiPackageDir === undefined) {
-			delete process.env.PI_PACKAGE_DIR;
+			delete process.env.KIN_PACKAGE_DIR;
 		} else {
-			process.env.PI_PACKAGE_DIR = originalPiPackageDir;
+			process.env.KIN_PACKAGE_DIR = originalPiPackageDir;
 		}
 		Object.defineProperty(process, "execPath", { value: originalExecPath, configurable: true });
 		rmSync(tempDir, { recursive: true, force: true });
@@ -137,11 +137,11 @@ describe("package commands", () => {
 	it("uses global npmCommand and current package name for forced self updates without checking the api", async () => {
 		const globalPrefix = join(tempDir, "global-prefix");
 		const projectPrefix = join(tempDir, "project-prefix");
-		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@earendil-works", "pi-coding-agent");
+		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@earendil-works", "kin-coding-agent");
 		const fakeNpmPath = join(tempDir, "fake-npm.cjs");
 		const recordPath = join(tempDir, "self-update.json");
 		mkdirSync(selfPackageDir, { recursive: true });
-		mkdirSync(join(projectDir, ".pi"), { recursive: true });
+		mkdirSync(join(projectDir, ".kin"), { recursive: true });
 		writeFileSync(
 			fakeNpmPath,
 			`const fs=require("node:fs"),path=require("node:path"),args=process.argv.slice(2),prefix=args[args.indexOf("--prefix")+1];
@@ -154,10 +154,10 @@ else fs.writeFileSync(${JSON.stringify(recordPath)},JSON.stringify(args));
 			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", globalPrefix] }, null, 2),
 		);
 		writeFileSync(
-			join(projectDir, ".pi", "settings.json"),
+			join(projectDir, ".kin", "settings.json"),
 			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", projectPrefix] }, null, 2),
 		);
-		process.env.PI_PACKAGE_DIR = selfPackageDir;
+		process.env.KIN_PACKAGE_DIR = selfPackageDir;
 		Object.defineProperty(process, "execPath", {
 			value: join(selfPackageDir, "dist", "cli.js"),
 			configurable: true,
@@ -186,7 +186,7 @@ else fs.writeFileSync(${JSON.stringify(recordPath)},JSON.stringify(args));
 
 	it("uses the current package name when the update check omits packageName", async () => {
 		const globalPrefix = join(tempDir, "global-prefix");
-		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@mariozechner", "pi-coding-agent");
+		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@mariozechner", "kin-coding-agent");
 		const fakeNpmPath = join(tempDir, "fake-npm.cjs");
 		const recordPath = join(tempDir, "self-update.json");
 		mkdirSync(selfPackageDir, { recursive: true });
@@ -201,7 +201,7 @@ else fs.writeFileSync(${JSON.stringify(recordPath)},JSON.stringify(args));
 			join(agentDir, "settings.json"),
 			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", globalPrefix] }, null, 2),
 		);
-		process.env.PI_PACKAGE_DIR = selfPackageDir;
+		process.env.KIN_PACKAGE_DIR = selfPackageDir;
 		Object.defineProperty(process, "execPath", {
 			value: join(selfPackageDir, "dist", "cli.js"),
 			configurable: true,
@@ -228,7 +228,7 @@ else fs.writeFileSync(${JSON.stringify(recordPath)},JSON.stringify(args));
 
 	it("installs the active package name from the update check during self-update", async () => {
 		const globalPrefix = join(tempDir, "global-prefix");
-		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@mariozechner", "pi-coding-agent");
+		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@mariozechner", "kin-coding-agent");
 		const fakeNpmPath = join(tempDir, "fake-npm.cjs");
 		const recordPath = join(tempDir, "self-update.json");
 		mkdirSync(selfPackageDir, { recursive: true });
@@ -247,12 +247,12 @@ else {
 			join(agentDir, "settings.json"),
 			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", globalPrefix] }, null, 2),
 		);
-		process.env.PI_PACKAGE_DIR = selfPackageDir;
+		process.env.KIN_PACKAGE_DIR = selfPackageDir;
 		Object.defineProperty(process, "execPath", {
 			value: join(selfPackageDir, "dist", "cli.js"),
 			configurable: true,
 		});
-		const activePackageName = PACKAGE_NAME === "@new-scope/pi" ? "@newer-scope/pi" : "@new-scope/pi";
+		const activePackageName = PACKAGE_NAME === "@new-scope/kin" ? "@newer-scope/kin" : "@new-scope/kin";
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(async () => Response.json({ packageName: activePackageName, version: "0.73.0" })),
@@ -279,7 +279,7 @@ else {
 
 	it("fails self-update when renamed npm package installation fails", async () => {
 		const globalPrefix = join(tempDir, "global-prefix");
-		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@mariozechner", "pi-coding-agent");
+		const selfPackageDir = join(globalPrefix, "lib", "node_modules", "@mariozechner", "kin-coding-agent");
 		const fakeNpmPath = join(tempDir, "fake-npm-fail.cjs");
 		const recordPath = join(tempDir, "self-update-fail.json");
 		mkdirSync(selfPackageDir, { recursive: true });
@@ -300,12 +300,12 @@ if(args.includes("install")) process.exit(23);
 			join(agentDir, "settings.json"),
 			JSON.stringify({ npmCommand: [originalExecPath, fakeNpmPath, "--prefix", globalPrefix] }, null, 2),
 		);
-		process.env.PI_PACKAGE_DIR = selfPackageDir;
+		process.env.KIN_PACKAGE_DIR = selfPackageDir;
 		Object.defineProperty(process, "execPath", {
 			value: join(selfPackageDir, "dist", "cli.js"),
 			configurable: true,
 		});
-		const activePackageName = PACKAGE_NAME === "@new-scope/pi" ? "@newer-scope/pi" : "@new-scope/pi";
+		const activePackageName = PACKAGE_NAME === "@new-scope/kin" ? "@newer-scope/kin" : "@new-scope/kin";
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(async () => Response.json({ packageName: activePackageName, version: "0.73.0" })),

@@ -2,7 +2,7 @@
  * Armin says hi! A fun easter egg with animated XBM art.
  */
 
-import type { Component, TUI } from "@earendil-works/pi-tui";
+import type { Component, TUI } from "@earendil-works/kin-tui";
 import { theme } from "../theme/theme.ts";
 
 // XBM image: 31x36 pixels, LSB first, 1=background, 0=foreground
@@ -27,7 +27,7 @@ type Effect = "typewriter" | "scanline" | "rain" | "fade" | "crt" | "glitch" | "
 const EFFECTS: Effect[] = ["typewriter", "scanline", "rain", "fade", "crt", "glitch", "dissolve"];
 
 // Get pixel at (x, y): true = foreground, false = background
-function getPixel(x: number, y: number): boolean {
+function getKinxel(x: number, y: number): boolean {
 	if (y >= HEIGHT) return false;
 	const byteIndex = y * BYTES_PER_ROW + Math.floor(x / 8);
 	const bitIndex = x % 8;
@@ -36,8 +36,8 @@ function getPixel(x: number, y: number): boolean {
 
 // Get the character for a cell (2 vertical pixels packed)
 function getChar(x: number, row: number): string {
-	const upper = getPixel(x, row * 2);
-	const lower = getPixel(x, row * 2 + 1);
+	const upper = getKinxel(x, row * 2);
+	const lower = getKinxel(x, row * 2 + 1);
 	if (upper && lower) return "█";
 	if (upper) return "▀";
 	if (lower) return "▄";

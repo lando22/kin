@@ -38,7 +38,7 @@ pi update --extension npm:@foo/bar
 
 These commands manage pi packages, not the pi CLI installation. To uninstall pi itself, see [Quickstart](quickstart.md#uninstall).
 
-By default, `install` and `remove` write to user settings (`~/.pi/agent/settings.json`). Use `-l` to write to project settings (`.pi/settings.json`) instead. Project settings can be shared with your team, and pi installs any missing packages automatically on startup.
+By default, `install` and `remove` write to user settings (`~/.kin/agent/settings.json`). Use `-l` to write to project settings (`.kin/settings.json`) instead. Project settings can be shared with your team, and pi installs any missing packages automatically on startup.
 
 To try a package without installing it, use `--extension` or `-e`. This installs to a temporary directory for the current run only:
 
@@ -59,8 +59,8 @@ npm:pkg
 ```
 
 - Versioned specs are pinned and skipped by package updates (`pi update`, `pi update --extensions`).
-- User installs go under `~/.pi/agent/npm/`.
-- Project installs go under `.pi/npm/`.
+- User installs go under `~/.kin/agent/npm/`.
+- Project installs go under `.kin/npm/`.
 - Set `npmCommand` in `settings.json` to pin npm package lookup and install operations to a specific wrapper command such as `mise` or `asdf`.
 
 Example:
@@ -86,7 +86,7 @@ ssh://git@github.com/user/repo@v1
 - SSH URLs use your configured SSH keys automatically (respects `~/.ssh/config`).
 - For non-interactive runs (for example CI), you can set `GIT_TERMINAL_PROMPT=0` to disable credential prompts and set `GIT_SSH_COMMAND` (for example `ssh -o BatchMode=yes -o ConnectTimeout=5`) to fail fast.
 - Refs pin the package and skip package updates (`pi update`, `pi update --extensions`).
-- Cloned to `~/.pi/agent/git/<host>/<path>` (global) or `.pi/git/<host>/<path>` (project).
+- Cloned to `~/.kin/agent/git/<host>/<path>` (global) or `.kin/git/<host>/<path>` (project).
 - Runs `npm install` after clone or pull if `package.json` exists.
 
 **SSH examples:**
@@ -131,7 +131,7 @@ Paths are relative to the package root. Arrays support glob patterns and `!exclu
 
 ### Gallery Metadata
 
-The [package gallery](https://pi.dev/packages) displays packages tagged with `pi-package`. Add `video` or `image` fields to show a preview:
+The [package gallery](https://kin.dev/packages) displays packages tagged with `pi-package`. Add `video` or `image` fields to show a preview:
 
 ```json
 {
@@ -165,7 +165,7 @@ If no `pi` manifest is present, pi auto-discovers resources from these directori
 
 Third party runtime dependencies belong in `dependencies` in `package.json`. Dependencies that do not register extensions, skills, prompt templates, or themes also belong in `dependencies`. When pi installs a package from npm or git, it runs `npm install`, so those dependencies are installed automatically.
 
-Pi bundles core packages for extensions and skills. If you import any of these, list them in `peerDependencies` with a `"*"` range and do not bundle them: `@earendil-works/pi-ai`, `@earendil-works/pi-agent-core`, `@earendil-works/pi-coding-agent`, `@earendil-works/pi-tui`, `typebox`.
+Pi bundles core packages for extensions and skills. If you import any of these, list them in `peerDependencies` with a `"*"` range and do not bundle them: `@earendil-works/kin-ai`, `@earendil-works/kin-agent-core`, `@earendil-works/kin-coding-agent`, `@earendil-works/kin-tui`, `typebox`.
 
 Other pi packages must be bundled in your tarball. Add them to `dependencies` and `bundledDependencies`, then reference their resources through `node_modules/` paths. Pi loads packages with separate module roots, so separate installs do not collide or share modules.
 
@@ -214,7 +214,7 @@ Filter what a package loads using the object form in settings:
 
 ## Enable and Disable Resources
 
-Use `pi config` to enable or disable extensions, skills, prompt templates, and themes from installed packages and local directories. Works for both global (`~/.pi/agent`) and project (`.pi/`) scopes.
+Use `pi config` to enable or disable extensions, skills, prompt templates, and themes from installed packages and local directories. Works for both global (`~/.kin/agent`) and project (`.kin/`) scopes.
 
 ## Scope and Deduplication
 

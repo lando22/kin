@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { APP_NAME } from "../config.ts";
-import { exportPiContext, findLatestPiContextArchive, importPiContext } from "../core/context-transfer.ts";
+import { exportPiContext, findLatestKinContextArchive, importPiContext } from "../core/context-transfer.ts";
 
 type ContextTransferCommand = "export" | "import";
 
@@ -54,7 +54,7 @@ export async function runContextTransferMode(args: string[]): Promise<number> {
 			return 0;
 		}
 
-		const inputPath = getPathArg(args) ?? findLatestPiContextArchive();
+		const inputPath = getPathArg(args) ?? findLatestKinContextArchive();
 		const result = importPiContext(inputPath);
 		console.log(`Imported Pi context from: ${result.path}`);
 		console.log(chalk.dim(`${result.files} files, ${result.bytes} bytes.`));

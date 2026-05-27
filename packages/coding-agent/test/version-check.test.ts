@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-	checkForNewPiVersion,
+	checkForNewKinVersion,
 	comparePackageVersions,
-	getLatestPiRelease,
-	getLatestPiVersion,
+	getLatestKinRelease,
+	getLatestKinVersion,
 	isNewerPackageVersion,
 } from "../src/utils/version-check.js";
 
 const originalSkipVersionCheck = process.env.PI_SKIP_VERSION_CHECK;
-const originalOffline = process.env.PI_OFFLINE;
+const originalOffline = process.env.KIN_OFFLINE;
 const originalForceVersionCheck = process.env.PI_FORCE_VERSION_CHECK;
 
 afterEach(() => {
@@ -19,9 +19,9 @@ afterEach(() => {
 		process.env.PI_SKIP_VERSION_CHECK = originalSkipVersionCheck;
 	}
 	if (originalOffline === undefined) {
-		delete process.env.PI_OFFLINE;
+		delete process.env.KIN_OFFLINE;
 	} else {
-		process.env.PI_OFFLINE = originalOffline;
+		process.env.KIN_OFFLINE = originalOffline;
 	}
 	if (originalForceVersionCheck === undefined) {
 		delete process.env.PI_FORCE_VERSION_CHECK;
@@ -44,18 +44,18 @@ describe("version checks", () => {
 		const fetchMock = vi.fn(async () => Response.json({ version: "1.2.3" }));
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(checkForNewPiVersion("1.2.3")).resolves.toBeUndefined();
-		await expect(checkForNewPiVersion("1.2.2")).resolves.toEqual({ version: "1.2.3" });
+		await expect(checkForNewKinVersion("1.2.3")).resolves.toBeUndefined();
+		await expect(checkForNewKinVersion("1.2.2")).resolves.toEqual({ version: "1.2.3" });
 	});
 
-	it("uses the pi.dev version check api with a pi user agent", async () => {
+	it("uses the kin.dev version check api with a pi user agent", async () => {
 		process.env.PI_FORCE_VERSION_CHECK = "1";
 		const fetchMock = vi.fn(async () => Response.json({ version: "1.2.4" }));
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(getLatestPiVersion("1.2.3")).resolves.toBe("1.2.4");
+		await expect(getLatestKinVersion("1.2.3")).resolves.toBe("1.2.4");
 		expect(fetchMock).toHaveBeenCalledWith(
-			"https://pi.dev/api/latest-version",
+			"https://kin.dev/api/latest-version",
 			expect.objectContaining({
 				headers: expect.objectContaining({
 					"User-Agent": expect.stringMatching(/^pi\/1\.2\.3 /),
@@ -69,14 +69,14 @@ describe("version checks", () => {
 		process.env.PI_FORCE_VERSION_CHECK = "1";
 		const fetchMock = vi.fn(async () =>
 			Response.json({
-				packageName: "@new-scope/pi",
+				packageName: "@new-scope/kin",
 				version: "1.2.4",
 			}),
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(getLatestPiRelease("1.2.3")).resolves.toEqual({
-			packageName: "@new-scope/pi",
+		await expect(getLatestKinRelease("1.2.3")).resolves.toEqual({
+			packageName: "@new-scope/kin",
 			version: "1.2.4",
 		});
 	});
@@ -86,7 +86,7 @@ describe("version checks", () => {
 		const fetchMock = vi.fn(async () => Response.json({ note: " **Read this** ", version: "1.2.4" }));
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(getLatestPiRelease("1.2.3")).resolves.toEqual({ note: "**Read this**", version: "1.2.4" });
+		await expect(getLatestKinRelease("1.2.3")).resolves.toEqual({ note: "**Read this**", version: "1.2.4" });
 	});
 
 	it("skips api calls when version checks are disabled", async () => {
@@ -94,7 +94,7 @@ describe("version checks", () => {
 		const fetchMock = vi.fn();
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(getLatestPiVersion("1.2.3")).resolves.toBeUndefined();
+		await expect(getLatestKinVersion("1.2.3")).resolves.toBeUndefined();
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
@@ -102,7 +102,7 @@ describe("version checks", () => {
 		const fetchMock = vi.fn();
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(getLatestPiVersion("1.2.3")).resolves.toBeUndefined();
+		await expect(getLatestKinVersion("1.2.3")).resolves.toBeUndefined();
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 });

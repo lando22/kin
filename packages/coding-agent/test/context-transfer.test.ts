@@ -28,8 +28,8 @@ function createTempDir(): string {
 describe("Pi context transfer", () => {
 	test("exports and imports memory, skills, sessions, and context files without auth", () => {
 		const root = createTempDir();
-		const sourcePi = join(root, "source", ".pi");
-		const targetPi = join(root, "target", ".pi");
+		const sourcePi = join(root, "source", ".kin");
+		const targetKin = join(root, "target", ".kin");
 		process.env[ENV_AGENT_DIR] = join(sourcePi, "agent");
 
 		mkdirSync(join(sourcePi, "Projects", "pi"), { recursive: true });
@@ -49,16 +49,16 @@ describe("Pi context transfer", () => {
 		expect(exported.path).toBe(archivePath);
 		expect(exported.files).toBeGreaterThan(0);
 
-		process.env[ENV_AGENT_DIR] = join(targetPi, "agent");
+		process.env[ENV_AGENT_DIR] = join(targetKin, "agent");
 		const imported = importPiContext(archivePath, root);
 		expect(imported.path).toBe(archivePath);
 
-		expect(readFileSync(join(targetPi, "MEMORY.md"), "utf-8")).toBe("memory");
-		expect(readFileSync(join(targetPi, "PREFERENCES.md"), "utf-8")).toBe("prefs");
-		expect(readFileSync(join(targetPi, "Projects", "pi", "PROJECT.md"), "utf-8")).toBe("project");
-		expect(readFileSync(join(targetPi, "SKILLS", "review", "SKILL.md"), "utf-8")).toBe("skill");
-		expect(readFileSync(join(targetPi, "agent", "sessions", "--project--", "session.jsonl"), "utf-8")).toBe("{}\n");
-		expect(readFileSync(join(targetPi, "agent", "AGENTS.md"), "utf-8")).toBe("context");
-		expect(existsSync(join(targetPi, "agent", "auth.json"))).toBe(false);
+		expect(readFileSync(join(targetKin, "MEMORY.md"), "utf-8")).toBe("memory");
+		expect(readFileSync(join(targetKin, "PREFERENCES.md"), "utf-8")).toBe("prefs");
+		expect(readFileSync(join(targetKin, "Projects", "pi", "PROJECT.md"), "utf-8")).toBe("project");
+		expect(readFileSync(join(targetKin, "SKILLS", "review", "SKILL.md"), "utf-8")).toBe("skill");
+		expect(readFileSync(join(targetKin, "agent", "sessions", "--project--", "session.jsonl"), "utf-8")).toBe("{}\n");
+		expect(readFileSync(join(targetKin, "agent", "AGENTS.md"), "utf-8")).toBe("context");
+		expect(existsSync(join(targetKin, "agent", "auth.json"))).toBe(false);
 	});
 });

@@ -198,7 +198,7 @@ async function handleToolWithTextAndImageResult<TApi extends Api>(
 	expect(textContent).toBeTruthy();
 	if (textContent && textContent.type === "text") {
 		const lowerContent = textContent.text.toLowerCase();
-		// Should mention details from the text (diameter/pixels)
+		// Should mention details from the text (diameter/kinxels)
 		expect(lowerContent.match(/diameter|100|pixel/)).toBeTruthy();
 		// Should also mention the visual properties (red and circle)
 		expect(lowerContent).toContain("red");
@@ -418,7 +418,7 @@ describe("Tool Results with Images", () => {
 	});
 
 	// =========================================================================
-	// OAuth-based providers (credentials from ~/.pi/agent/oauth.json)
+	// OAuth-based providers (credentials from ~/.kin/agent/oauth.json)
 	// =========================================================================
 
 	describe("Anthropic OAuth Provider (claude-sonnet-4-5)", () => {

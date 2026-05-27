@@ -19,13 +19,13 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: /^@earendil-works\/pi-ai$/, replacement: aiSrcIndex },
-			{ find: /^@earendil-works\/pi-ai\/oauth$/, replacement: aiSrcOAuth },
-			{ find: /^@earendil-works\/pi-agent-core$/, replacement: agentSrcIndex },
-			{ find: /^@earendil-works\/pi-tui$/, replacement: tuiSrcIndex },
-			{ find: /^@mariozechner\/pi-ai$/, replacement: aiSrcIndex },
-			{ find: /^@mariozechner\/pi-ai\/oauth$/, replacement: aiSrcOAuth },
-			{ find: /^@mariozechner\/pi-agent-core$/, replacement: agentSrcIndex },
+			{ find: /^@earendil-works\/kin-ai$/, replacement: aiSrcIndex },
+			{ find: /^@earendil-works\/kin-ai\/oauth$/, replacement: aiSrcOAuth },
+			{ find: /^@earendil-works\/kin-agent-core$/, replacement: agentSrcIndex },
+			{ find: /^@earendil-works\/kin-tui$/, replacement: tuiSrcIndex },
+			{ find: /^@mariozechner\/kin-ai$/, replacement: aiSrcIndex },
+			{ find: /^@mariozechner\/kin-ai\/oauth$/, replacement: aiSrcOAuth },
+			{ find: /^@mariozechner\/kin-agent-core$/, replacement: agentSrcIndex },
 		],
 	},
 });

@@ -1,6 +1,6 @@
-import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import type { AssistantMessage, Usage } from "@earendil-works/pi-ai";
-import { getModel } from "@earendil-works/pi-ai";
+import type { AgentMessage } from "@earendil-works/kin-agent-core";
+import type { AssistantMessage, Usage } from "@earendil-works/kin-ai";
+import { getModel } from "@earendil-works/kin-ai";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { beforeEach, describe, expect, it } from "vitest";

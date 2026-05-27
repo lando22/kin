@@ -22,8 +22,8 @@ import type {
 	AgentState,
 	AgentTool,
 	ThinkingLevel,
-} from "@earendil-works/pi-agent-core";
-import type { AssistantMessage, ImageContent, Message, Model, TextContent } from "@earendil-works/pi-ai";
+} from "@earendil-works/kin-agent-core";
+import type { AssistantMessage, ImageContent, Message, Model, TextContent } from "@earendil-works/kin-ai";
 import {
 	clampThinkingLevel,
 	cleanupSessionResources,
@@ -32,7 +32,7 @@ import {
 	modelsAreEqual,
 	resetApiProviders,
 	streamSimple,
-} from "@earendil-works/pi-ai";
+} from "@earendil-works/kin-ai";
 import { theme } from "../modes/interactive/theme/theme.ts";
 import { stripFrontmatter } from "../utils/frontmatter.ts";
 import { sleep } from "../utils/sleep.ts";
@@ -77,9 +77,15 @@ import {
 	wrapRegisteredTools,
 } from "./extensions/index.ts";
 import { emitSessionShutdownEvent } from "./extensions/runner.ts";
+import {
+	readMemoryContent,
+	readPreferencesContent,
+	readProjectContent,
+	readProjectStateContent,
+	readWorkingContent,
+} from "./kin-memory.ts";
 import type { BashExecutionMessage, CustomMessage } from "./messages.ts";
 import type { ModelRegistry } from "./model-registry.ts";
-import { readMemoryContent, readPreferencesContent, readProjectContent, readWorkingContent } from "./pi-memory.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";
 import type { ResourceExtensionPaths, ResourceLoader } from "./resource-loader.ts";
 import type { BranchSummaryEntry, CompactionEntry, SessionManager } from "./session-manager.ts";
@@ -911,6 +917,7 @@ export class AgentSession {
 			memoryContent: readMemoryContent(),
 			preferencesContent: readPreferencesContent(),
 			projectContent: readProjectContent(this._cwd),
+			projectStateContent: readProjectStateContent(this._cwd),
 			workingContent: readWorkingContent(),
 		};
 		return buildSystemPrompt(this._baseSystemPromptOptions);

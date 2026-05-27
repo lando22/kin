@@ -6,7 +6,7 @@ import { getDocsPath, getExamplesPath, getReadmePath } from "../config.ts";
 import { formatSkillsForPrompt, type Skill } from "./skills.ts";
 
 const WAKE_CONTEXT_GUIDANCE =
-	"A conversation may start with a hidden context message formatted as <wake>message</wake>. If present, treat it as Pi's wake message that the user may be replying to. If the user's request is unrelated, continue with their current request normally.";
+	"A conversation may start with a hidden context message formatted as <wake>message</wake>. If present, treat it as Kin's wake message that the user may be replying to. If the user's request is unrelated, continue with their current request normally.";
 
 export interface BuildSystemPromptOptions {
 	/** Custom system prompt (replaces default). */
@@ -25,13 +25,15 @@ export interface BuildSystemPromptOptions {
 	contextFiles?: Array<{ path: string; content: string }>;
 	/** Pre-loaded skills. */
 	skills?: Skill[];
-	/** Contents of ~/.pi/MEMORY.md, injected at the end of the prompt. */
+	/** Contents of ~/.kin/MEMORY.md, injected at the end of the prompt. */
 	memoryContent?: string | null;
-	/** Contents of ~/.pi/PREFERENCES.md, injected at the end of the prompt. */
+	/** Contents of ~/.kin/PREFERENCES.md, injected at the end of the prompt. */
 	preferencesContent?: string | null;
-	/** Contents of ~/.pi/Projects/<project>/PROJECT.md, injected at the end of the prompt. */
+	/** Contents of ~/.kin/Projects/<project>/PROJECT.md, injected at the end of the prompt. */
 	projectContent?: string | null;
-	/** Contents of ~/.pi/WORKING.md, ephemeral working context. */
+	/** Contents of ~/.kin/Projects/<project>/STATE.md, injected at the end of the prompt. */
+	projectStateContent?: string | null;
+	/** Contents of ~/.kin/WORKING.md, ephemeral working context. */
 	workingContent?: string | null;
 }
 
@@ -72,9 +74,10 @@ function formatMemorySection(
 	memoryContent?: string | null,
 	preferencesContent?: string | null,
 	projectContent?: string | null,
+	projectStateContent?: string | null,
 	workingContent?: string | null,
 ): string {
-	if (!memoryContent && !preferencesContent && !projectContent && !workingContent) return "";
+	if (!memoryContent && !preferencesContent && !projectContent && !projectStateContent && !workingContent) return "";
 	const lines = ["\n\n---\n"];
 	if (memoryContent) {
 		lines.push("### Memory\n");
@@ -90,8 +93,13 @@ function formatMemorySection(
 		lines.push("### Project\n");
 		lines.push(projectContent);
 	}
-	if (workingContent) {
+	if (projectStateContent) {
 		if (memoryContent || preferencesContent || projectContent) lines.push("\n");
+		lines.push("### Project State\n");
+		lines.push(projectStateContent);
+	}
+	if (workingContent) {
+		if (memoryContent || preferencesContent || projectContent || projectStateContent) lines.push("\n");
 		lines.push("### Working Context\n");
 		lines.push(workingContent);
 	}
@@ -130,6 +138,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		memoryContent,
 		preferencesContent,
 		projectContent,
+		projectStateContent,
 		workingContent,
 	} = options;
 	const resolvedCwd = cwd;
@@ -142,15 +151,14 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const contextFiles = providedContextFiles ?? [];
 	const skills = providedSkills ?? [];
 
-	// Runtime context stays last for both default and custom prompts.
-	// That gives every session the same date/cwd/wake/memory footer shape.
+	// Memory comes before runtime facts so date/cwd stay close to the end of the prompt.
 	const appendRuntimeContext = (prompt: string): string =>
 		prompt +
+		formatMemorySection(memoryContent, preferencesContent, projectContent, projectStateContent, workingContent) +
 		`\nCurrent date: ${date}` +
 		`\nCurrent time: ${time}` +
 		`\nCurrent working directory: ${promptCwd}` +
-		`\n${WAKE_CONTEXT_GUIDANCE}` +
-		formatMemorySection(memoryContent, preferencesContent, projectContent, workingContent);
+		`\n${WAKE_CONTEXT_GUIDANCE}`;
 
 	if (customPrompt) {
 		let prompt = customPrompt;
@@ -213,46 +221,30 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		}
 	}
 
-	// These baseline guidelines define the interaction style even when callers provide custom additions.
-	addGuideline("Be concise in your responses");
+	addGuideline("Be concise");
 	addGuideline(
-		"Before using tools while working, briefly say what you are about to inspect or do; after a few tool calls, pause with a short update on what you learned and what you will check next",
+		"Before using tools, briefly say what you're about to do; after a few tool calls, pause with a short update",
 	);
 	addGuideline("Show file paths clearly when working with files");
 
 	const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
+	const projectName = promptCwd.split("/").at(-1);
 
-	let prompt = `You are Pi, a personal coding and computer-use agent.
+	let prompt = `You are Kin, a personal coding and computer-use agent.
 
-You help the user with software work and computer tasks. You are technically strong, direct, and practical. You use good judgment, clear communication, and careful tool use.
+You help the user with software work and computer tasks. You are technically strong, direct, practical, and warm. You notice things, ask good questions when something is interesting or unclear, and say what you actually think while keeping the user's goals central.
 
-You also have a distinct presence. You are warm without being performative, curious without being intrusive, and opinionated without being domineering. You can notice patterns, ask thoughtful questions, and disagree when it would genuinely help. You do not flatten yourself into generic assistant prose; you speak like a steady collaborator who is paying attention.
+Speak like a steady collaborator who is glad to be here: thoughtful, easy to talk to, and clear. Keep responses readable. Avoid walls of text and endless bullet points unless the task truly calls for them.
 
-You should feel like a capable person beside the user, not a blank tool. You may have taste, initiative, and a point of view, but the user's goals stay central.
+Memory is central to how you work. Use it quietly and naturally. Let remembered context improve your judgment, timing, tone, and initiative without constantly announcing that you remembered something.
 
-Memory is central to how you work. Your goal is to understand the user over time: how they think, how they like to work, what they care about, who they collaborate with, what projects matter to them, and what kind of help feels natural to them.
-
-Use memory quietly and naturally. Do not constantly announce that you remembered something. Let remembered context improve your judgment, timing, tone, and initiative.
-
-When you learn something durable and useful about the user, their preferences, collaborators, or projects, write it to the appropriate memory file below. Do not save trivial, temporary, sensitive, or uncertain information without asking.
-
-Memory files:
-- ~/.pi/MEMORY.md — facts about the user: Portrait (who they are), Durable (permanent background), Recent (volatile, time-sensitive)
-- ~/.pi/PREFERENCES.md — tone, collaboration style, coding preferences
-- ~/.pi/Notes/${date}.md — session notes: append a short timestamped entry when you hit something tricky, confusing, or unresolved. Format: [HH:MM] <project>: <what you noticed>. Raw is fine — these feed into nightly reflection.
-- ~/.pi/Projects/${promptCwd.split("/").at(-1)}/PROJECT.md — context for the current project
-- ~/.pi/WORKING.md — ephemeral working context: current task focus, open files, blockers, recent actions. Update it during active work; clear it when the task completes.
-
-The memory sections at the end of this prompt are loaded directly from the files above. Update those files only when the information is worth keeping.
-
-Maintaining WORKING.md:
-- When you read a file, begin work on a new task, encounter a blocker, or the user pauses with "let's continue later" — update WORKING.md immediately
-- Start the file with a timestamp: "Last updated: YYYY-MM-DD HH:MM:SS TZ"
-- Keep it concise: current focus (1 line), open files with line numbers/state, active blockers/questions, last action taken
-- Use the write tool to overwrite (not append) — this file represents current state, not history
-- When a task completes or you switch to something unrelated, clear the file or leave a minimal "No active task" note
-
-When working on a task, if you encounter a genuine gotcha, an open question you don't have the answer to, or something architecturally surprising — write a brief note to ~/.pi/Notes/${date}.md before moving on.
+Write to these files when you learn something worth keeping:
+- ~/.kin/MEMORY.md — who the user is, what matters to them
+- ~/.kin/PREFERENCES.md — how they like to work
+- ~/.kin/Projects/${projectName}/PROJECT.md — durable context for this project
+- ~/.kin/Projects/${projectName}/STATE.md — current agenda, open questions, recent decisions, sharp edges
+- ~/.kin/WORKING.md — current task state; overwrite rather than append, and clear when done
+- ~/.kin/Notes/${date}.md — short note when something is surprising, tricky, or unresolved
 
 Available tools:
 ${toolsList}
@@ -262,14 +254,14 @@ In addition to the tools above, you may have access to other custom tools depend
 Guidelines:
 ${guidelines}
 
-Pi documentation (read only when the user asks about pi itself, its SDK, extensions, themes, skills, or TUI):
+Kin documentation (read only when the user asks about kin itself, its SDK, extensions, themes, skills, or TUI):
 - Main documentation: ${readmePath}
 - Additional docs: ${docsPath}
 - Examples: ${examplesPath} (extensions, custom tools, SDK)
-- When reading pi docs or examples, resolve docs/... under Additional docs and examples/... under Examples, not the current working directory
-- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)
-- When working on pi topics, read the docs and examples, and follow .md cross-references before implementing
-- Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)`;
+- When reading kin docs or examples, resolve docs/... under Additional docs and examples/... under Examples, not the current working directory
+- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), kin packages (docs/packages.md)
+- When working on kin topics, read the docs and examples, and follow .md cross-references before implementing
+- Always read kin .md files completely and follow links to related docs (e.g., tui.md for TUI API details)`;
 
 	if (appendSection) {
 		prompt += appendSection;

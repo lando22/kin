@@ -3,17 +3,17 @@
  *
  * Bootstraps the services (settings, auth, model registry), reads the latest
  * reflection, generates a wake message via the LLM, and writes it to
- * ~/.pi/Wakes/<date>/WAKE.md if there's something worth saying.
+ * ~/.kin/Wakes/<date>/WAKE.md if there's something worth saying.
  */
 
 import { basename, join } from "node:path";
-import type { Model } from "@earendil-works/pi-ai";
+import type { Model } from "@earendil-works/kin-ai";
 import chalk from "chalk";
 import { getAgentDir } from "../config.ts";
 import { createAgentSessionServices } from "../core/agent-session-services.ts";
 import { AuthStorage } from "../core/auth-storage.ts";
+import { readMemoryContent, readProjectContent } from "../core/kin-memory.ts";
 import type { ModelRegistry } from "../core/model-registry.ts";
-import { readMemoryContent, readProjectContent } from "../core/pi-memory.ts";
 import { formatLocalDate, readAgenda } from "../core/reflect.ts";
 import { SettingsManager } from "../core/settings-manager.ts";
 import { findLatestReflection, generateWake, getWakePath, isNoneResponse, readWake, writeWake } from "../core/wake.ts";
@@ -113,7 +113,7 @@ export async function runWakeMode(args: string[], { date }: { date?: Date } = {}
 
 	// Do not write a WAKE.md for empty/<NONE>; startup should stay quiet in that case.
 	if (!rawWake || isNoneResponse(rawWake)) {
-		console.error(chalk.dim("Pi has nothing to wake about today. <NONE>"));
+		console.error(chalk.dim("Kin has nothing to wake about today. <NONE>"));
 		return 0;
 	}
 

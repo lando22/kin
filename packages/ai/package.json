@@ -1,5 +1,5 @@
 {
-	"name": "@earendil-works/pi-ai",
+	"name": "@earendil-works/kin-ai",
 	"version": "0.75.3",
 	"description": "Unified LLM API with automatic model discovery and provider configuration",
 	"type": "module",
@@ -52,7 +52,7 @@
 		}
 	},
 	"bin": {
-		"pi-ai": "./dist/cli.js"
+		"kin-ai": "./dist/cli.js"
 	},
 	"files": [
 		"dist",
@@ -91,7 +91,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/earendil-works/pi-mono.git",
+		"url": "git+https://github.com/earendil-works/kin-mono.git",
 		"directory": "packages/ai"
 	},
 	"engines": {

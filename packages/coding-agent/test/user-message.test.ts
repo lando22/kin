@@ -1,4 +1,4 @@
-import { visibleWidth } from "@earendil-works/pi-tui";
+import { visibleWidth } from "@earendil-works/kin-tui";
 import { describe, expect, test } from "vitest";
 import { UserMessageComponent } from "../src/modes/interactive/components/user-message.js";
 import { initTheme } from "../src/modes/interactive/theme/theme.js";

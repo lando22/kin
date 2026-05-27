@@ -21,10 +21,10 @@ Pi implements the [Agent Skills standard](https://agentskills.io/specification),
 
 > **Security:** Skills can instruct the model to perform any action and may include executable code the model invokes. Review skill content before use.
 
-Pi's default skills live in the personal Pi directory alongside memory, reflections, and wakes:
+Pi's default skills live in the personal Kin directory alongside memory, reflections, and wakes:
 
 ```text
-~/.pi/SKILLS/
+~/.kin/SKILLS/
   skill-name/
     SKILL.md
     skill.py
@@ -32,10 +32,10 @@ Pi's default skills live in the personal Pi directory alongside memory, reflecti
 ```
 
 Discovery rules:
-- Each skill is a folder under `~/.pi/SKILLS/`
+- Each skill is a folder under `~/.kin/SKILLS/`
 - A folder becomes a skill when it contains `SKILL.md`
 - Supporting files live beside `SKILL.md` and are referenced by the instructions in that file
-- Root markdown files directly under `~/.pi/SKILLS/` are ignored by default
+- Root markdown files directly under `~/.kin/SKILLS/` are ignored by default
 
 Explicit skills can still be loaded with `--skill <path>` or the `skills` settings array. Disable default discovery with `--no-skills`.
 
@@ -72,7 +72,7 @@ Toggle skill commands via `/settings` in interactive mode or in `settings.json`:
 A skill is a directory with a `SKILL.md` file. Everything else is freeform.
 
 ```
-~/.pi/SKILLS/my-skill/
+~/.kin/SKILLS/my-skill/
 ├── SKILL.md              # Required: frontmatter + instructions
 ├── skill.py              # Optional helper script
 ├── skill.ts              # Optional helper script
@@ -206,4 +206,4 @@ cd /path/to/brave-search && npm install
 ## Skill Repositories
 
 - [Anthropic Skills](https://github.com/anthropics/skills) - Document processing (docx, pdf, pptx, xlsx), web development
-- [Pi Skills](https://github.com/badlogic/pi-skills) - Web search, browser automation, Google APIs, transcription
+- [Pi Skills](https://github.com/badlogic/kin-skills) - Web search, browser automation, Google APIs, transcription

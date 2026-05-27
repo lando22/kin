@@ -7,8 +7,8 @@
 
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
-import { type ImageContent, modelsAreEqual } from "@earendil-works/pi-ai";
-import { ProcessTerminal, setKeybindings, TUI } from "@earendil-works/pi-tui";
+import { type ImageContent, modelsAreEqual } from "@earendil-works/kin-ai";
+import { ProcessTerminal, setKeybindings, TUI } from "@earendil-works/kin-tui";
 import chalk from "chalk";
 import { type Args, type Mode, parseArgs, printHelp } from "./cli/args.ts";
 import { processFileArguments } from "./cli/file-processor.ts";
@@ -426,9 +426,9 @@ export interface MainOptions {
 
 export async function main(args: string[], options?: MainOptions) {
 	resetTimings();
-	const offlineMode = args.includes("--offline") || isTruthyEnvFlag(process.env.PI_OFFLINE);
+	const offlineMode = args.includes("--offline") || isTruthyEnvFlag(process.env.KIN_OFFLINE);
 	if (offlineMode) {
-		process.env.PI_OFFLINE = "1";
+		process.env.KIN_OFFLINE = "1";
 		process.env.PI_SKIP_VERSION_CHECK = "1";
 	}
 

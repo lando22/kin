@@ -2,7 +2,7 @@
  * Reflection engine for Pi's autonomous reflection feature.
  *
  * Reads session files, feeds conversations through the LLM, and writes
- * structured reflections to ~/.pi/Reflections/<date>/REFLECTION.md.
+ * structured reflections to ~/.kin/Reflections/<date>/REFLECTION.md.
  *
  * Used by both the `/reflect` slash command and the `pi reflect` CLI command.
  */
@@ -10,8 +10,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
-import type { Message, Model } from "@earendil-works/pi-ai";
-import { completeSimple } from "@earendil-works/pi-ai";
+import type { Message, Model } from "@earendil-works/kin-ai";
+import { completeSimple } from "@earendil-works/kin-ai";
 
 // =============================================================================
 // Date helpers (local time, not UTC)
@@ -167,7 +167,7 @@ export function buildReflectionContext(
 	systemPrompt: string;
 	messages: Message[];
 } {
-	// Reflections are grouped by local day, matching session discovery and ~/.pi/Notes filenames.
+	// Reflections are grouped by local day, matching session discovery and ~/.kin/Notes filenames.
 	const dateStr = formatLocalDate(date);
 	let systemPrompt = REFLECTION_SYSTEM_PROMPT.replace("YYYY-MM-DD", dateStr);
 
@@ -182,7 +182,7 @@ export function buildReflectionContext(
 		// Update blocks are an escape hatch: the reflection remains readable markdown,
 		// while machine-parseable fenced blocks let the CLI apply memory/project edits.
 		const projectNames = projectContexts.map((p) => p.name).join(", ");
-		systemPrompt += `\n\nAdditionally, you have the ability to update the user's long-term memory (~/.pi/MEMORY.md) and per-project context files based on today's sessions and learnings.
+		systemPrompt += `\n\nAdditionally, you have the ability to update the user's long-term memory (~/.kin/MEMORY.md) and per-project context files based on today's sessions and learnings.
 
 To update memory or project files, append blocks at the very end of your response:
 
@@ -392,7 +392,7 @@ export function getAgendaPath(date?: Date): string {
 function getReflectionFilePath(fileName: string, date?: Date): string {
 	const d = date ?? new Date();
 	const dateStr = formatLocalDate(d);
-	return join(homedir(), ".pi", "Reflections", dateStr, fileName);
+	return join(homedir(), ".kin", "Reflections", dateStr, fileName);
 }
 
 /** Check if an agenda exists for the given date. */
@@ -477,7 +477,7 @@ export function parseReflectionUpdates(rawReflection: string): ExtractedUpdates 
 
 /** Write the updated memory content. */
 export function writeMemoryContent(content: string, homeDir = homedir()): void {
-	const dir = join(homeDir, ".pi");
+	const dir = join(homeDir, ".kin");
 	if (!existsSync(dir)) {
 		mkdirSync(dir, { recursive: true });
 	}
@@ -488,7 +488,7 @@ export function writeMemoryContent(content: string, homeDir = homedir()): void {
 /** Write the updated project content. */
 export function writeProjectContent(cwd: string, content: string, homeDir = homedir()): void {
 	const projectName = basename(cwd);
-	const dir = join(homeDir, ".pi", "Projects", projectName);
+	const dir = join(homeDir, ".kin", "Projects", projectName);
 	if (!existsSync(dir)) {
 		mkdirSync(dir, { recursive: true });
 	}

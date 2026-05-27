@@ -14,18 +14,18 @@ function localDateStr(date: Date = new Date()): string {
 export const PI_MEMORY_ENTRIES = ["MEMORY.md", "PREFERENCES.md", "Notes", "Reflections", "Projects"] as const;
 
 /** Resolve the root of Pi's personal memory directory. Tests can pass a fake home dir. */
-export function getPiMemoryDir(homeDir = homedir()): string {
-	return join(homeDir, ".pi");
+export function getKinMemoryDir(homeDir = homedir()): string {
+	return join(homeDir, ".kin");
 }
 
 /** Return absolute paths for every resettable top-level memory entry. */
-export function getPiMemoryPaths(homeDir = homedir()): string[] {
-	return PI_MEMORY_ENTRIES.map((entry) => join(getPiMemoryDir(homeDir), entry));
+export function getKinMemoryPaths(homeDir = homedir()): string[] {
+	return PI_MEMORY_ENTRIES.map((entry) => join(getKinMemoryDir(homeDir), entry));
 }
 
 /** Remove all resettable personal memory entries without failing on missing files. */
-export function resetPiMemory(homeDir = homedir()): void {
-	for (const target of getPiMemoryPaths(homeDir)) {
+export function resetKinMemory(homeDir = homedir()): void {
+	for (const target of getKinMemoryPaths(homeDir)) {
 		rmSync(target, { force: true, recursive: true });
 	}
 }
@@ -39,23 +39,29 @@ function readTrimmedFile(path: string): string | null {
 
 /** Durable user-level memory loaded into every agent session. */
 export function readMemoryContent(homeDir = homedir()): string | null {
-	return readTrimmedFile(join(getPiMemoryDir(homeDir), "MEMORY.md"));
+	return readTrimmedFile(join(getKinMemoryDir(homeDir), "MEMORY.md"));
 }
 
 /** User preferences are separate from MEMORY.md so tone/style updates can stay targeted. */
 export function readPreferencesContent(homeDir = homedir()): string | null {
-	return readTrimmedFile(join(getPiMemoryDir(homeDir), "PREFERENCES.md"));
+	return readTrimmedFile(join(getKinMemoryDir(homeDir), "PREFERENCES.md"));
 }
 
 /** Project memory is keyed by cwd basename, matching how session/project context is displayed elsewhere. */
 export function readProjectContent(cwd: string, homeDir = homedir()): string | null {
 	const projectName = basename(cwd);
-	return readTrimmedFile(join(getPiMemoryDir(homeDir), "Projects", projectName, "PROJECT.md"));
+	return readTrimmedFile(join(getKinMemoryDir(homeDir), "Projects", projectName, "PROJECT.md"));
+}
+
+/** Project state tracks current agenda, open questions, recent decisions, and sharp edges. */
+export function readProjectStateContent(cwd: string, homeDir = homedir()): string | null {
+	const projectName = basename(cwd);
+	return readTrimmedFile(join(getKinMemoryDir(homeDir), "Projects", projectName, "STATE.md"));
 }
 
 /** Notes are daily scratch observations that later feed the reflection cycle. */
 export function getNotesPath(date?: Date, homeDir = homedir()): string {
-	return join(getPiMemoryDir(homeDir), "Notes", `${localDateStr(date)}.md`);
+	return join(getKinMemoryDir(homeDir), "Notes", `${localDateStr(date)}.md`);
 }
 
 /** Read today's notes, if any were captured during active sessions. */
@@ -65,7 +71,7 @@ export function readNotesContent(date?: Date, homeDir = homedir()): string | nul
 
 /** WORKING.md is ephemeral task state, separate from durable memory. */
 export function getWorkingPath(homeDir = homedir()): string {
-	return join(getPiMemoryDir(homeDir), "WORKING.md");
+	return join(getKinMemoryDir(homeDir), "WORKING.md");
 }
 
 /** Load current task state so a rebuilt prompt can pick up where the session left off. */
