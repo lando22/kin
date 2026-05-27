@@ -4034,7 +4034,9 @@ export class InteractiveMode {
 					"text",
 					"I learn who you are, how you work, and what you're building - so I can actually be useful over time.",
 				),
+				"",
 				theme.fg("text", "This isn't a form. It's a conversation. Like meeting a coworker for the first time."),
+				"",
 				theme.fg("dim", "It takes about 2 minutes, and it pays off immediately."),
 			];
 
@@ -4072,13 +4074,17 @@ export class InteractiveMode {
 				theme.fg("accent", theme.bold("Hey, I'm Kin - your personal collaborator.")),
 				"",
 				theme.fg("text", "I remember who you are, what you're working on, and how you like to work."),
+				"",
 				theme.fg("text", "I get sharper every time we talk."),
 				"",
 				theme.fg("text", "I can read files, run commands, edit code, and help with whatever's relevant to you."),
+				"",
 				theme.fg("text", "Memory is what makes me actually useful."),
 				"",
 				theme.fg("text", `Right now I'm in ${cwd}.`),
+				"",
 				theme.fg("text", "Ask me anything, or just tell me what you're working on."),
+				"",
 				theme.fg("dim", options.skipHint),
 			];
 			this.chatContainer.addChild(new Spacer(1));
