@@ -4071,16 +4071,14 @@ export class InteractiveMode {
 			const skipLines = [
 				theme.fg("accent", theme.bold("Hey, I'm Kin - your personal collaborator.")),
 				"",
-				theme.fg(
-					"text",
-					"I remember who you are, what you're working on, and how you like to work - and I get sharper every time we talk.",
-				),
-				theme.fg(
-					"text",
-					"I can read files, run commands, edit code, and help with whatever's relevant to you. Memory is what makes me actually useful.",
-				),
+				theme.fg("text", "I remember who you are, what you're working on, and how you like to work."),
+				theme.fg("text", "I get sharper every time we talk."),
 				"",
-				theme.fg("text", `Right now I'm in ${cwd}. Ask me anything - or just tell me what you're working on.`),
+				theme.fg("text", "I can read files, run commands, edit code, and help with whatever's relevant to you."),
+				theme.fg("text", "Memory is what makes me actually useful."),
+				"",
+				theme.fg("text", `Right now I'm in ${cwd}.`),
+				theme.fg("text", "Ask me anything, or just tell me what you're working on."),
 				theme.fg("dim", options.skipHint),
 			];
 			this.chatContainer.addChild(new Spacer(1));
