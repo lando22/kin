@@ -2,7 +2,7 @@
  * System prompt construction and project context loading
  */
 
-import { formatSkillsForPrompt, type Skill } from "./skills.ts";
+import type { Skill } from "./skills.ts";
 
 const WAKE_CONTEXT_GUIDANCE =
 	"A conversation may start with a hidden context message formatted as <wake>message</wake>. If present, treat it as Kin's wake message that the user may be replying to. If the user's request is unrelated, continue with their current request normally.";
@@ -148,7 +148,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const appendSection = appendSystemPrompt ? `\n\n${appendSystemPrompt}` : "";
 
 	const contextFiles = providedContextFiles ?? [];
-	const skills = providedSkills ?? [];
+	const _skills = providedSkills ?? [];
 
 	// Memory comes before runtime facts so date/cwd stay close to the end of the prompt.
 	const appendRuntimeContext = (prompt: string): string =>
@@ -167,12 +167,6 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		}
 
 		prompt += formatContextFilesForPrompt(contextFiles);
-
-		// Append skills section (only if read tool is available)
-		const customPromptHasBash = !selectedTools || selectedTools.includes("bash");
-		if (customPromptHasBash && skills.length > 0) {
-			prompt += formatSkillsForPrompt(skills);
-		}
 
 		return appendRuntimeContext(prompt);
 	}
@@ -264,11 +258,6 @@ ${guidelines.length > 0 ? `${guidelines}\n` : ""}- Be concise — short by defau
 	}
 
 	prompt += formatContextFilesForPrompt(contextFiles);
-
-	// Append skills section when bash is available (skills are invoked via bash)
-	if (hasBash && skills.length > 0) {
-		prompt += formatSkillsForPrompt(skills);
-	}
 
 	return appendRuntimeContext(prompt);
 }
