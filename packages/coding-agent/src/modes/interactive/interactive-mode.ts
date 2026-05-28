@@ -56,6 +56,7 @@ import {
 	getAuthPath,
 	getDebugLogPath,
 	getDocsPath,
+	getKinDir,
 	getSessionsDir,
 	VERSION,
 } from "../../config.ts";
@@ -4167,7 +4168,7 @@ export class InteractiveMode {
 
 	private installReflectWakePlists(reflectHour: number): void {
 		const homeDir = os.homedir();
-		const piDir = this.sessionManager.getCwd();
+		const kinDir = getKinDir(getAgentDir());
 		// Resolve kin bin path using known global symlink or which fallback
 		let kinBin: string;
 		try {
@@ -4190,9 +4191,11 @@ export class InteractiveMode {
 	<array>
 		<string>${this.escapePlistString(kinBin)}</string>
 		<string>${wake ? "wake" : "reflect"}</string>
+		<string>--cwd</string>
+		<string>${this.escapePlistString(kinDir)}</string>
 	</array>
 	<key>WorkingDirectory</key>
-	<string>${this.escapePlistString(piDir)}</string>
+	<string>${this.escapePlistString(kinDir)}</string>
 	<key>StartCalendarInterval</key>
 	<dict>
 		<key>Hour</key>
@@ -4210,6 +4213,7 @@ export class InteractiveMode {
 </plist>`;
 
 		fs.mkdirSync(path.dirname(reflectPlistPath), { recursive: true });
+		fs.mkdirSync(kinDir, { recursive: true });
 		fs.writeFileSync(reflectPlistPath, launchdPlist("com.kin.reflect", false), "utf-8");
 		fs.writeFileSync(wakePlistPath, launchdPlist("com.kin.wake", true), "utf-8");
 
