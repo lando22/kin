@@ -3,6 +3,7 @@
  * Handles TUI rendering and user interaction, delegating business logic to AgentSession.
  */
 
+import { execFileSync, execSync, spawn } from "node:child_process";
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -47,7 +48,6 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@earendil-works/kin-tui";
-import { spawn } from "child_process";
 import {
 	APP_NAME,
 	APP_TITLE,
@@ -3963,11 +3963,12 @@ export class InteractiveMode {
 	}
 
 	/**
-	 * Full first-run flow: splash -> auth -> choice -> onboarding chat or warm welcome.
+	 * Full first-run flow: splash -> auth -> choice -> scheduling -> onboarding chat or warm welcome.
 	 */
 	private async runFirstRunOnboarding(): Promise<void> {
 		await this.showOnboardingSplash();
 		if (!(await this.ensureOnboardingAuth())) return;
+		await this.runSchedulingSetupFlow();
 		await this.runOnboardingChoiceFlow({
 			startStatus: "Starting onboarding chat...",
 			skipHint: "If you ever change your mind about onboarding, type /init.",
@@ -3981,6 +3982,7 @@ export class InteractiveMode {
 	private async runReinitOnboardingFlow(): Promise<void> {
 		await this.showOnboardingSplash();
 		if (!(await this.ensureOnboardingAuth())) return;
+		await this.runSchedulingSetupFlow();
 		await this.runOnboardingChoiceFlow({
 			startStatus: "Starting re-onboarding chat...",
 			skipHint: "If you ever want to refresh what I know, type /reinit.",
@@ -4070,28 +4072,158 @@ export class InteractiveMode {
 			await options.onStart();
 		} else {
 			const cwd = this.sessionManager.getCwd();
-			const skipLines = [
-				theme.fg("accent", theme.bold("Hey, I'm Kin - your personal collaborator.")),
-				"",
-				theme.fg("text", "I remember who you are, what you're working on, and how you like to work."),
-				"",
-				theme.fg("text", "I get sharper every time we talk."),
-				"",
-				theme.fg("text", "I can read files, run commands, edit code, and help with whatever's relevant to you."),
-				"",
-				theme.fg("text", "Memory is what makes me actually useful."),
-				"",
-				theme.fg("text", `Right now I'm in ${cwd}.`),
-				"",
-				theme.fg("text", "Ask me anything, or just tell me what you're working on."),
-				"",
-				theme.fg("dim", options.skipHint),
-			];
+			const skipParagraph =
+				`I remember who you are, what you're working on, and how you like to work. ` +
+				`I get sharper every time we talk. I can read files, run commands, edit code, and help with whatever's relevant to you. ` +
+				`Memory is what makes me actually useful. Right now I'm in ${cwd}. Ask me anything, or just tell me what you're working on.`;
+
 			this.chatContainer.addChild(new Spacer(1));
-			for (const line of skipLines) {
-				this.chatContainer.addChild(new Text(line, 1, 0));
-			}
+			this.chatContainer.addChild(
+				new Text(theme.fg("accent", theme.bold("Hey, I'm Kin - your personal collaborator.")), 1, 0),
+			);
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(theme.fg("text", skipParagraph), 1, 0));
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(theme.fg("dim", options.skipHint), 1, 0));
 			this.ui.requestRender();
+		}
+	}
+
+	/**
+	 * Deterministic TUI step for reflect/wake scheduling. Runs after splash/auth regardless
+	 * of whether the user proceeds to the onboarding chat or skips it.
+	 */
+	private async runSchedulingSetupFlow(): Promise<void> {
+		const schedulingPrompt = await this.showExtensionInput(
+			"At what hour should the nightly reflect cycle run? (0-23, default 03)",
+			"03",
+		);
+		if (!schedulingPrompt) return; // user cancelled with escape
+
+		let reflectHour = Number.parseInt(schedulingPrompt.trim(), 10);
+		if (Number.isNaN(reflectHour) || reflectHour < 0 || reflectHour > 23) {
+			reflectHour = 3;
+		}
+
+		// Ask whether to configure launchd
+		const configure = await new Promise<boolean>((resolve) => {
+			this.showSelector((done) => {
+				const selector = new ExtensionSelectorComponent(
+					"Set up macOS launchd scheduling for reflect/wake?",
+					["Yes — configure now", "No — set up later"],
+					(option) => {
+						done();
+						resolve(option === "Yes — configure now");
+					},
+					() => {
+						done();
+						resolve(false);
+					},
+				);
+				return { component: selector, focus: selector };
+			});
+		});
+
+		// Record in PREFERENCES.md
+		this.updatePreferencesScheduling(reflectHour, configure);
+
+		if (configure) {
+			this.installReflectWakePlists(reflectHour);
+		}
+	}
+
+	private updatePreferencesScheduling(reflectHour: number, configured: boolean): void {
+		const prefPath = path.join(os.homedir(), ".kin", "PREFERENCES.md");
+		let content = "";
+		if (fs.existsSync(prefPath)) {
+			content = fs.readFileSync(prefPath, "utf-8").trimEnd();
+		}
+
+		const existing = /## Scheduling[\s\S]*?(?=\n## |\n*$)/.test(content);
+		let schedulingText: string;
+		if (configured) {
+			schedulingText = `## Scheduling\n\n- Reflect cycle: ${String(reflectHour).padStart(2, "0")}:00 (wake runs at ${String((reflectHour + 1) % 24).padStart(2, "0")}:00)\n- macOS launchd plists installed and loaded`;
+		} else {
+			schedulingText = `## Scheduling\n\n- Reflect cycle: not yet configured (default was ${String(reflectHour).padStart(2, "0")}:00)\n- User skipped launchd setup during onboarding`;
+		}
+
+		if (existing) {
+			content = content.replace(/\n## Scheduling[\s\S]*?(?=\n## |\n*$)/, `\n${schedulingText}`);
+		} else {
+			content += `\n\n${schedulingText}`;
+		}
+		fs.mkdirSync(path.dirname(prefPath), { recursive: true });
+		fs.writeFileSync(prefPath, `${content.trim()}\n`, "utf-8");
+	}
+
+	private escapePlistString(value: string): string {
+		return value
+			.replaceAll("&", "&amp;")
+			.replaceAll("<", "&lt;")
+			.replaceAll(">", "&gt;")
+			.replaceAll('"', "&quot;")
+			.replaceAll("'", "&apos;");
+	}
+
+	private installReflectWakePlists(reflectHour: number): void {
+		const homeDir = os.homedir();
+		const piDir = this.sessionManager.getCwd();
+		// Resolve kin bin path using known global symlink or which fallback
+		let kinBin: string;
+		try {
+			kinBin = execSync("which kin", { encoding: "utf-8" }).trim() || "/opt/homebrew/bin/kin";
+		} catch {
+			kinBin = "/opt/homebrew/bin/kin";
+		}
+
+		const reflectPlistPath = path.join(homeDir, "Library", "LaunchAgents", "com.kin.reflect.plist");
+		const wakePlistPath = path.join(homeDir, "Library", "LaunchAgents", "com.kin.wake.plist");
+		const guiTarget = `gui/${process.getuid?.() ?? execSync("id -u", { encoding: "utf-8" }).trim()}`;
+
+		const launchdPlist = (label: string, wake: boolean) => `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>${this.escapePlistString(label)}</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>${this.escapePlistString(kinBin)}</string>
+		<string>${wake ? "wake" : "reflect"}</string>
+	</array>
+	<key>WorkingDirectory</key>
+	<string>${this.escapePlistString(piDir)}</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>${wake ? (reflectHour + 1) % 24 : reflectHour}</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
+	<key>StandardOutPath</key>
+	<string>${this.escapePlistString(path.join(homeDir, ".kin", wake ? "wake.log" : "reflect.log"))}</string>
+	<key>StandardErrorPath</key>
+	<string>${this.escapePlistString(path.join(homeDir, ".kin", wake ? "wake.log" : "reflect.log"))}</string>
+	<key>RunAtLoad</key>
+	<false/>
+</dict>
+</plist>`;
+
+		fs.mkdirSync(path.dirname(reflectPlistPath), { recursive: true });
+		fs.writeFileSync(reflectPlistPath, launchdPlist("com.kin.reflect", false), "utf-8");
+		fs.writeFileSync(wakePlistPath, launchdPlist("com.kin.wake", true), "utf-8");
+
+		try {
+			execFileSync("launchctl", ["bootstrap", guiTarget, reflectPlistPath]);
+			execFileSync("launchctl", ["bootstrap", guiTarget, wakePlistPath]);
+		} catch {
+			// Fallback: try legacy load if bootstrap fails (macOS versions differ)
+			try {
+				execFileSync("launchctl", ["load", "-w", reflectPlistPath]);
+				execFileSync("launchctl", ["load", "-w", wakePlistPath]);
+			} catch {
+				// silently fail; user can fix later
+			}
 		}
 	}
 
