@@ -48,7 +48,6 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | `/clone` | Duplicate the current active branch into a new session |
 | `/compact [prompt]` | Manually compact context, optionally with custom instructions |
 | `/copy` | Copy last assistant message to clipboard |
-| `/export [file]` | Export session to HTML |
 | `/share` | Upload as private GitHub gist with shareable HTML link |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files |
 | `/hotkeys` | Show all keyboard shortcuts |
@@ -109,9 +108,7 @@ Replace the default system prompt with:
 
 Append to the default prompt without replacing it with `APPEND_SYSTEM.md` in either location.
 
-## Exporting and Sharing Sessions
-
-Use `/export [file]` to write a session to HTML.
+## Sharing Sessions
 
 Use `/share` to upload a private GitHub gist with a shareable HTML link.
 
@@ -141,6 +138,19 @@ These commands manage pi packages, not the pi CLI installation. To uninstall pi 
 
 See [Pi Packages](packages.md) for package sources and security notes.
 
+### Context Transfer
+
+```bash
+kin export [output.tar.gz]    # Export personal context for another computer
+kin import [archive.tar.gz]   # Import personal context from an archive
+```
+
+Use `kin export [output.tar.gz]` to create a context archive for another computer. It includes memory, preferences, working notes, notes, reflections, wakes, projects, personal skills, sessions, prompts, themes, extensions, settings, `models.json`, and global `AGENTS.md`/`CLAUDE.md` files.
+
+Use `kin import [archive.tar.gz]` on the other computer to restore that context. If no archive path is provided, kin uses the newest `kin-context-*.tar.gz` archive it finds in the current directory, `~/Downloads`, or `~`.
+
+Context archives intentionally exclude auth tokens, cached binaries, tools, debug logs, and project source checkouts.
+
 ### Modes
 
 | Flag | Description |
@@ -149,7 +159,6 @@ See [Pi Packages](packages.md) for package sources and security notes.
 | `-p`, `--print` | Print response and exit |
 | `--mode json` | Output all events as JSON lines; see [JSON mode](json.md) |
 | `--mode rpc` | RPC mode over stdin/stdout; see [RPC mode](rpc.md) |
-| `--export <in> [out]` | Export a session to HTML |
 
 In print mode, pi also reads piped stdin and merges it into the initial prompt:
 

@@ -185,7 +185,6 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 | `/clone` | Duplicate the current active branch into a new session |
 | `/compact [prompt]` | Manually compact context, optional custom instructions |
 | `/copy` | Copy last assistant message to clipboard |
-| `/export [file]` | Export session to HTML file |
 | `/share` | Upload as private GitHub gist with shareable HTML link |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files (themes hot-reload automatically) |
 | `/hotkeys` | Show all keyboard shortcuts |
@@ -506,6 +505,15 @@ pi list                      # List installed packages
 pi config                    # Enable/disable package resources
 ```
 
+### Context Transfer
+
+```bash
+kin export [output.tar.gz]    # Export personal context for another computer
+kin import [archive.tar.gz]   # Import personal context from an archive
+```
+
+`kin export` includes memory, preferences, working notes, notes, reflections, wakes, projects, personal skills, sessions, prompts, themes, extensions, settings, `models.json`, and global `AGENTS.md`/`CLAUDE.md` files. It intentionally excludes auth tokens, cached binaries/tools, debug logs, and project source checkouts.
+
 ### Modes
 
 | Flag | Description |
@@ -514,7 +522,6 @@ pi config                    # Enable/disable package resources
 | `-p`, `--print` | Print response and exit |
 | `--mode json` | Output all events as JSON lines (see [docs/json.md](docs/json.md)) |
 | `--mode rpc` | RPC mode for process integration (see [docs/rpc.md](docs/rpc.md)) |
-| `--export <in> [out]` | Export session to HTML |
 
 In print mode, pi also reads piped stdin and merges it into the initial prompt:
 
