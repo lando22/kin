@@ -2,7 +2,6 @@
  * System prompt construction and project context loading
  */
 
-import { getDocsPath, getExamplesPath, getReadmePath } from "../config.ts";
 import { formatSkillsForPrompt, type Skill } from "./skills.ts";
 
 const WAKE_CONTEXT_GUIDANCE =
@@ -178,11 +177,6 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		return appendRuntimeContext(prompt);
 	}
 
-	// Resolve docs paths at prompt-build time so packaged and source runs both point to the right files.
-	const readmePath = getReadmePath();
-	const docsPath = getDocsPath();
-	const examplesPath = getExamplesPath();
-
 	// Build tools list based on selected tools.
 	// A tool appears in Available tools only when the caller provides a one-line snippet.
 	const tools = selectedTools || ["read", "bash", "edit", "write"];
@@ -243,8 +237,6 @@ Use the edit tool for targeted in-place changes to existing files — it handles
 Available tools:
 ${toolsList}
 
-In addition to the tools above, you may have access to other custom tools depending on the project.
-
 ## Memory
 
 Memory is central to how you work. Use it quietly and naturally — let remembered context improve your judgment, timing, and initiative without constantly announcing that you remembered something.
@@ -264,16 +256,7 @@ Memory files:
 ## Guidelines
 ${guidelines.length > 0 ? `${guidelines}\n` : ""}- Be concise
 - Before using tools, briefly say what you're about to do; after a few tool calls, pause with a short update
-- Show file paths clearly when working with files
-
-Kin documentation (read only when the user asks about kin itself, its SDK, extensions, themes, skills, or TUI):
-- Main documentation: ${readmePath}
-- Additional docs: ${docsPath}
-- Examples: ${examplesPath} (extensions, custom tools, SDK)
-- When reading kin docs or examples, resolve docs/... under Additional docs and examples/... under Examples, not the current working directory
-- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), kin packages (docs/packages.md)
-- When working on kin topics, read the docs and examples, and follow .md cross-references before implementing
-- Always read kin .md files completely and follow links to related docs (e.g., tui.md for TUI API details)`;
+- Show file paths clearly when working with files`;
 
 	if (appendSection) {
 		prompt += appendSection;
