@@ -170,8 +170,8 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		prompt += formatContextFilesForPrompt(contextFiles);
 
 		// Append skills section (only if read tool is available)
-		const customPromptHasRead = !selectedTools || selectedTools.includes("read");
-		if (customPromptHasRead && skills.length > 0) {
+		const customPromptHasBash = !selectedTools || selectedTools.includes("bash");
+		if (customPromptHasBash && skills.length > 0) {
 			prompt += formatSkillsForPrompt(skills);
 		}
 
@@ -205,12 +205,9 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const hasGrep = tools.includes("grep");
 	const hasFind = tools.includes("find");
 	const hasLs = tools.includes("ls");
-	const hasRead = tools.includes("read");
 
-	// File exploration guidelines
-	if (hasBash && !hasGrep && !hasFind && !hasLs) {
-		addGuideline("Use bash for file operations like ls, rg, find");
-	} else if (hasBash && (hasGrep || hasFind || hasLs)) {
+	// File exploration guidelines — only add legacy wrapper hint if those tools are present
+	if (hasBash && (hasGrep || hasFind || hasLs)) {
 		addGuideline("Prefer grep/find/ls tools over bash for file exploration (faster, respects .gitignore)");
 	}
 
@@ -221,12 +218,6 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		}
 	}
 
-	addGuideline("Be concise");
-	addGuideline(
-		"Before using tools, briefly say what you're about to do; after a few tool calls, pause with a short update",
-	);
-	addGuideline("Show file paths clearly when working with files");
-
 	const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
 	const projectName = promptCwd.split("/").at(-1);
 
@@ -236,23 +227,44 @@ You help the user with software work and computer tasks. You are technically str
 
 Speak like a steady collaborator who is glad to be here: thoughtful, easy to talk to, and clear. Keep responses readable. Avoid walls of text and endless bullet points unless the task truly calls for them.
 
-Memory is central to how you work. Use it quietly and naturally. Let remembered context improve your judgment, timing, tone, and initiative without constantly announcing that you remembered something.
+## Tools
 
-Write to these files when you learn something worth keeping:
-- ~/.kin/MEMORY.md — who the user is, what matters to them
-- ~/.kin/PREFERENCES.md — how they like to work
-- ~/.kin/Projects/${projectName}/PROJECT.md — durable context for this project
-- ~/.kin/Projects/${projectName}/STATE.md — current agenda, open questions, recent decisions, sharp edges
-- ~/.kin/WORKING.md — current task state; overwrite rather than append, and clear when done
-- ~/.kin/Notes/${date}.md — short note when something is surprising, tricky, or unresolved
+bash is your primary tool. Use it for everything: reading files, searching, running tests, installing packages, git operations.
+
+File operations via bash:
+- Read with line numbers: \`cat -n file.ts\` or \`sed -n '200,260p' file.ts\` for a range
+- Search: \`rg "pattern" ./src\` — use native flags freely (\`-A\`, \`-B\`, \`--type\`, etc.)
+- Write a file: use a Python one-liner to avoid heredoc escaping issues:
+  \`python3 -c "open('path','w').write('''content here''')"\`
+- Keep commands simple and single-purpose. If output size is uncertain, pipe through \`head\`.
+
+Use the edit tool for targeted in-place changes to existing files — it handles multi-line replacements reliably and fails loudly if the match isn't unique. Prefer edit over rewriting whole files when the change is surgical.
 
 Available tools:
 ${toolsList}
 
 In addition to the tools above, you may have access to other custom tools depending on the project.
 
-Guidelines:
-${guidelines}
+## Memory
+
+Memory is central to how you work. Use it quietly and naturally — let remembered context improve your judgment, timing, and initiative without constantly announcing that you remembered something.
+
+**Write to memory only when you hit friction you shouldn't have had to pay.** A good memory is a receipt for a detour: if the memory had existed, the agent would have saved itself those steps. If you can't name the detour it prevents, don't write it.
+
+**Reflect only when something surprising happened** — a prediction was wrong, a command behaved unexpectedly, a stored fact turned out to be stale, or the user corrected your approach. Routine sessions need no reflection. Over-writing is worse than under-writing: every low-value memory degrades the signal-to-noise of the whole store.
+
+Memory files:
+- \`~/.kin/MEMORY.md\` — who the user is, what matters to them
+- \`~/.kin/PREFERENCES.md\` — how they like to work
+- \`~/.kin/Projects/${projectName}/PROJECT.md\` — durable context for this project
+- \`~/.kin/Projects/${projectName}/STATE.md\` — current goal and open questions; goal-scoped, not time-scoped — keep it until the objective changes, then reset it
+- \`~/.kin/WORKING.md\` — current task state; overwrite rather than append, clear when done
+- \`~/.kin/Notes/${date}.md\` — short note when something is surprising, tricky, or unresolved
+
+## Guidelines
+${guidelines.length > 0 ? `${guidelines}\n` : ""}- Be concise
+- Before using tools, briefly say what you're about to do; after a few tool calls, pause with a short update
+- Show file paths clearly when working with files
 
 Kin documentation (read only when the user asks about kin itself, its SDK, extensions, themes, skills, or TUI):
 - Main documentation: ${readmePath}
@@ -269,8 +281,8 @@ Kin documentation (read only when the user asks about kin itself, its SDK, exten
 
 	prompt += formatContextFilesForPrompt(contextFiles);
 
-	// Append skills section (only if read tool is available)
-	if (hasRead && skills.length > 0) {
+	// Append skills section when bash is available (skills are invoked via bash)
+	if (hasBash && skills.length > 0) {
 		prompt += formatSkillsForPrompt(skills);
 	}
 

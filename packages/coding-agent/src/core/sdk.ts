@@ -284,7 +284,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	// Tool activation has two separate concepts:
 	// - allowedToolNames limits the registry to an allowlist.
 	// - initialActiveToolNames controls what starts enabled for the first turn.
-	const defaultActiveToolNames: ToolName[] = ["read", "bash", "edit", "write"];
+	const defaultActiveToolNames: ToolName[] = ["bash", "edit"];
 	const allowedToolNames = options.tools ?? (options.noTools === "all" ? [] : undefined);
 	const initialActiveToolNames: string[] = options.tools
 		? [...options.tools]
