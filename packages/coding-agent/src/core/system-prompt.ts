@@ -256,7 +256,7 @@ Memory is central to how you work. Use it quietly and naturally — let remember
 Memory files:
 - \`~/.kin/MEMORY.md\` — who the user is, what matters to them
 - \`~/.kin/PREFERENCES.md\` — how they like to work
-- \`~/.kin/Projects/${projectName}/PROJECT.md\` — durable context for this project
+- \`~/.kin/Projects/${projectName}/PROJECT.md\` — durable context for this project; treat the codebase map here as authoritative — if it names a file for a concern, go there directly without exploring first
 - \`~/.kin/Projects/${projectName}/STATE.md\` — current goal and open questions; goal-scoped, not time-scoped — keep it until the objective changes, then reset it
 - \`~/.kin/WORKING.md\` — current task state; overwrite rather than append, clear when done
 - \`~/.kin/Notes/${date}.md\` — short note when something is surprising, tricky, or unresolved

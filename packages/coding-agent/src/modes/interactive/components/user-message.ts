@@ -4,10 +4,9 @@ import { getMarkdownTheme, theme } from "../theme/theme.ts";
 const OSC133_ZONE_START = "\x1b]133;A\x07";
 const OSC133_ZONE_END = "\x1b]133;B\x07";
 const OSC133_ZONE_FINAL = "\x1b]133;C\x07";
-const USER_MARKER = "›";
 const MESSAGE_PADDING_X = 2;
 const MESSAGE_PADDING_Y = 1;
-const MESSAGE_PREFIX_WIDTH = 2;
+const MESSAGE_PREFIX_WIDTH = 0;
 
 function padToWidth(text: string, width: number): string {
 	const currentWidth = visibleWidth(text);
@@ -37,13 +36,9 @@ export class UserMessageComponent extends Container {
 		});
 		const rendered = markdown.render(contentWidth);
 		const blankLine = theme.bg("userMessageBg", " ".repeat(width));
-		const lines = rendered.map((line, index) => {
-			const marker = index === 0 ? theme.fg("accent", USER_MARKER) : " ";
+		const lines = rendered.map((line, _index) => {
 			const content = padToWidth(line.trimEnd(), contentWidth);
-			return theme.bg(
-				"userMessageBg",
-				`${" ".repeat(MESSAGE_PADDING_X)}${marker} ${content}${" ".repeat(MESSAGE_PADDING_X)}`,
-			);
+			return theme.bg("userMessageBg", `${" ".repeat(MESSAGE_PADDING_X)}${content}${" ".repeat(MESSAGE_PADDING_X)}`);
 		});
 
 		if (lines.length === 0) {
