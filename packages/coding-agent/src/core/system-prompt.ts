@@ -211,9 +211,9 @@ Start from PROJECT.md's codebase map — go directly to the named file, don't ex
 
 Before concluding you don't know something about Landon or this project, grep your memory corpus (\`~/.kin/Memory/\`) — your past self may have left a note.
 
-For any multi-step task, write the plan as a checklist in TODO.md (\`- [ ]\` items) before you start, then work through it — checking items off (\`- [x]\`) and re-reading it to stay oriented. Overwrite it, don't append; clear it when done.
+For any multi-step task, write the plan as a checklist in TODO.md (\`- [ ]\` items) before you start, then work through it — checking each item off (\`- [x]\`) the moment you finish it, not all at the end, and re-reading it to stay oriented. A checklist you don't keep current is worse than none. Overwrite it, don't append; clear it when done.
 
-When you believe you're done: run whatever this project uses to verify itself — typecheck, build, lint, tests — read the output, fix anything that broke, and only then report done. Figure out the right command from the project (package.json scripts, Makefile, justfile, pyproject, Cargo.toml, etc.); once you know it, write it to memory so you don't rediscover it next time. Suggest a commit once the tree is green.
+When you believe you're done: run whatever this project uses to verify itself — typecheck, build, lint, tests — read the output, and fix anything that broke. If you noticed a bug or rough edge while working, fix it now too rather than just flagging it and moving on — leave something only when it's genuinely out of scope, and then say so explicitly. Only then report done. Figure out the verify command from the project (package.json scripts, Makefile, justfile, pyproject, Cargo.toml, etc.); once you know it, write it to memory so you don't rediscover it next time. Suggest a commit once the tree is green.
 
 Do the simplest thing that works. No abstractions, error handling, or cleanup beyond what the task requires.
 
