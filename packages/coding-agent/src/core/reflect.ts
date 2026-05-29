@@ -475,9 +475,9 @@ export function parseReflectionUpdates(rawReflection: string): ExtractedUpdates 
 	};
 }
 
-/** Write the updated memory content. */
+/** Write the updated memory portrait (~/.kin/Memory/MEMORY.md). */
 export function writeMemoryContent(content: string, homeDir = homedir()): void {
-	const dir = join(homeDir, ".kin");
+	const dir = join(homeDir, ".kin", "Memory");
 	if (!existsSync(dir)) {
 		mkdirSync(dir, { recursive: true });
 	}

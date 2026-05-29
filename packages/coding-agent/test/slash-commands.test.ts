@@ -27,8 +27,7 @@ describe("built-in slash commands", () => {
 		expect(prompt).toContain("one question at a time");
 		expect(prompt).toContain("don't run a checklist");
 		expect(prompt).toContain("~/.kin");
-		expect(prompt).toContain("MEMORY.md");
-		expect(prompt).toContain("PREFERENCES.md");
+		expect(prompt).toContain("Memory/MEMORY.md");
 		expect(prompt).toContain("Memory has just been cleared");
 		expect(prompt).toContain("Phase 1: Get to know the user");
 	});
@@ -36,13 +35,12 @@ describe("built-in slash commands", () => {
 	it("clears only the Kin memory files and note folders used by init onboarding", () => {
 		const homeDir = join(tmpdir(), `kin-init-memory-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		const kinDir = join(homeDir, ".kin");
-		mkdirSync(join(kinDir, "Notes"), { recursive: true });
+		mkdirSync(join(kinDir, "Memory"), { recursive: true });
 		mkdirSync(join(kinDir, "Reflections"), { recursive: true });
 		mkdirSync(join(kinDir, "Projects"), { recursive: true });
 		mkdirSync(join(kinDir, "agent"), { recursive: true });
-		writeFileSync(join(kinDir, "MEMORY.md"), "old memory");
-		writeFileSync(join(kinDir, "PREFERENCES.md"), "old preferences");
-		writeFileSync(join(kinDir, "Notes", "note.md"), "old note");
+		writeFileSync(join(kinDir, "Memory", "MEMORY.md"), "old memory");
+		writeFileSync(join(kinDir, "Memory", "note.md"), "old note");
 		writeFileSync(join(kinDir, "Reflections", "reflection.md"), "old reflection");
 		writeFileSync(join(kinDir, "Projects", "project.md"), "old project");
 		writeFileSync(join(kinDir, "agent", "auth.json"), "{}");

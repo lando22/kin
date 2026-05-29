@@ -24,15 +24,11 @@ export interface BuildSystemPromptOptions {
 	contextFiles?: Array<{ path: string; content: string }>;
 	/** Pre-loaded skills. */
 	skills?: Skill[];
-	/** Contents of ~/.kin/MEMORY.md, injected at the end of the prompt. */
+	/** Contents of ~/.kin/Memory/MEMORY.md (the personal portrait), injected at the end of the prompt. */
 	memoryContent?: string | null;
-	/** Contents of ~/.kin/PREFERENCES.md, injected at the end of the prompt. */
-	preferencesContent?: string | null;
-	/** Contents of ~/.kin/Projects/<project>/PROJECT.md, injected at the end of the prompt. */
+	/** Contents of ~/.kin/Projects/<project>/PROJECT.md (the project portrait), injected at the end of the prompt. */
 	projectContent?: string | null;
-	/** Contents of ~/.kin/Projects/<project>/STATE.md, injected at the end of the prompt. */
-	projectStateContent?: string | null;
-	/** Contents of ~/.kin/WORKING.md, ephemeral working context. */
+	/** Contents of ~/.kin/TODO.md, ephemeral working context. */
 	workingContent?: string | null;
 }
 
@@ -71,35 +67,23 @@ function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content
  */
 function formatMemorySection(
 	memoryContent?: string | null,
-	preferencesContent?: string | null,
 	projectContent?: string | null,
-	projectStateContent?: string | null,
 	workingContent?: string | null,
 ): string {
-	if (!memoryContent && !preferencesContent && !projectContent && !projectStateContent && !workingContent) return "";
+	if (!memoryContent && !projectContent && !workingContent) return "";
 	const lines = ["\n\n---\n"];
 	if (memoryContent) {
 		lines.push("### Memory\n");
 		lines.push(memoryContent);
 	}
-	if (preferencesContent) {
-		if (memoryContent) lines.push("\n");
-		lines.push("### Preferences\n");
-		lines.push(preferencesContent);
-	}
 	if (projectContent) {
-		if (memoryContent || preferencesContent) lines.push("\n");
+		if (memoryContent) lines.push("\n");
 		lines.push("### Project\n");
 		lines.push(projectContent);
 	}
-	if (projectStateContent) {
-		if (memoryContent || preferencesContent || projectContent) lines.push("\n");
-		lines.push("### Project State\n");
-		lines.push(projectStateContent);
-	}
 	if (workingContent) {
-		if (memoryContent || preferencesContent || projectContent || projectStateContent) lines.push("\n");
-		lines.push("### Working Context\n");
+		if (memoryContent || projectContent) lines.push("\n");
+		lines.push("### TODO\n");
 		lines.push(workingContent);
 	}
 	return lines.join("\n");
@@ -135,9 +119,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		contextFiles: providedContextFiles,
 		skills: providedSkills,
 		memoryContent,
-		preferencesContent,
 		projectContent,
-		projectStateContent,
 		workingContent,
 	} = options;
 	const resolvedCwd = cwd;
@@ -153,7 +135,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	// Memory comes before runtime facts so date/cwd stay close to the end of the prompt.
 	const appendRuntimeContext = (prompt: string): string =>
 		prompt +
-		formatMemorySection(memoryContent, preferencesContent, projectContent, projectStateContent, workingContent) +
+		formatMemorySection(memoryContent, projectContent, workingContent) +
 		`\nCurrent date: ${date}` +
 		`\nCurrent time: ${time}` +
 		`\nCurrent working directory: ${promptCwd}` +
@@ -213,15 +195,12 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 
 ## Tools
 
-bash is your primary tool for everything: reading files, searching, running tests, git, package installs.
+Your tools are bash, read, edit, and write. Reach for the dedicated tool over a bash equivalent — they're more reliable.
 
-File operations:
-- Read with line numbers: \`cat -n file.ts\` or \`sed -n '200,260p' file.ts\` for a range
-- Search: \`rg "pattern" ./src\` — use native flags freely (\`-A\`, \`-B\`, \`--type\`, etc.)
-- Write: \`python3 -c "open('path','w').write('''content here''')"\` — avoids heredoc escaping
-- Pipe uncertain output through \`head\` to avoid context blowout
-
-Use edit for surgical in-place changes — matches exactly, fails loudly if the match isn't unique.
+- bash — your hands on the system: search (\`rg "pattern" ./src\`, use native flags like \`-A\`, \`-B\`, \`--type\` freely), run tests, git, package installs, anything executable. Pipe noisy output through \`head\` to protect context.
+- read — view a file with line numbers; handles images, PDFs, and large files safely. Prefer it over \`cat\`.
+- edit — surgical in-place change; matches exactly and fails loudly if the match isn't unique.
+- write — create a new file or fully rewrite one.
 
 Available tools:
 ${toolsList}
@@ -230,24 +209,31 @@ ${toolsList}
 
 Start from PROJECT.md's codebase map — go directly to the named file, don't explore to confirm.
 
-Before calling anything done: run \`npm run check\` after any code change, test the changed thing if it's testable, suggest a commit when state is green.
+Before concluding you don't know something about Landon or this project, grep your memory corpus (\`~/.kin/Memory/\`) — your past self may have left a note.
 
-Track the current task in WORKING.md — overwrite it, don't append. Clear it when done.
+For any multi-step task, write the plan as a checklist in TODO.md (\`- [ ]\` items) before you start, then work through it — checking items off (\`- [x]\`) and re-reading it to stay oriented. Overwrite it, don't append; clear it when done.
+
+When you believe you're done: run whatever this project uses to verify itself — typecheck, build, lint, tests — read the output, fix anything that broke, and only then report done. Figure out the right command from the project (package.json scripts, Makefile, justfile, pyproject, Cargo.toml, etc.); once you know it, write it to memory so you don't rediscover it next time. Suggest a commit once the tree is green.
 
 Do the simplest thing that works. No abstractions, error handling, or cleanup beyond what the task requires.
 
 ## Memory
 
-Write to memory only when you hit friction you shouldn't have had to pay — a good memory is a receipt for a detour. If you can't name the detour it prevents, don't write it.
+Memory has two layers:
+- **Portrait** — always loaded (the Memory and Project sections below). Small and ambient: who Landon is, how he works, the shape of the project. It holds what you'd never think to look up mid-task, so it has to be in front of you.
+- **Corpus** — \`~/.kin/Memory/\` is a folder of atomic notes, one fact per file, NOT loaded. Everything referenceable: commands, gotchas, decisions, specifics. You reach it by grepping the folder when a concrete cue comes up.
 
-Reflect only when something surprising happened: a wrong prediction, unexpected behavior, a stale fact, or an explicit correction. Routine sessions need no reflection. Over-writing degrades signal-to-noise for every future session.
+Routing a new fact: if you'd never think to search for it (a preference, a standing constraint, the project's shape) → portrait. If you'd grep for it when a cue appeared (a command, an API quirk, a one-off decision) → a corpus note.
+
+Write only when you hit friction you shouldn't have had to pay, or something surprised you — a wrong prediction, an unexpected behavior, a correction, a hard-won command. A good memory is a receipt for a detour; if you can't name the detour it prevents, don't write it. Keep the portrait small and let the corpus grow.
+
+Corpus notes are one fact per file with a descriptive filename and a one-line summary as the first line, so \`ls\`/\`grep\` alone tells you what's inside.
 
 Write to:
-- \`~/.kin/MEMORY.md\` / \`~/.kin/PREFERENCES.md\` — who Landon is and how he works
-- \`~/.kin/Projects/${projectName}/PROJECT.md\` — durable project context
-- \`~/.kin/Projects/${projectName}/STATE.md\` — current goal; reset when the goal changes, not on a schedule
-- \`~/.kin/WORKING.md\` — current task; overwrite, clear when done
-- \`~/.kin/Notes/${date}.md\` — surprising or unresolved things
+- \`~/.kin/Memory/MEMORY.md\` — the personal portrait: who Landon is and how he works
+- \`~/.kin/Memory/<slug>.md\` — atomic corpus notes (referenceable facts)
+- \`~/.kin/Projects/${projectName}/PROJECT.md\` — the project portrait: durable project context
+- \`~/.kin/TODO.md\` — current task checklist; overwrite, clear when done
 
 ## Guidelines
 ${guidelines.length > 0 ? `${guidelines}\n` : ""}- Be concise — short by default, depth when asked

@@ -14,7 +14,7 @@ describe("buildSystemPrompt", () => {
 			expect(prompt).toContain("Available tools:\n(none)");
 		});
 
-		test("shows file paths guideline even with no tools", () => {
+		test("shows default guidelines even with no tools", () => {
 			const prompt = buildSystemPrompt({
 				selectedTools: [],
 				contextFiles: [],
@@ -22,7 +22,7 @@ describe("buildSystemPrompt", () => {
 				cwd: process.cwd(),
 			});
 
-			expect(prompt).toContain("Show file paths clearly");
+			expect(prompt).toContain("Be concise — short by default, depth when asked");
 		});
 	});
 
@@ -34,9 +34,9 @@ describe("buildSystemPrompt", () => {
 				cwd: process.cwd(),
 			});
 
-			expect(prompt).toContain("You are Pi, a personal coding and computer-use agent.");
-			expect(prompt).toContain("Memory is central to how you work.");
-			expect(prompt).toContain("You should feel like a capable person beside the user");
+			expect(prompt).toContain("You are Kin — a personal coding agent built for Landon.");
+			expect(prompt).toContain("Memory has two layers:");
+			expect(prompt).toContain("Be a steady collaborator, not a formal assistant.");
 		});
 
 		test("instructs models to provide brief tool-use progress updates", () => {
@@ -46,8 +46,8 @@ describe("buildSystemPrompt", () => {
 				cwd: process.cwd(),
 			});
 
-			expect(prompt).toContain("Before using tools while working");
-			expect(prompt).toContain("after a few tool calls");
+			expect(prompt).toContain("Before tool calls, say briefly what you're doing");
+			expect(prompt).toContain("every few calls");
 		});
 
 		test("explains wake context messages", () => {
@@ -78,18 +78,6 @@ describe("buildSystemPrompt", () => {
 			expect(prompt).toContain("- bash:");
 			expect(prompt).toContain("- edit:");
 			expect(prompt).toContain("- write:");
-		});
-
-		test("instructs models to resolve pi docs and examples under absolute base paths", () => {
-			const prompt = buildSystemPrompt({
-				contextFiles: [],
-				skills: [],
-				cwd: process.cwd(),
-			});
-
-			expect(prompt).toContain(
-				"- When reading pi docs or examples, resolve docs/... under Additional docs and examples/... under Examples, not the current working directory",
-			);
 		});
 	});
 

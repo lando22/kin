@@ -77,13 +77,7 @@ import {
 	wrapRegisteredTools,
 } from "./extensions/index.ts";
 import { emitSessionShutdownEvent } from "./extensions/runner.ts";
-import {
-	readMemoryContent,
-	readPreferencesContent,
-	readProjectContent,
-	readProjectStateContent,
-	readWorkingContent,
-} from "./kin-memory.ts";
+import { readMemoryContent, readProjectContent, readWorkingContent } from "./kin-memory.ts";
 import type { BashExecutionMessage, CustomMessage } from "./messages.ts";
 import type { ModelRegistry } from "./model-registry.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";
@@ -95,7 +89,7 @@ import type { SlashCommandInfo } from "./slash-commands.ts";
 import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.ts";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "./system-prompt.ts";
 import { type BashOperations, createLocalBashOperations } from "./tools/bash.ts";
-import { createAllToolDefinitions } from "./tools/index.ts";
+import { createCodingToolDefinitions } from "./tools/index.ts";
 import { createToolDefinitionFromAgentTool } from "./tools/tool-definition-wrapper.ts";
 
 // ============================================================================
@@ -915,9 +909,7 @@ export class AgentSession {
 			toolSnippets,
 			promptGuidelines,
 			memoryContent: readMemoryContent(),
-			preferencesContent: readPreferencesContent(),
 			projectContent: readProjectContent(this._cwd),
-			projectStateContent: readProjectStateContent(this._cwd),
 			workingContent: readWorkingContent(),
 		};
 		return buildSystemPrompt(this._baseSystemPromptOptions);
@@ -2373,10 +2365,12 @@ export class AgentSession {
 						createToolDefinitionFromAgentTool(tool),
 					]),
 				)
-			: createAllToolDefinitions(this._cwd, {
-					read: { autoResizeImages },
-					bash: { commandPrefix: shellCommandPrefix, shellPath },
-				});
+			: Object.fromEntries(
+					createCodingToolDefinitions(this._cwd, {
+						read: { autoResizeImages },
+						bash: { commandPrefix: shellCommandPrefix, shellPath },
+					}).map((def) => [def.name, def]),
+				);
 
 		this._baseToolDefinitions = new Map(
 			Object.entries(baseToolDefinitions).map(([name, tool]) => [name, tool as ToolDefinition]),

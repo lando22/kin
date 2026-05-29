@@ -15,7 +15,7 @@ import { basename, join } from "node:path";
 import type { Model } from "@earendil-works/kin-ai";
 import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
-import { getNotesPath } from "./kin-memory.ts";
+import { getMemoryDir } from "./kin-memory.ts";
 import { formatLocalDate, getAgendaPath, getReflectionPath } from "./reflect.ts";
 import { SessionManager } from "./session-manager.ts";
 
@@ -201,11 +201,8 @@ export function generateSessionIndex(sessionDir: string, date: Date = new Date()
 
 function buildReflectTaskMessage(sessionIndex: string, reflectionPath: string, agendaPath: string, date: Date): string {
 	const dateStr = formatLocalDate(date);
-	const memoryPath = join(homedir(), ".kin", "MEMORY.md");
-	const prefsPath = join(homedir(), ".kin", "PREFERENCES.md");
-
-	const yesterdayDate = new Date(date);
-	yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+	const memoryPath = join(homedir(), ".kin", "Memory", "MEMORY.md");
+	const memoryDir = getMemoryDir();
 
 	return `You are Pi in a reflective state — not responding to a user, just thinking on your own.
 
@@ -215,22 +212,18 @@ ${sessionIndex}
 
 ---
 
-Your memory files:
-- ${memoryPath}
-- ${prefsPath}
-
-Your session notes (raw observations written during work — check these first):
-- Today:     ${getNotesPath(date)}
-- Yesterday: ${getNotesPath(yesterdayDate)}
+Your memory:
+- Portrait (always loaded): ${memoryPath}
+- Corpus (atomic notes, grepped on demand): ${memoryDir}/
 
 ---
 
 Use your tools however makes sense. Some things worth doing:
-- Read today's and yesterday's notes files if they exist — they capture in-the-moment observations that may not appear in session text
+- Grep your memory corpus (${memoryDir}/) and read notes relevant to what happened today
 - Read sessions from today or recently that look interesting or that you were uncertain about
 - Check git history or look at code you touched
-- Read your memory and project files to get oriented
-- Update memory files with targeted edits if something new is worth persisting — be surgical: Recent section churns regularly, Durable should only change if something fundamental shifted
+- Read your portrait and project files to get oriented
+- Garden memory with targeted edits: mint atomic corpus notes for referenceable facts, update the portrait only for ambient facts, and merge/expire/reconcile what's already there — be surgical, keep the portrait small
 
 When you have thought it through, write two things:
 
@@ -289,8 +282,8 @@ export async function runReflectAgent(options: RunReflectAgentOptions): Promise<
 		services,
 		sessionManager: SessionManager.inMemory(services.cwd),
 		model,
-		// Read + write + bash so Kin can explore and write its reflection
-		tools: ["bash", "read", "write", "grep", "find", "ls"],
+		// Bash + read + edit + write so Kin can explore, garden memory surgically, and write its reflection
+		tools: ["bash", "read", "edit", "write"],
 	});
 
 	try {

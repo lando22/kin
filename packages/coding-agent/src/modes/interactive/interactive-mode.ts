@@ -76,8 +76,8 @@ import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
 import {
 	getKinMemoryDir,
+	getMemoryDir,
 	readMemoryContent,
-	readNotesContent,
 	readProjectContent,
 	resetKinMemory,
 } from "../../core/kin-memory.ts";
@@ -751,19 +751,14 @@ export class InteractiveMode {
 				rawKeyHint("drop files", "to attach"),
 			].join("\n");
 			const compactInstructions = [
-				hint("app.interrupt", "interrupt"),
-				rawKeyHint(`${keyText("app.clear")}/${keyText("app.exit")}`, "clear/exit"),
+				rawKeyHint("^C", "exit"),
 				rawKeyHint("/", "commands"),
 				rawKeyHint("!", "bash"),
-				hint("app.tools.expand", "more"),
+				rawKeyHint("^O", "more"),
 			].join(theme.fg("muted", " · "));
-			const compactOnboarding = theme.fg("dim", `Press ${keyText("app.tools.expand")} to show full startup help.`);
-			const onboarding = theme.fg(
-				"dim",
-				`Kin can explain its own features and look up its docs. Ask it how to use or extend Kin.`,
-			);
+			const onboarding = theme.fg("dim", "Ask me anything, or / for commands.");
 			this.builtInHeader = new ExpandableText(
-				() => `${brand}\n\n${compactInstructions}\n${compactOnboarding}\n\n${onboarding}`,
+				() => `${brand}\n\n${compactInstructions}\n\n${onboarding}`,
 				() => `${brand}\n\n${expandedInstructions}\n\n${onboarding}`,
 				this.getStartupExpansionState(),
 				1,
@@ -4125,7 +4120,7 @@ export class InteractiveMode {
 			});
 		});
 
-		// Record in PREFERENCES.md
+		// Record in the personal portrait (Memory/MEMORY.md)
 		this.updatePreferencesScheduling(reflectHour, configure);
 
 		if (configure) {
@@ -4134,7 +4129,7 @@ export class InteractiveMode {
 	}
 
 	private updatePreferencesScheduling(reflectHour: number, configured: boolean): void {
-		const prefPath = path.join(os.homedir(), ".kin", "PREFERENCES.md");
+		const prefPath = path.join(getMemoryDir(), "MEMORY.md");
 		let content = "";
 		if (fs.existsSync(prefPath)) {
 			content = fs.readFileSync(prefPath, "utf-8").trimEnd();
@@ -4333,9 +4328,8 @@ export class InteractiveMode {
 			const uniqueCwds = [...new Set(sessions.map((s) => s.cwd).filter((c) => c && c !== "unknown"))];
 			this.showWarning(`Reading ${sessions.length} session(s) across ${uniqueCwds.length} project(s)...`);
 
-			// Read current memory, notes, and all project contexts
+			// Read current memory and all project contexts
 			const currentMemory = readMemoryContent();
-			const notesContent = readNotesContent();
 			const projectContexts = uniqueCwds.map((projectCwd) => ({
 				name: path.basename(projectCwd),
 				content: readProjectContent(projectCwd),
@@ -4344,7 +4338,6 @@ export class InteractiveMode {
 			const rawResponse = await generateReflection(model, sessions, {
 				date: new Date(),
 				currentMemory,
-				notesContent,
 				projectContexts,
 			});
 
@@ -4357,7 +4350,7 @@ export class InteractiveMode {
 			// Write memory update if present
 			if (memoryUpdate !== null) {
 				writeMemoryContent(memoryUpdate);
-				this.showWarning("Memory updated in ~/.kin/MEMORY.md!");
+				this.showWarning("Memory updated in ~/.kin/Memory/MEMORY.md!");
 			}
 
 			// Write named project updates

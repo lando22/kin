@@ -18,15 +18,7 @@ import {
 import { spawnProcessSync } from "../utils/child-process.ts";
 import { SettingsManager } from "./settings-manager.ts";
 
-const PERSONAL_ENTRIES = [
-	"MEMORY.md",
-	"PREFERENCES.md",
-	"WORKING.md",
-	"Notes",
-	"Reflections",
-	"Wakes",
-	"Projects",
-] as const;
+const PERSONAL_ENTRIES = ["Memory", "TODO.md", "Reflections", "Wakes", "Projects"] as const;
 
 const AGENT_FILENAMES = ["AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"] as const;
 

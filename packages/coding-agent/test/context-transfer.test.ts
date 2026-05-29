@@ -32,11 +32,12 @@ describe("Pi context transfer", () => {
 		const targetKin = join(root, "target", ".kin");
 		process.env[ENV_AGENT_DIR] = join(sourcePi, "agent");
 
+		mkdirSync(join(sourcePi, "Memory"), { recursive: true });
 		mkdirSync(join(sourcePi, "Projects", "pi"), { recursive: true });
 		mkdirSync(join(sourcePi, "SKILLS", "review"), { recursive: true });
 		mkdirSync(join(sourcePi, "agent", "sessions", "--project--"), { recursive: true });
-		writeFileSync(join(sourcePi, "MEMORY.md"), "memory");
-		writeFileSync(join(sourcePi, "PREFERENCES.md"), "prefs");
+		writeFileSync(join(sourcePi, "Memory", "MEMORY.md"), "memory");
+		writeFileSync(join(sourcePi, "Memory", "build-command.md"), "note");
 		writeFileSync(join(sourcePi, "Projects", "pi", "PROJECT.md"), "project");
 		writeFileSync(join(sourcePi, "SKILLS", "review", "SKILL.md"), "skill");
 		writeFileSync(join(sourcePi, "agent", "sessions", "--project--", "session.jsonl"), "{}\n");
@@ -53,8 +54,8 @@ describe("Pi context transfer", () => {
 		const imported = importPiContext(archivePath, root);
 		expect(imported.path).toBe(archivePath);
 
-		expect(readFileSync(join(targetKin, "MEMORY.md"), "utf-8")).toBe("memory");
-		expect(readFileSync(join(targetKin, "PREFERENCES.md"), "utf-8")).toBe("prefs");
+		expect(readFileSync(join(targetKin, "Memory", "MEMORY.md"), "utf-8")).toBe("memory");
+		expect(readFileSync(join(targetKin, "Memory", "build-command.md"), "utf-8")).toBe("note");
 		expect(readFileSync(join(targetKin, "Projects", "pi", "PROJECT.md"), "utf-8")).toBe("project");
 		expect(readFileSync(join(targetKin, "SKILLS", "review", "SKILL.md"), "utf-8")).toBe("skill");
 		expect(readFileSync(join(targetKin, "agent", "sessions", "--project--", "session.jsonl"), "utf-8")).toBe("{}\n");
