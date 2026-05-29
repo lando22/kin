@@ -1,5 +1,5 @@
 /**
- * Reflect mode — standalone CLI command for `pi reflect`.
+ * Reflect mode — standalone CLI command for `kin reflect`.
  *
  * Runs Pi as a headless agent with full tool access so it can explore its own
  * session history, read code, and write a reflection (and optional agenda)

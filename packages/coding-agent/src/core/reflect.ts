@@ -4,7 +4,7 @@
  * Reads session files, feeds conversations through the LLM, and writes
  * structured reflections to ~/.kin/Reflections/<date>/REFLECTION.md.
  *
- * Used by both the `/reflect` slash command and the `pi reflect` CLI command.
+ * Used by both the `/reflect` slash command and the `kin reflect` CLI command.
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";

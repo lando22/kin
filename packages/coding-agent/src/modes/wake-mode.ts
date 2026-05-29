@@ -1,5 +1,5 @@
 /**
- * Wake mode — standalone CLI command for `pi wake`.
+ * Wake mode — standalone CLI command for `kin wake`.
  *
  * Bootstraps the services (settings, auth, model registry), reads the latest
  * reflection, generates a wake message via the LLM, and writes it to
@@ -71,7 +71,7 @@ export async function runWakeMode(args: string[], { date }: { date?: Date } = {}
 	// Wake is based on the latest available reflection, not necessarily today's.
 	const latestReflection = findLatestReflection();
 	if (!latestReflection) {
-		console.error(chalk.yellow("No reflections found yet. Run `pi reflect` first."));
+		console.error(chalk.yellow("No reflections found yet. Run `kin reflect` first."));
 		return 0;
 	}
 

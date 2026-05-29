@@ -5,7 +5,7 @@
  * the LLM with memory/project context, and writes a structured wake message to
  * ~/.kin/Wakes/<date>/WAKE.md — or returns <NONE> if there's nothing worth saying.
  *
- * Used by the `pi wake` CLI command.
+ * Used by the `kin wake` CLI command.
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
