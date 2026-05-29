@@ -16,7 +16,8 @@ import { readMemoryContent, readProjectContent } from "../core/kin-memory.ts";
 import type { ModelRegistry } from "../core/model-registry.ts";
 import { formatLocalDate, readAgenda } from "../core/reflect.ts";
 import { SettingsManager } from "../core/settings-manager.ts";
-import { findLatestReflection, generateWake, getWakePath, isNoneResponse, readWake, writeWake } from "../core/wake.ts";
+import { findLatestReflection, getWakePath, readWake } from "../core/wake.ts";
+import { runWakeAgent } from "../core/wake-agent.ts";
 
 /** Run the wake mode and return an exit code. */
 export async function runWakeMode(args: string[], { date }: { date?: Date } = {}): Promise<number> {
@@ -93,36 +94,38 @@ export async function runWakeMode(args: string[], { date }: { date?: Date } = {}
 		console.error(chalk.dim("Found agenda from last reflection."));
 	}
 
-	// Generate wake
-	console.error(chalk.dim("Generating wake message..."));
-	let rawWake: string;
+	// Run the wake agent. It decides whether to leave a message or do work
+	// (branch + PR), and writes WAKE.md itself — or leaves it absent if there's
+	// nothing worth saying.
+	console.error(chalk.dim("Running wake agent..."));
 	try {
-		rawWake = await generateWake(model, {
+		await runWakeAgent({
+			model,
+			services,
 			reflection: latestReflection.content,
-			reflectionDate: formatLocalDate(latestReflection.date),
+			reflectionDate: latestReflection.date,
+			agenda,
 			memory: currentMemory,
 			projectContent: currentProject,
 			projectName,
-			agenda,
+			date: wakeDate,
+			onProgress: (message) => console.error(chalk.dim(message)),
 		});
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		console.error(chalk.red(`Wake generation failed: ${message}`));
+		console.error(chalk.red(`Wake agent failed: ${message}`));
 		return 1;
 	}
 
-	// Do not write a WAKE.md for empty/<NONE>; startup should stay quiet in that case.
-	if (!rawWake || isNoneResponse(rawWake)) {
-		console.error(chalk.dim("Kin has nothing to wake about today. <NONE>"));
+	// The agent writes WAKE.md when it has something to say or do.
+	const produced = readWake(wakeDate);
+	if (!produced) {
+		console.error(chalk.dim("Kin had nothing to wake about today."));
 		return 0;
 	}
 
-	// Write wake
-	writeWake(rawWake, wakeDate);
 	console.error(chalk.green(`Wake written to ${getWakePath(wakeDate)}`));
-
-	// Print the wake to stdout
-	console.log(rawWake);
+	console.log(produced);
 
 	return 0;
 }

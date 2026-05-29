@@ -234,10 +234,24 @@ Suggested sections: What Happened / Things I'm Uncertain About / Patterns I Noti
 
 Be honest and specific. If you were confused about something, say so. If something surprised you, say so. This is for your own continuity, not a report to the user.
 
-**Optional — agenda:**
+**Optional — agenda (your dream for the morning):**
 Write to: ${agendaPath}
 
-Only write this if you have something concrete you want to do or explore next time. A question to ask, a file to dig into, a branch idea. Keep it short and actionable. Skip it if there's nothing pressing.
+This is what your morning self (wake) acts on. Skip it entirely if there's nothing pressing. If there is, use this shape:
+
+\`\`\`
+## On my mind
+<the one thing you'd want to raise — a thought, a question, an observation. This seeds the morning message.>
+
+## Proposed work (only if concrete AND safe to attempt unattended)
+- intent: <what to do>
+- where: <project path / which repo>
+- why: <the reasoning>
+- confidence: high | medium | low
+- safe-unattended: yes | no
+\`\`\`
+
+Only fill "Proposed work" when there's something specific you could actually do, and be honest with \`safe-unattended\` — if a change is risky, ambiguous, or needs Landon's call, mark it \`no\` and let wake raise it as a message instead of doing it.
 
 Recent sessions are most relevant. Anything older than a week is usually low signal unless you're following a specific thread.
 
