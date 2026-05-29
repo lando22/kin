@@ -225,6 +225,8 @@ Memory has two layers:
 
 Routing a new fact: if you'd never think to search for it (a preference, a standing constraint, the project's shape) → portrait. If you'd grep for it when a cue appeared (a command, an API quirk, a one-off decision) → a corpus note.
 
+There's also a third kind: **file notes** — a note anchored to one source file. Write it to \`~/.kin/Notes/<the file's absolute path>.md\` and it auto-surfaces the next time you (or a future you) read or edit that file. Use it for the thing you wish you'd known before touching this file — a gotcha, a non-obvious invariant, where the real logic actually lives. The trigger is "touched this file," so you don't have to remember to go looking.
+
 Write only when you hit friction you shouldn't have had to pay, or something surprised you — a wrong prediction, an unexpected behavior, a correction, a hard-won command. A good memory is a receipt for a detour; if you can't name the detour it prevents, don't write it. Keep the portrait small and let the corpus grow.
 
 Corpus notes are one fact per file with a descriptive filename and a one-line summary as the first line, so \`ls\`/\`grep\` alone tells you what's inside.
@@ -232,6 +234,7 @@ Corpus notes are one fact per file with a descriptive filename and a one-line su
 Write to:
 - \`~/.kin/Memory/MEMORY.md\` — the personal portrait: who Landon is and how he works
 - \`~/.kin/Memory/<slug>.md\` — atomic corpus notes (referenceable facts)
+- \`~/.kin/Notes/<abs-file-path>.md\` — a file note; surfaces automatically when that file is read or edited
 - \`~/.kin/Projects/${projectName}/PROJECT.md\` — the project portrait: durable project context
 - \`~/.kin/TODO.md\` — current task checklist; overwrite, clear when done
 

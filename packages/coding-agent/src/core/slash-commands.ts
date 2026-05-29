@@ -85,6 +85,7 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "model", description: "Select model" },
 	{ name: "compact", description: "Manually compact the session context" },
 	{ name: "reflect", description: "Generate a reflection on today's work" },
+	{ name: "note", description: "Write a file note for a specific source file" },
 	{ name: "login", description: "Configure provider authentication" },
 	{ name: "logout", description: "Remove provider authentication" },
 	{ name: "quit", description: `Quit ${APP_NAME}` },

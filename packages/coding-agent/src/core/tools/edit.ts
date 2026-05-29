@@ -5,6 +5,7 @@ import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } 
 import { type Static, Type } from "typebox";
 import { renderDiff } from "../../modes/interactive/components/diff.ts";
 import type { ToolDefinition } from "../extensions/types.ts";
+import { readFileNote } from "../kin-memory.ts";
 import {
 	applyEditsToNormalizedContent,
 	computeEditsDiff,
@@ -388,11 +389,16 @@ export function createEditToolDefinition(
 								}
 
 								const diffResult = generateDiffString(baseContent, newContent);
+								let resultText = `Successfully replaced ${edits.length} block(s) in ${path}.`;
+								const fileNote = readFileNote(absolutePath);
+								if (fileNote) {
+									resultText += `\n\n[File note for ${path}]:\n${fileNote}\n---`;
+								}
 								resolve({
 									content: [
 										{
 											type: "text",
-											text: `Successfully replaced ${edits.length} block(s) in ${path}.`,
+											text: resultText,
 										},
 									],
 									details: { diff: diffResult.diff, firstChangedLine: diffResult.firstChangedLine },

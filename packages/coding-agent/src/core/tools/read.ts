@@ -12,6 +12,7 @@ import { formatDimensionNote, resizeImage } from "../../utils/image-resize.ts";
 import { detectSupportedImageMimeTypeFromFile } from "../../utils/mime.ts";
 import { formatPathRelativeToCwdOrAbsolute } from "../../utils/paths.ts";
 import type { ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
+import { readFileNote } from "../kin-memory.ts";
 import { resolveReadPath } from "./path-utils.ts";
 import { getTextOutput, invalidArgText, replaceTabs, shortenPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
@@ -325,6 +326,11 @@ export function createReadToolDefinition(
 								} else {
 									// No truncation and no remaining user-limited content.
 									outputText = truncation.content;
+								}
+								// Inject any file note for this path before returning content to the model.
+								const fileNote = readFileNote(absolutePath);
+								if (fileNote) {
+									outputText = `[File note for ${path}]:\n${fileNote}\n---\n\n${outputText}`;
 								}
 								content = [{ type: "text", text: outputText }];
 							}

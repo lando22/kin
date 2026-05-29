@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 /**
  * Memory layout:
@@ -8,6 +8,7 @@ import { basename, dirname, join } from "node:path";
  * - ~/.kin/Memory/<slug>.md      — the corpus: atomic notes, retrieved on demand (grepped, never hotloaded)
  * - ~/.kin/Projects/<name>/PROJECT.md — the project portrait, loaded when working in that project
  * - ~/.kin/TODO.md               — ephemeral current-task checklist
+ * - ~/.kin/Notes/<mirrored-abs-path>.md — file notes: anchored to a specific source file, auto-surfaced on read/edit
  */
 
 /** Top-level personal entries that are safe for `/init` reset flows to remove. */
@@ -73,4 +74,44 @@ export function writeWorkingContent(content: string, homeDir = homedir()): void 
 /** Clear task state when work completes or the agent switches to unrelated work. */
 export function clearWorkingContent(homeDir = homedir()): void {
 	rmSync(getWorkingPath(homeDir), { force: true });
+}
+
+// ============================================================================
+// File Notes
+// ============================================================================
+
+/** Directory for file notes. */
+export function getFileNotesDir(homeDir = homedir()): string {
+	return join(getKinMemoryDir(homeDir), "Notes");
+}
+
+/**
+ * Storage path for a file's note: the file's absolute path mirrored under Notes/, with `.md`
+ * appended. Legible and constructable, so the agent can leave a note with the write tool —
+ * a note for /Users/x/pi/a.ts lives at ~/.kin/Notes/Users/x/pi/a.ts.md.
+ */
+export function getFileNotePath(filePath: string, homeDir = homedir()): string {
+	const mirrored = resolve(filePath).replace(/^\/+/, "");
+	return join(getFileNotesDir(homeDir), `${mirrored}.md`);
+}
+
+/** Read the note for a specific file, if one exists. Strips a legacy `<!-- file: ... -->` header. */
+export function readFileNote(filePath: string, homeDir = homedir()): string | null {
+	const notePath = getFileNotePath(filePath, homeDir);
+	if (!existsSync(notePath)) return null;
+	const raw = readFileSync(notePath, "utf-8");
+	const content = raw.replace(/^\s*<!--\s*file:\s*.+?\s*-->\s*/, "").trim();
+	return content.length > 0 ? content : null;
+}
+
+/** Write or overwrite a note for a specific file. */
+export function writeFileNote(filePath: string, content: string, homeDir = homedir()): void {
+	const notePath = getFileNotePath(filePath, homeDir);
+	mkdirSync(dirname(notePath), { recursive: true });
+	writeFileSync(notePath, `${content.trim()}\n`, "utf-8");
+}
+
+/** Delete a file note. */
+export function deleteFileNote(filePath: string, homeDir = homedir()): void {
+	rmSync(getFileNotePath(filePath, homeDir), { force: true });
 }

@@ -75,11 +75,14 @@ import type {
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/footer-data-provider.ts";
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
 import {
+	deleteFileNote,
 	getKinMemoryDir,
 	getMemoryDir,
+	readFileNote,
 	readMemoryContent,
 	readProjectContent,
 	resetKinMemory,
+	writeFileNote,
 } from "../../core/kin-memory.ts";
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider } from "../../core/model-resolver.ts";
@@ -104,6 +107,7 @@ import {
 } from "../../core/slash-commands.ts";
 import type { SourceInfo } from "../../core/source-info.ts";
 import { isInstallTelemetryEnabled } from "../../core/telemetry.ts";
+import { resolveReadPath } from "../../core/tools/path-utils.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
 import { formatWakeContextMessage, markWakeSeen, readUnseenWake } from "../../core/wake.ts";
 import { getChangelogPath, getNewEntries, parseChangelog } from "../../utils/changelog.ts";
@@ -2696,6 +2700,11 @@ export class InteractiveMode {
 				this.editor.setText("");
 				return;
 			}
+			if (text.startsWith("/note ")) {
+				this.editor.setText("");
+				await this.handleNoteCommand(text);
+				return;
+			}
 			if (text === "/reflect") {
 				this.editor.setText("");
 				this.handleReflectCommand();
@@ -4368,6 +4377,34 @@ export class InteractiveMode {
 			this.chatContainer.addChild(new Text(theme.fg("success", `Reflection written to ${refPath}`), 1, 0));
 			this.chatContainer.addChild(new Text(reflectionText, 1, 0));
 			this.chatContainer.addChild(new Spacer(1));
+			this.ui.requestRender();
+		} catch (error) {
+			this.showError(error instanceof Error ? error.message : String(error));
+		}
+	}
+
+	private async handleNoteCommand(text: string): Promise<void> {
+		const args = text.slice(6).trim();
+		if (!args) {
+			this.showWarning("Usage: /note <path>");
+			return;
+		}
+		const resolvedPath = resolveReadPath(args, this.sessionManager.getCwd());
+		const existingNote = readFileNote(resolvedPath);
+		try {
+			const noteContent = await this.showExtensionEditor(`Note for ${args}`, existingNote ?? "");
+			if (noteContent === undefined) {
+				return; // Cancelled
+			}
+			if (noteContent.trim()) {
+				writeFileNote(resolvedPath, noteContent.trim());
+				this.chatContainer.addChild(new Spacer(1));
+				this.chatContainer.addChild(new Text(theme.fg("success", `Note saved for ${args}`), 1, 0));
+			} else {
+				deleteFileNote(resolvedPath);
+				this.chatContainer.addChild(new Spacer(1));
+				this.chatContainer.addChild(new Text(theme.fg("dim", `Note cleared for ${args}`), 1, 0));
+			}
 			this.ui.requestRender();
 		} catch (error) {
 			this.showError(error instanceof Error ? error.message : String(error));
