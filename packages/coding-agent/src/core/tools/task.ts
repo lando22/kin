@@ -1,5 +1,6 @@
 import { Text } from "@earendil-works/kin-tui";
 import { Type } from "typebox";
+import { keyText } from "../../modes/interactive/components/keybinding-hints.ts";
 import type { Theme } from "../../modes/interactive/theme/theme.ts";
 import type { ToolDefinition } from "../extensions/index.ts";
 import {
@@ -85,13 +86,17 @@ function renderCard(details: TaskToolDetails, opts: { partial: boolean }, theme:
 		return { plain: `${mode} ${clip(s.description, DESC_MAX)}`, state: s.state };
 	});
 
-	const footer = !opts.partial && statuses.length > 0 ? "⏎ expand for reports" : "";
-	const inner = Math.max(title.length, footer.length, ...rows.map((r) => r.plain.length + 2));
+	// Resolve the real, user-configurable expand key (ctrl+o by default) rather than hardcoding one.
+	const expandKey = !opts.partial && statuses.length > 0 ? keyText("app.tools.expand") : "";
+	const footerPlain = expandKey ? `${expandKey} expand for reports` : "";
+	const inner = Math.max(title.length, footerPlain.length, ...rows.map((r) => r.plain.length + 2));
 
 	const dim = (t: string) => theme.fg("muted", t);
 	const top = dim(`╭ `) + theme.fg("accent", title) + dim(` ${"─".repeat(inner - title.length)}╮`);
-	const bottom = footer
-		? dim(`╰ `) + theme.fg("muted", footer) + dim(` ${"─".repeat(inner - footer.length)}╯`)
+	const bottom = footerPlain
+		? dim(`╰ `) +
+			theme.fg("dim", expandKey) +
+			theme.fg("muted", ` expand for reports ${"─".repeat(inner - footerPlain.length)}╯`)
 		: dim(`╰${"─".repeat(inner + 2)}╯`);
 
 	const body = rows.map(({ plain, state }) => {
