@@ -77,7 +77,7 @@ import {
 	wrapRegisteredTools,
 } from "./extensions/index.ts";
 import { emitSessionShutdownEvent } from "./extensions/runner.ts";
-import { readMemoryContent, readProjectContent, readWorkingContent } from "./kin-memory.ts";
+import { readCorpusIndex, readMemoryContent, readProjectContent, readWorkingContent } from "./kin-memory.ts";
 import type { BashExecutionMessage, CustomMessage } from "./messages.ts";
 import type { ModelRegistry } from "./model-registry.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";
@@ -910,6 +910,7 @@ export class AgentSession {
 			promptGuidelines,
 			memoryContent: readMemoryContent(),
 			projectContent: readProjectContent(this._cwd),
+			corpusIndex: readCorpusIndex(),
 			workingContent: readWorkingContent(),
 		};
 		return buildSystemPrompt(this._baseSystemPromptOptions);

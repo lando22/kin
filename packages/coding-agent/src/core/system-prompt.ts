@@ -2,6 +2,7 @@
  * System prompt construction and project context loading
  */
 
+import type { CorpusIndexEntry } from "./kin-memory.ts";
 import type { Skill } from "./skills.ts";
 
 const WAKE_CONTEXT_GUIDANCE =
@@ -28,6 +29,8 @@ export interface BuildSystemPromptOptions {
 	memoryContent?: string | null;
 	/** Contents of ~/.kin/Projects/<project>/PROJECT.md (the project portrait), injected at the end of the prompt. */
 	projectContent?: string | null;
+	/** Table of contents for the corpus: one line per ~/.kin/Memory/<slug>.md note. Names without contents. */
+	corpusIndex?: CorpusIndexEntry[] | null;
 	/** Contents of ~/.kin/TODO.md, ephemeral working context. */
 	workingContent?: string | null;
 }
@@ -68,21 +71,35 @@ function formatContextFilesForPrompt(contextFiles: Array<{ path: string; content
 function formatMemorySection(
 	memoryContent?: string | null,
 	projectContent?: string | null,
+	corpusIndex?: CorpusIndexEntry[] | null,
 	workingContent?: string | null,
 ): string {
-	if (!memoryContent && !projectContent && !workingContent) return "";
+	const hasCorpus = !!corpusIndex && corpusIndex.length > 0;
+	if (!memoryContent && !projectContent && !hasCorpus && !workingContent) return "";
 	const lines = ["\n\n---\n"];
+	let wrote = false;
 	if (memoryContent) {
 		lines.push("### Memory\n");
 		lines.push(memoryContent);
+		wrote = true;
 	}
 	if (projectContent) {
-		if (memoryContent) lines.push("\n");
+		if (wrote) lines.push("\n");
 		lines.push("### Project\n");
 		lines.push(projectContent);
+		wrote = true;
+	}
+	if (hasCorpus) {
+		if (wrote) lines.push("\n");
+		lines.push("### Memory corpus\n");
+		lines.push("Notes you've left yourself. To read one in full, grep `~/.kin/Memory/`.\n");
+		for (const { file, summary } of corpusIndex as CorpusIndexEntry[]) {
+			lines.push(`- ${file} — ${summary}`);
+		}
+		wrote = true;
 	}
 	if (workingContent) {
-		if (memoryContent || projectContent) lines.push("\n");
+		if (wrote) lines.push("\n");
 		lines.push("### TODO\n");
 		lines.push(workingContent);
 	}
@@ -120,6 +137,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		skills: providedSkills,
 		memoryContent,
 		projectContent,
+		corpusIndex,
 		workingContent,
 	} = options;
 	const resolvedCwd = cwd;
@@ -135,7 +153,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	// Memory comes before runtime facts so date/cwd stay close to the end of the prompt.
 	const appendRuntimeContext = (prompt: string): string =>
 		prompt +
-		formatMemorySection(memoryContent, projectContent, workingContent) +
+		formatMemorySection(memoryContent, projectContent, corpusIndex, workingContent) +
 		`\nCurrent date: ${date}` +
 		`\nCurrent time: ${time}` +
 		`\nCurrent working directory: ${promptCwd}` +
@@ -221,7 +239,7 @@ Do the simplest thing that works. No abstractions, error handling, or cleanup be
 
 Memory has two layers:
 - **Portrait** — always loaded (the Memory and Project sections below). Small and ambient: who Landon is, how he works, the shape of the project. It holds what you'd never think to look up mid-task, so it has to be in front of you.
-- **Corpus** — \`~/.kin/Memory/\` is a folder of atomic notes, one fact per file, NOT loaded. Everything referenceable: commands, gotchas, decisions, specifics. You reach it by grepping the folder when a concrete cue comes up.
+- **Corpus** — \`~/.kin/Memory/\` is a folder of atomic notes, one fact per file. Everything referenceable: commands, gotchas, decisions, specifics. The notes' contents are NOT loaded, but their filenames and one-line summaries are always in front of you as the **Memory corpus** index below. When a cue matches one, read it in full (grep or read the file) before concluding you don't know.
 
 Routing a new fact: if you'd never think to search for it (a preference, a standing constraint, the project's shape) → portrait. If you'd grep for it when a cue appeared (a command, an API quirk, a one-off decision) → a corpus note.
 

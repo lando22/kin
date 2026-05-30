@@ -164,4 +164,31 @@ describe("buildSystemPrompt", () => {
 			expect(prompt.match(/- Use dynamic_tool for summaries\./g)).toHaveLength(1);
 		});
 	});
+
+	describe("memory corpus index", () => {
+		test("renders the corpus index as a name + summary list", () => {
+			const prompt = buildSystemPrompt({
+				contextFiles: [],
+				skills: [],
+				cwd: process.cwd(),
+				corpusIndex: [
+					{ file: "reflection-model.md", summary: "Use deepseek-v4-flash for reflect/wake." },
+					{ file: "setup-environment.md", summary: "Landon's machine setup and personal stack." },
+				],
+			});
+
+			expect(prompt).toContain("### Memory corpus");
+			expect(prompt).toContain("- reflection-model.md — Use deepseek-v4-flash for reflect/wake.");
+			expect(prompt).toContain("- setup-environment.md — Landon's machine setup and personal stack.");
+			expect(prompt).toContain("grep `~/.kin/Memory/`");
+		});
+
+		test("omits the corpus section when the index is empty or missing", () => {
+			const empty = buildSystemPrompt({ contextFiles: [], skills: [], cwd: process.cwd(), corpusIndex: [] });
+			const absent = buildSystemPrompt({ contextFiles: [], skills: [], cwd: process.cwd() });
+
+			expect(empty).not.toContain("### Memory corpus");
+			expect(absent).not.toContain("### Memory corpus");
+		});
+	});
 });

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 
@@ -46,6 +46,43 @@ function readTrimmedFile(path: string): string | null {
 /** The always-loaded personal portrait: who the user is and how they work. */
 export function readMemoryContent(homeDir = homedir()): string | null {
 	return readTrimmedFile(join(getMemoryDir(homeDir), "MEMORY.md"));
+}
+
+/** One corpus note as it appears in the always-loaded index: filename plus its one-line summary. */
+export interface CorpusIndexEntry {
+	file: string;
+	summary: string;
+}
+
+/** Keep the always-loaded index lean even when a note's first line runs long. */
+const CORPUS_SUMMARY_MAX = 120;
+
+/**
+ * Build a table of contents for the corpus: every `Memory/<slug>.md` note (except the portrait
+ * MEMORY.md) with its one-line summary. Injected into the prompt so the agent knows what notes
+ * exist and when to grep for them — a model can't reach for a note it doesn't know is there.
+ * Contents are NOT loaded; only the filename and first non-empty line.
+ */
+export function readCorpusIndex(homeDir = homedir()): CorpusIndexEntry[] {
+	const dir = getMemoryDir(homeDir);
+	if (!existsSync(dir)) return [];
+	const entries: CorpusIndexEntry[] = [];
+	for (const file of readdirSync(dir)) {
+		if (!file.endsWith(".md") || file === "MEMORY.md") continue;
+		const lines = readFileSync(join(dir, file), "utf-8")
+			.split(/\r?\n/)
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0);
+		// A note may open with a `# Heading`; the real summary is the first prose line after it.
+		const summaryLine = lines.find((line) => !line.startsWith("#")) ?? lines[0]?.replace(/^#+\s*/, "");
+		if (!summaryLine) continue;
+		const summary =
+			summaryLine.length > CORPUS_SUMMARY_MAX
+				? `${summaryLine.slice(0, CORPUS_SUMMARY_MAX - 1).trimEnd()}…`
+				: summaryLine;
+		entries.push({ file, summary });
+	}
+	return entries.sort((a, b) => a.file.localeCompare(b.file));
 }
 
 /** Project portrait, keyed by cwd basename, matching how session/project context is displayed elsewhere. */
