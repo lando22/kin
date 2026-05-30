@@ -36,6 +36,8 @@ describe("buildSystemPrompt", () => {
 
 			expect(prompt).toContain("You are Kin — a personal coding agent built for Landon.");
 			expect(prompt).toContain("Memory has two layers:");
+			// Kin should own its memory in the first person, not narrate it as an external source.
+			expect(prompt).toContain("It's your own knowledge, not an external source");
 			expect(prompt).toContain("Be a steady collaborator, not a formal assistant.");
 		});
 
