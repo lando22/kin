@@ -7,8 +7,10 @@ import type { SessionStartEvent, ToolDefinition } from "./extensions/index.ts";
 import { ModelRegistry } from "./model-registry.ts";
 import { DefaultResourceLoader, type DefaultResourceLoaderOptions, type ResourceLoader } from "./resource-loader.ts";
 import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "./sdk.ts";
-import type { SessionManager } from "./session-manager.ts";
+import { SessionManager } from "./session-manager.ts";
 import { SettingsManager } from "./settings-manager.ts";
+import { buildSubagentPrompt, type SubagentResult, type SubagentSpec, subagentTools } from "./subagent.ts";
+import { createTaskToolDefinition } from "./tools/task.ts";
 
 /**
  * Non-fatal issues collected while creating services or sessions.
@@ -55,6 +57,11 @@ export interface CreateAgentSessionFromServicesOptions {
 	tools?: string[];
 	noTools?: CreateAgentSessionOptions["noTools"];
 	customTools?: ToolDefinition[];
+	/**
+	 * Enable the `task` tool so this session can delegate scoped work to subagents.
+	 * Child sessions are spawned with subagents disabled, so delegation never recurses.
+	 */
+	subagents?: boolean;
 }
 
 /**
@@ -179,6 +186,19 @@ export async function createAgentSessionServices(
 export async function createAgentSessionFromServices(
 	options: CreateAgentSessionFromServicesOptions,
 ): Promise<CreateAgentSessionResult> {
+	let customTools = options.customTools;
+	let tools = options.tools;
+
+	if (options.subagents) {
+		// Widen from the schema-specialized type to the array's element type (optional-method variance).
+		const taskTool = createTaskToolDefinition({
+			runTasks: makeRunTasks(options.services, options.model),
+		}) as unknown as ToolDefinition;
+		customTools = [...(customTools ?? []), taskTool];
+		// `tools` doubles as the allowlist, so an explicit list must include "task" for it to register.
+		if (tools && !tools.includes("task")) tools = [...tools, "task"];
+	}
+
 	return createAgentSession({
 		cwd: options.services.cwd,
 		agentDir: options.services.agentDir,
@@ -190,9 +210,40 @@ export async function createAgentSessionFromServices(
 		model: options.model,
 		thinkingLevel: options.thinkingLevel,
 		scopedModels: options.scopedModels,
-		tools: options.tools,
+		tools,
 		noTools: options.noTools,
-		customTools: options.customTools,
+		customTools,
 		sessionStartEvent: options.sessionStartEvent,
 	});
+}
+
+/**
+ * Build the `runTasks` callback for the `task` tool: spawn one headless child session per spec,
+ * run them in parallel, and collect each child's final message as its report. Children are
+ * created with `subagents` off, so delegation cannot recurse.
+ */
+function makeRunTasks(services: AgentSessionServices, model?: Model<any>) {
+	return async (specs: SubagentSpec[], signal?: AbortSignal): Promise<SubagentResult[]> =>
+		Promise.all(
+			specs.map(async (spec): Promise<SubagentResult> => {
+				const { session } = await createAgentSessionFromServices({
+					services,
+					sessionManager: SessionManager.inMemory(services.cwd),
+					model,
+					tools: subagentTools(spec.mode),
+				});
+				try {
+					await session.prompt(buildSubagentPrompt(spec), {
+						signal,
+					} as Parameters<typeof session.prompt>[1]);
+					const report = session.getLastAssistantText() ?? "(subagent finished without a report)";
+					return { description: spec.description, report, ok: true };
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error);
+					return { description: spec.description, report: `Subagent failed: ${message}`, ok: false };
+				} finally {
+					session.dispose();
+				}
+			}),
+		);
 }

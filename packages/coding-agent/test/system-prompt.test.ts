@@ -167,6 +167,29 @@ describe("buildSystemPrompt", () => {
 		});
 	});
 
+	describe("planning and delegation", () => {
+		test("includes the delegation section only when the task tool is active", () => {
+			const withTask = buildSystemPrompt({
+				selectedTools: ["bash", "read", "edit", "write", "task"],
+				contextFiles: [],
+				skills: [],
+				cwd: process.cwd(),
+			});
+			const withoutTask = buildSystemPrompt({
+				selectedTools: ["bash", "read", "edit", "write"],
+				contextFiles: [],
+				skills: [],
+				cwd: process.cwd(),
+			});
+
+			expect(withTask).toContain("## Planning and delegation");
+			expect(withTask).toContain("`explore` subagent");
+			expect(withTask).toContain("Run independent units in parallel");
+			expect(withoutTask).not.toContain("## Planning and delegation");
+			expect(withoutTask).not.toContain("subagent");
+		});
+	});
+
 	describe("memory corpus index", () => {
 		test("renders the corpus index as a name + summary list", () => {
 			const prompt = buildSystemPrompt({
