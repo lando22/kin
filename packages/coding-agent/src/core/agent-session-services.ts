@@ -9,8 +9,8 @@ import { DefaultResourceLoader, type DefaultResourceLoaderOptions, type Resource
 import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "./sdk.ts";
 import { SessionManager } from "./session-manager.ts";
 import { SettingsManager } from "./settings-manager.ts";
-import { buildSubagentPrompt, type SubagentResult, type SubagentSpec, subagentTools } from "./subagent.ts";
-import { createTaskToolDefinition } from "./tools/task.ts";
+import { buildSubagentPrompt, type SubagentResult, subagentTools } from "./subagent.ts";
+import { createTaskToolDefinition, type RunTasks } from "./tools/task.ts";
 
 /**
  * Non-fatal issues collected while creating services or sessions.
@@ -222,10 +222,10 @@ export async function createAgentSessionFromServices(
  * run them in parallel, and collect each child's final message as its report. Children are
  * created with `subagents` off, so delegation cannot recurse.
  */
-function makeRunTasks(services: AgentSessionServices, model?: Model<any>) {
-	return async (specs: SubagentSpec[], signal?: AbortSignal): Promise<SubagentResult[]> =>
+function makeRunTasks(services: AgentSessionServices, model?: Model<any>): RunTasks {
+	return async (specs, hooks): Promise<SubagentResult[]> =>
 		Promise.all(
-			specs.map(async (spec): Promise<SubagentResult> => {
+			specs.map(async (spec, index): Promise<SubagentResult> => {
 				const { session } = await createAgentSessionFromServices({
 					services,
 					sessionManager: SessionManager.inMemory(services.cwd),
@@ -234,12 +234,14 @@ function makeRunTasks(services: AgentSessionServices, model?: Model<any>) {
 				});
 				try {
 					await session.prompt(buildSubagentPrompt(spec), {
-						signal,
+						signal: hooks?.signal,
 					} as Parameters<typeof session.prompt>[1]);
 					const report = session.getLastAssistantText() ?? "(subagent finished without a report)";
+					hooks?.onProgress?.(index, "done");
 					return { description: spec.description, report, ok: true };
 				} catch (error) {
 					const message = error instanceof Error ? error.message : String(error);
+					hooks?.onProgress?.(index, "failed");
 					return { description: spec.description, report: `Subagent failed: ${message}`, ok: false };
 				} finally {
 					session.dispose();

@@ -28,6 +28,21 @@ export interface SubagentResult {
 	ok: boolean;
 }
 
+/** Live lifecycle of one subagent, surfaced to the fan-out UI. */
+export type SubagentState = "running" | "done" | "failed";
+
+/** Per-subagent render state for the live fan-out card. */
+export interface SubagentStatus {
+	description: string;
+	mode: SubagentMode;
+	state: SubagentState;
+}
+
+/** Normalize a spec's optional mode to a concrete one (defaults to work). */
+export function normalizeMode(mode: SubagentMode | undefined): SubagentMode {
+	return mode === "explore" ? "explore" : "work";
+}
+
 /** Explore subagents get read-only tools, so they structurally cannot modify the repo. */
 export const EXPLORE_TOOLS = ["read", "grep", "find", "ls"] as const;
 /** Work subagents get the full mutating set so they can implement, run, and fix. */

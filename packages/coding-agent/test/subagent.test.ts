@@ -5,6 +5,7 @@ import {
 	formatSubagentReports,
 	type SubagentResult,
 	type SubagentSpec,
+	type SubagentStatus,
 	subagentTools,
 	WORK_TOOLS,
 } from "../src/core/subagent.js";
@@ -97,6 +98,39 @@ describe("createTaskToolDefinition", () => {
 		expect(text).toContain("## 2 subagent reports");
 		expect(text).toContain("ran unit one");
 		expect(text).toContain("ran unit two");
+	});
+
+	test("renders a live card from status details, and falls back to report text without details", () => {
+		const tool = createTaskToolDefinition({ runTasks: async () => [] });
+		// Stub theme: identity color fns so we assert on layout, not ANSI codes.
+		const theme = { fg: (_key: string, text: string) => text } as unknown as Parameters<
+			NonNullable<typeof tool.renderResult>
+		>[2];
+		const render = (comp: { render(width: number): string[] }) => comp.render(80).join("\n");
+
+		const statuses: SubagentStatus[] = [
+			{ description: "Map the auth flow", mode: "explore", state: "running" },
+			{ description: "Add the migration", mode: "work", state: "done" },
+		];
+		const live = tool.renderResult?.(
+			{ content: [{ type: "text", text: "reports" }], details: { statuses, startedAt: Date.now() } },
+			{ isPartial: true, expanded: false },
+			theme,
+			{} as never,
+		);
+		const liveText = render(live as { render(width: number): string[] });
+		expect(liveText).toContain("task · 2 subagents in parallel");
+		expect(liveText).toContain("Map the auth flow");
+		expect(liveText).toContain("✓"); // the done unit
+		expect(liveText).toContain("│"); // box border
+
+		const fallback = tool.renderResult?.(
+			{ content: [{ type: "text", text: "just the report" }], details: undefined },
+			{ isPartial: false, expanded: false },
+			theme,
+			{} as never,
+		);
+		expect(render(fallback as { render(width: number): string[] })).toContain("just the report");
 	});
 
 	test("short-circuits on empty task list without invoking runTasks", async () => {
