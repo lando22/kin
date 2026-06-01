@@ -90,6 +90,7 @@ import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.ts";
 import { type BuildSystemPromptOptions, buildSystemPrompt } from "./system-prompt.ts";
 import { type BashOperations, createLocalBashOperations } from "./tools/bash.ts";
 import { createCodingToolDefinitions } from "./tools/index.ts";
+import { createPersistentBashOperations } from "./tools/persistent-shell.ts";
 import { createToolDefinitionFromAgentTool } from "./tools/tool-definition-wrapper.ts";
 
 // ============================================================================
@@ -296,6 +297,8 @@ export class AgentSession {
 	private _initialActiveToolNames?: string[];
 	private _allowedToolNames?: Set<string>;
 	private _baseToolsOverride?: Record<string, AgentTool>;
+	/** One persistent shell shared by this session's bash tool, so cwd/env survive across commands. */
+	private _persistentBashOps?: BashOperations & { dispose: () => void };
 	private _sessionStartEvent: SessionStartEvent;
 	private _extensionUIContext?: ExtensionUIContext;
 	private _extensionCommandContextActions?: ExtensionCommandContextActions;
@@ -714,6 +717,8 @@ export class AgentSession {
 		);
 		this._disconnectFromAgent();
 		this._eventListeners = [];
+		this._persistentBashOps?.dispose();
+		this._persistentBashOps = undefined;
 		cleanupSessionResources(this.sessionId);
 	}
 
@@ -2359,6 +2364,10 @@ export class AgentSession {
 		const autoResizeImages = this.settingsManager.getImageAutoResize();
 		const shellCommandPrefix = this.settingsManager.getShellCommandPrefix();
 		const shellPath = this.settingsManager.getShellPath();
+		// Reuse one persistent shell across runtime rebuilds so cwd/env carry between commands.
+		if (!this._baseToolsOverride && !this._persistentBashOps) {
+			this._persistentBashOps = createPersistentBashOperations({ shellPath });
+		}
 		const baseToolDefinitions = this._baseToolsOverride
 			? Object.fromEntries(
 					Object.entries(this._baseToolsOverride).map(([name, tool]) => [
@@ -2368,8 +2377,15 @@ export class AgentSession {
 				)
 			: Object.fromEntries(
 					createCodingToolDefinitions(this._cwd, {
-						read: { autoResizeImages },
-						bash: { commandPrefix: shellCommandPrefix, shellPath },
+						// Only real (persisted) work sessions count corpus reads; reflect/wake garden in-memory,
+						// and counting their evaluation reads would inflate the usefulness signal they prune on.
+						read: { autoResizeImages, trackCorpusAccess: this.sessionManager.isPersistent() },
+						bash: {
+							commandPrefix: shellCommandPrefix,
+							shellPath,
+							operations: this._persistentBashOps,
+							persistentSession: true,
+						},
 					}).map((def) => [def.name, def]),
 				);
 

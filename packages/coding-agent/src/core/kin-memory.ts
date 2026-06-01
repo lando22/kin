@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
+import { ageInDays } from "./memory-freshness.ts";
 
 /**
  * Memory layout:
@@ -48,10 +49,12 @@ export function readMemoryContent(homeDir = homedir()): string | null {
 	return readTrimmedFile(join(getMemoryDir(homeDir), "MEMORY.md"));
 }
 
-/** One corpus note as it appears in the always-loaded index: filename plus its one-line summary. */
+/** One corpus note as it appears in the always-loaded index: filename, one-line summary, and age. */
 export interface CorpusIndexEntry {
 	file: string;
 	summary: string;
+	/** Whole days since the note was last written — a freshness signal for selection. */
+	ageDays: number;
 }
 
 /** Keep the always-loaded index lean even when a note's first line runs long. */
@@ -80,9 +83,86 @@ export function readCorpusIndex(homeDir = homedir()): CorpusIndexEntry[] {
 			summaryLine.length > CORPUS_SUMMARY_MAX
 				? `${summaryLine.slice(0, CORPUS_SUMMARY_MAX - 1).trimEnd()}…`
 				: summaryLine;
-		entries.push({ file, summary });
+		const ageDays = ageInDays(statSync(join(dir, file)).mtimeMs);
+		entries.push({ file, summary, ageDays });
 	}
 	return entries.sort((a, b) => a.file.localeCompare(b.file));
+}
+
+// ============================================================================
+// Corpus usage tracking
+//
+// A "usefulness" signal to complement age: which notes actually get read. Stored in a
+// sidecar so it never pollutes the corpus itself. This is a SOFT signal — notes are
+// most often located by grepping `~/.kin/Memory/`, and a grep hit is not recorded here;
+// only a full read through the read tool bumps the count. So a zero count means "not read
+// via the read tool lately," not "never useful." Reflect uses it to prioritize what to
+// review, never to delete automatically.
+// ============================================================================
+
+/** Per-note usage record. */
+export interface CorpusUsageRecord {
+	/** How many times the note was read in full via the read tool. */
+	count: number;
+	/** Epoch ms of the most recent recorded read. */
+	lastAccessMs: number;
+}
+
+/** The usage sidecar lives in the Memory dir but is skipped by the corpus index (not a `.md`). */
+function getCorpusUsagePath(homeDir = homedir()): string {
+	return join(getMemoryDir(homeDir), ".usage.json");
+}
+
+/** Load the usage map, tolerating a missing or corrupt sidecar (treated as empty). */
+export function readCorpusUsage(homeDir = homedir()): Record<string, CorpusUsageRecord> {
+	const path = getCorpusUsagePath(homeDir);
+	if (!existsSync(path)) return {};
+	try {
+		const parsed = JSON.parse(readFileSync(path, "utf-8"));
+		return parsed && typeof parsed === "object" ? (parsed as Record<string, CorpusUsageRecord>) : {};
+	} catch {
+		return {};
+	}
+}
+
+/** Record that a corpus note was read in full. Best-effort: never throws into the read path. */
+export function recordCorpusAccess(file: string, homeDir = homedir()): void {
+	if (file === "MEMORY.md" || !file.endsWith(".md")) return;
+	try {
+		const usage = readCorpusUsage(homeDir);
+		const prev = usage[file];
+		usage[file] = { count: (prev?.count ?? 0) + 1, lastAccessMs: Date.now() };
+		writeFileSync(getCorpusUsagePath(homeDir), JSON.stringify(usage), "utf-8");
+	} catch {
+		// Usage tracking is a convenience; a failure here must not break reading a note.
+	}
+}
+
+/** A corpus note enriched with both freshness (age) and usefulness (usage) signals, for gardening. */
+export interface CorpusHealthEntry extends CorpusIndexEntry {
+	/** Recorded full reads via the read tool. */
+	accessCount: number;
+	/** Whole days since the last recorded read, or null if never recorded. */
+	daysSinceAccess: number | null;
+}
+
+/**
+ * The corpus with age + usage attached, sorted stalest-and-least-used first so a reviewer
+ * sees the most likely dead weight at the top. Read by reflect to drive consolidation/pruning.
+ */
+export function readCorpusHealth(homeDir = homedir()): CorpusHealthEntry[] {
+	const usage = readCorpusUsage(homeDir);
+	const now = Date.now();
+	const entries = readCorpusIndex(homeDir).map((entry) => {
+		const record = usage[entry.file];
+		return {
+			...entry,
+			accessCount: record?.count ?? 0,
+			daysSinceAccess: record ? ageInDays(record.lastAccessMs, now) : null,
+		};
+	});
+	// Oldest first; within the same age, least-read first — the rot floats to the top.
+	return entries.sort((a, b) => b.ageDays - a.ageDays || a.accessCount - b.accessCount);
 }
 
 /** Project portrait, keyed by cwd basename, matching how session/project context is displayed elsewhere. */
@@ -139,6 +219,13 @@ export function readFileNote(filePath: string, homeDir = homedir()): string | nu
 	const raw = readFileSync(notePath, "utf-8");
 	const content = raw.replace(/^\s*<!--\s*file:\s*.+?\s*-->\s*/, "").trim();
 	return content.length > 0 ? content : null;
+}
+
+/** Age in days of a file's note — when the observation was last recorded — or null if there is none. */
+export function fileNoteAgeDays(filePath: string, homeDir = homedir()): number | null {
+	const notePath = getFileNotePath(filePath, homeDir);
+	if (!existsSync(notePath)) return null;
+	return ageInDays(statSync(notePath).mtimeMs);
 }
 
 /** Write or overwrite a note for a specific file. */

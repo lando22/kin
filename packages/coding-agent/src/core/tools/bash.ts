@@ -149,6 +149,12 @@ export interface BashToolOptions {
 	shellPath?: string;
 	/** Hook to adjust command, cwd, or env before execution */
 	spawnHook?: BashSpawnHook;
+	/**
+	 * When true, the description tells the model that working directory and environment persist
+	 * across calls. Set this only when a persistent backend (see persistent-shell.ts) is wired in;
+	 * the default one-shot backend forgets state between commands.
+	 */
+	persistentSession?: boolean;
 }
 
 const BASH_PREVIEW_LINES = 5;
@@ -269,10 +275,13 @@ export function createBashToolDefinition(
 	const ops = options?.operations ?? createLocalBashOperations({ shellPath: options?.shellPath });
 	const commandPrefix = options?.commandPrefix;
 	const spawnHook = options?.spawnHook;
+	const persistenceNote = options?.persistentSession
+		? " Commands run in one persistent shell, so the working directory and environment variables carry over between calls — a `cd` or `export` stays in effect for later commands, and you don't need to repeat them. (State resets if a command times out or is interrupted.)"
+		: "";
 	return {
 		name: "bash",
 		label: "bash",
-		description: `Execute a bash command in the current working directory. Returns stdout and stderr. Output is truncated to last ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds.`,
+		description: `Execute a bash command in the current working directory. Returns stdout and stderr.${persistenceNote} Output is truncated to last ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds.`,
 		promptSnippet: "Execute bash commands (ls, grep, find, etc.)",
 		parameters: bashSchema,
 		async execute(

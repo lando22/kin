@@ -21,6 +21,12 @@ export {
 	createLocalBashOperations,
 } from "./bash.ts";
 export {
+	createDefinitionTool,
+	createDefinitionToolDefinition,
+	type DefinitionToolDetails,
+	type DefinitionToolInput,
+} from "./definition.ts";
+export {
 	createEditTool,
 	createEditToolDefinition,
 	type EditOperations,
@@ -82,6 +88,7 @@ export {
 import type { AgentTool } from "@earendil-works/kin-agent-core";
 import type { ToolDefinition } from "../extensions/types.ts";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";
+import { createDefinitionTool, createDefinitionToolDefinition } from "./definition.ts";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "./edit.ts";
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "./find.ts";
 import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "./grep.ts";
@@ -94,9 +101,18 @@ export type Tool = AgentTool<any>;
 /** Rich tool shape used by coding-agent before wrapping into an AgentTool. */
 export type ToolDef = ToolDefinition<any, any>;
 /** Names of the built-in tools shipped with coding-agent. */
-export type ToolName = "read" | "bash" | "edit" | "write" | "grep" | "find" | "ls";
+export type ToolName = "read" | "bash" | "edit" | "write" | "grep" | "find" | "ls" | "definition";
 /** Set form for validation and allowlist checks. */
-export const allToolNames: Set<ToolName> = new Set(["read", "bash", "edit", "write", "grep", "find", "ls"]);
+export const allToolNames: Set<ToolName> = new Set([
+	"read",
+	"bash",
+	"edit",
+	"write",
+	"grep",
+	"find",
+	"ls",
+	"definition",
+]);
 
 /** Per-tool option bag passed through to built-in tool factories. */
 export interface ToolsOptions {
@@ -126,6 +142,8 @@ export function createToolDefinition(toolName: ToolName, cwd: string, options?: 
 			return createFindToolDefinition(cwd, options?.find);
 		case "ls":
 			return createLsToolDefinition(cwd, options?.ls);
+		case "definition":
+			return createDefinitionToolDefinition(cwd);
 		default:
 			throw new Error(`Unknown tool name: ${toolName}`);
 	}
@@ -148,18 +166,21 @@ export function createTool(toolName: ToolName, cwd: string, options?: ToolsOptio
 			return createFindTool(cwd, options?.find);
 		case "ls":
 			return createLsTool(cwd, options?.ls);
+		case "definition":
+			return createDefinitionTool(cwd);
 		default:
 			throw new Error(`Unknown tool name: ${toolName}`);
 	}
 }
 
-/** Default mutating coding tool set: read, bash, edit, write. */
+/** Default mutating coding tool set: read, bash, edit, write, definition. */
 export function createCodingToolDefinitions(cwd: string, options?: ToolsOptions): ToolDef[] {
 	return [
 		createReadToolDefinition(cwd, options?.read),
 		createBashToolDefinition(cwd, options?.bash),
 		createEditToolDefinition(cwd, options?.edit),
 		createWriteToolDefinition(cwd, options?.write),
+		createDefinitionToolDefinition(cwd),
 	];
 }
 
@@ -183,6 +204,7 @@ export function createAllToolDefinitions(cwd: string, options?: ToolsOptions): R
 		grep: createGrepToolDefinition(cwd, options?.grep),
 		find: createFindToolDefinition(cwd, options?.find),
 		ls: createLsToolDefinition(cwd, options?.ls),
+		definition: createDefinitionToolDefinition(cwd),
 	};
 }
 
@@ -193,6 +215,7 @@ export function createCodingTools(cwd: string, options?: ToolsOptions): Tool[] {
 		createBashTool(cwd, options?.bash),
 		createEditTool(cwd, options?.edit),
 		createWriteTool(cwd, options?.write),
+		createDefinitionTool(cwd),
 	];
 }
 
@@ -216,5 +239,6 @@ export function createAllTools(cwd: string, options?: ToolsOptions): Record<Tool
 		grep: createGrepTool(cwd, options?.grep),
 		find: createFindTool(cwd, options?.find),
 		ls: createLsTool(cwd, options?.ls),
+		definition: createDefinitionTool(cwd),
 	};
 }

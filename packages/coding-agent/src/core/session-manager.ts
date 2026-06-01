@@ -828,6 +828,15 @@ export class SessionManager {
 		return this.cwd;
 	}
 
+	/**
+	 * Whether this session is written to disk. False for in-memory sessions (reflect, wake,
+	 * tests). Used to gate corpus usage tracking to real working sessions, so the gardener's own
+	 * reads during reflect don't inflate the usefulness signal it judges notes by.
+	 */
+	isPersistent(): boolean {
+		return this.persist;
+	}
+
 	getSessionDir(): string {
 		return this.sessionDir;
 	}

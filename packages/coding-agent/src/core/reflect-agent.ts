@@ -15,7 +15,8 @@ import { basename, join } from "node:path";
 import type { Model } from "@earendil-works/kin-ai";
 import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
-import { getMemoryDir } from "./kin-memory.ts";
+import { getMemoryDir, readCorpusHealth } from "./kin-memory.ts";
+import { formatAgeShort } from "./memory-freshness.ts";
 import { formatLocalDate, getAgendaPath, getReflectionPath } from "./reflect.ts";
 import { SessionManager } from "./session-manager.ts";
 
@@ -196,6 +197,36 @@ export function generateSessionIndex(sessionDir: string, date: Date = new Date()
 }
 
 // =============================================================================
+// Corpus health
+// =============================================================================
+
+/** Notes this old with no recent reads are surfaced as prune/merge candidates during reflect. */
+const CORPUS_REVIEW_AGE_DAYS = 30;
+
+/**
+ * A compact health report for the corpus: every note with its age and read signal, stalest
+ * first, flagging likely dead weight. Drives the consolidation/pruning step in reflect.
+ * Returns null when there's no corpus yet (nothing to garden).
+ */
+export function formatCorpusHealth(homeDir = homedir()): string | null {
+	const entries = readCorpusHealth(homeDir);
+	if (entries.length === 0) return null;
+
+	const lines = entries.map((e) => {
+		const reads =
+			e.accessCount === 0
+				? "never read via the read tool"
+				: `read ${e.accessCount}× (last ${formatAgeShort(e.daysSinceAccess ?? 0)} ago)`;
+		// Old and unread/cold → worth a look. A soft hint: reads via grep aren't counted, so confirm by reading it.
+		const cold = e.daysSinceAccess === null || e.daysSinceAccess >= CORPUS_REVIEW_AGE_DAYS;
+		const flag = e.ageDays >= CORPUS_REVIEW_AGE_DAYS && cold ? "  ← review candidate" : "";
+		return `- ${e.file} — written ${formatAgeShort(e.ageDays)} ago, ${reads}${flag}`;
+	});
+
+	return lines.join("\n");
+}
+
+// =============================================================================
 // Reflect task message
 // =============================================================================
 
@@ -203,6 +234,19 @@ function buildReflectTaskMessage(sessionIndex: string, reflectionPath: string, a
 	const dateStr = formatLocalDate(date);
 	const memoryPath = join(homedir(), ".kin", "Memory", "MEMORY.md");
 	const memoryDir = getMemoryDir();
+	const corpusHealth = formatCorpusHealth();
+
+	const corpusHealthSection = corpusHealth
+		? `
+
+---
+
+Your corpus today (stalest first; "review candidate" = old and not read lately, so possibly dead weight):
+
+${corpusHealth}
+
+Reads located via grep aren't counted, so a low read count is a hint, not proof — read a candidate before judging it.`
+		: "";
 
 	return `You are Pi in a reflective state — not responding to a user, just thinking on your own.
 
@@ -215,6 +259,7 @@ ${sessionIndex}
 Your memory:
 - Portrait (always loaded): ${memoryPath}
 - Corpus (atomic notes, grepped on demand): ${memoryDir}/
+${corpusHealthSection}
 
 ---
 
@@ -224,6 +269,7 @@ Use your tools however makes sense. Some things worth doing:
 - Check git history or look at code you touched
 - Read your portrait and project files to get oriented
 - Garden memory with targeted edits: mint atomic corpus notes for referenceable facts, update the portrait only for ambient facts, and merge/expire/reconcile what's already there — be surgical, keep the portrait small
+- Tend the corpus: skim the review candidates above. Merge notes that say the same thing, rewrite ones that have gone stale, and delete a note outright if it's wrong, redundant, or no longer useful — a smaller true corpus beats a large rotting one. Don't prune a note just for being old; confirm it's actually dead before removing it.
 
 When you have thought it through, write two things:
 

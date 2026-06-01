@@ -3,6 +3,7 @@
  */
 
 import type { CorpusIndexEntry } from "./kin-memory.ts";
+import { formatAgeShort } from "./memory-freshness.ts";
 import type { Skill } from "./skills.ts";
 
 const WAKE_CONTEXT_GUIDANCE =
@@ -92,9 +93,11 @@ function formatMemorySection(
 	if (hasCorpus) {
 		if (wrote) lines.push("\n");
 		lines.push("### Memory corpus\n");
-		lines.push("Notes you've left yourself. To read one in full, grep `~/.kin/Memory/`.\n");
-		for (const { file, summary } of corpusIndex as CorpusIndexEntry[]) {
-			lines.push(`- ${file} — ${summary}`);
+		lines.push(
+			"Notes you've left yourself, with how long ago each was written. Grep `~/.kin/Memory/` to find the relevant one, then read it in full. Treat older notes as point-in-time observations — verify before relying on them.\n",
+		);
+		for (const { file, summary, ageDays } of corpusIndex as CorpusIndexEntry[]) {
+			lines.push(`- ${file} (${formatAgeShort(ageDays)}) — ${summary}`);
 		}
 		wrote = true;
 	}
@@ -193,10 +196,16 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const hasGrep = tools.includes("grep");
 	const hasFind = tools.includes("find");
 	const hasLs = tools.includes("ls");
+	const hasDefinition = tools.includes("definition");
 
 	// File exploration guidelines — only add legacy wrapper hint if those tools are present
 	if (hasBash && (hasGrep || hasFind || hasLs)) {
 		addGuideline("Prefer grep/find/ls tools over bash for file exploration (faster, respects .gitignore)");
+	}
+	if (hasDefinition) {
+		addGuideline(
+			"To find where a symbol is defined, use the definition tool instead of grepping for it; reserve grep for content/text search and finding usages",
+		);
 	}
 
 	for (const guideline of promptGuidelines ?? []) {

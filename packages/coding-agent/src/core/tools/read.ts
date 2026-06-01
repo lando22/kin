@@ -12,7 +12,8 @@ import { formatDimensionNote, resizeImage } from "../../utils/image-resize.ts";
 import { detectSupportedImageMimeTypeFromFile } from "../../utils/mime.ts";
 import { formatPathRelativeToCwdOrAbsolute } from "../../utils/paths.ts";
 import type { ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
-import { readFileNote } from "../kin-memory.ts";
+import { fileNoteAgeDays, getMemoryDir, readFileNote, recordCorpusAccess } from "../kin-memory.ts";
+import { freshnessCaveat } from "../memory-freshness.ts";
 import { resolveReadPath } from "./path-utils.ts";
 import { getTextOutput, invalidArgText, replaceTabs, shortenPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
@@ -61,6 +62,11 @@ export interface ReadToolOptions {
 	autoResizeImages?: boolean;
 	/** Custom operations for file reading. Default: local filesystem */
 	operations?: ReadOperations;
+	/**
+	 * Whether reading a corpus note records a usage hit. Default: true. Set false for gardening
+	 * sessions (reflect/wake) so their evaluation reads don't inflate the usefulness signal.
+	 */
+	trackCorpusAccess?: boolean;
 }
 
 type ReadRenderArgs = { path?: string; file_path?: string; offset?: number; limit?: number };
@@ -209,6 +215,7 @@ export function createReadToolDefinition(
 	options?: ReadToolOptions,
 ): ToolDefinition<typeof readSchema, ReadToolDetails | undefined> {
 	const autoResizeImages = options?.autoResizeImages ?? true;
+	const trackCorpusAccess = options?.trackCorpusAccess ?? true;
 	const ops = options?.operations ?? defaultReadOperations;
 	return {
 		name: "read",
@@ -330,7 +337,15 @@ export function createReadToolDefinition(
 								// Inject any file note for this path before returning content to the model.
 								const fileNote = readFileNote(absolutePath);
 								if (fileNote) {
-									outputText = `[File note for ${path}]:\n${fileNote}\n---\n\n${outputText}`;
+									const ageDays = fileNoteAgeDays(absolutePath);
+									const caveat = ageDays === null ? null : freshnessCaveat(ageDays);
+									const noteBody = caveat ? `${fileNote}\n\n(${caveat})` : fileNote;
+									outputText = `[File note for ${path}]:\n${noteBody}\n---\n\n${outputText}`;
+								}
+								// Reading a corpus note in full is the "this note earned its place" signal reflect prunes on.
+								// Skipped in gardening sessions so reflect's own evaluation reads don't inflate it.
+								if (trackCorpusAccess && dirname(absolutePath) === getMemoryDir()) {
+									recordCorpusAccess(basename(absolutePath));
 								}
 								content = [{ type: "text", text: outputText }];
 							}

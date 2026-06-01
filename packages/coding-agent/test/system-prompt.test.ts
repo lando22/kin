@@ -197,15 +197,15 @@ describe("buildSystemPrompt", () => {
 				skills: [],
 				cwd: process.cwd(),
 				corpusIndex: [
-					{ file: "reflection-model.md", summary: "Use deepseek-v4-flash for reflect/wake." },
-					{ file: "setup-environment.md", summary: "Landon's machine setup and personal stack." },
+					{ file: "reflection-model.md", summary: "Use deepseek-v4-flash for reflect/wake.", ageDays: 0 },
+					{ file: "setup-environment.md", summary: "Landon's machine setup and personal stack.", ageDays: 40 },
 				],
 			});
 
 			expect(prompt).toContain("### Memory corpus");
-			expect(prompt).toContain("- reflection-model.md — Use deepseek-v4-flash for reflect/wake.");
-			expect(prompt).toContain("- setup-environment.md — Landon's machine setup and personal stack.");
-			expect(prompt).toContain("grep `~/.kin/Memory/`");
+			expect(prompt).toContain("- reflection-model.md (today) — Use deepseek-v4-flash for reflect/wake.");
+			expect(prompt).toContain("- setup-environment.md (6w) — Landon's machine setup and personal stack.");
+			expect(prompt).toContain("`~/.kin/Memory/`");
 		});
 
 		test("omits the corpus section when the index is empty or missing", () => {

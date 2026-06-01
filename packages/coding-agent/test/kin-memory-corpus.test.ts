@@ -23,8 +23,8 @@ describe("readCorpusIndex", () => {
 		writeFileSync(join(memoryDir, "reflection-model.md"), "Use deepseek for reflect.\n");
 
 		expect(readCorpusIndex(home)).toEqual([
-			{ file: "reflection-model.md", summary: "Use deepseek for reflect." },
-			{ file: "setup-environment.md", summary: "Landon's machine setup." },
+			{ file: "reflection-model.md", summary: "Use deepseek for reflect.", ageDays: 0 },
+			{ file: "setup-environment.md", summary: "Landon's machine setup.", ageDays: 0 },
 		]);
 	});
 
@@ -34,7 +34,7 @@ describe("readCorpusIndex", () => {
 
 		const index = readCorpusIndex(home);
 
-		expect(index).toEqual([{ file: "file-notes.md", summary: "Notes anchored to a file." }]);
+		expect(index).toEqual([{ file: "file-notes.md", summary: "Notes anchored to a file.", ageDays: 0 }]);
 	});
 
 	test("truncates an overlong summary line so the index stays lean", () => {
