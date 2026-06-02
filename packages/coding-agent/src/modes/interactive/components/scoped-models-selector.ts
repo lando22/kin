@@ -1,4 +1,4 @@
-import type { Model } from "@earendil-works/kin-ai";
+import type { Model } from "@landongarrison/kin-ai";
 import {
 	Container,
 	type Focusable,
@@ -9,7 +9,7 @@ import {
 	matchesKey,
 	Spacer,
 	Text,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import { theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { keyText } from "./keybinding-hints.ts";

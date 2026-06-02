@@ -8,9 +8,9 @@
  * Token stats come from ctx.sessionManager/ctx.model (already accessible).
  */
 
-import type { AssistantMessage } from "@earendil-works/kin-ai";
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
-import { truncateToWidth, visibleWidth } from "@earendil-works/kin-tui";
+import type { AssistantMessage } from "@landongarrison/kin-ai";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
+import { truncateToWidth, visibleWidth } from "@landongarrison/kin-tui";
 
 export default function (pi: ExtensionAPI) {
 	let enabled = false;

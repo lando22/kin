@@ -5,10 +5,10 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentMessage, AgentTool } from "@earendil-works/kin-agent-core";
-import { Agent } from "@earendil-works/kin-agent-core";
-import type { FauxModelDefinition, FauxProviderRegistration, FauxResponseStep, Model } from "@earendil-works/kin-ai";
-import { registerFauxProvider } from "@earendil-works/kin-ai";
+import type { AgentMessage, AgentTool } from "@landongarrison/kin-agent-core";
+import { Agent } from "@landongarrison/kin-agent-core";
+import type { FauxModelDefinition, FauxProviderRegistration, FauxResponseStep, Model } from "@landongarrison/kin-ai";
+import { registerFauxProvider } from "@landongarrison/kin-ai";
 import { AgentSession, type AgentSessionEvent } from "../../src/core/agent-session.js";
 import { AuthStorage } from "../../src/core/auth-storage.js";
 import type { ExtensionRunner } from "../../src/core/extensions/index.js";

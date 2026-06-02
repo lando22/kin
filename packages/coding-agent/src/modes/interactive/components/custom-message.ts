@@ -1,6 +1,6 @@
-import type { TextContent } from "@earendil-works/kin-ai";
-import type { Component } from "@earendil-works/kin-tui";
-import { Box, Container, Markdown, type MarkdownTheme, Spacer, Text } from "@earendil-works/kin-tui";
+import type { TextContent } from "@landongarrison/kin-ai";
+import type { Component } from "@landongarrison/kin-tui";
+import { Box, Container, Markdown, type MarkdownTheme, Spacer, Text } from "@landongarrison/kin-tui";
 import type { MessageRenderer } from "../../../core/extensions/types.ts";
 import type { CustomMessage } from "../../../core/messages.ts";
 import { getMarkdownTheme, theme } from "../theme/theme.ts";

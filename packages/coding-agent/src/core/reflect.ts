@@ -1,17 +1,17 @@
 /**
- * Reflection engine for Pi's autonomous reflection feature.
+ * Reflection engine for Kin's autonomous reflection feature.
  *
  * Reads session files, feeds conversations through the LLM, and writes
  * structured reflections to ~/.kin/Reflections/<date>/REFLECTION.md.
  *
- * Used by both the `/reflect` slash command and the `kin reflect` CLI command.
+ * Used by the `kin reflect` CLI command and the autonomous reflect/wake flow.
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
-import type { Message, Model } from "@earendil-works/kin-ai";
-import { completeSimple } from "@earendil-works/kin-ai";
+import type { Message, Model } from "@landongarrison/kin-ai";
+import { completeSimple } from "@landongarrison/kin-ai";
 
 // =============================================================================
 // Date helpers (local time, not UTC)

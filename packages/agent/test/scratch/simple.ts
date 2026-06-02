@@ -1,6 +1,6 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { getModel } from "@earendil-works/kin-ai";
+import { getModel } from "@landongarrison/kin-ai";
 import { NodeExecutionEnv } from "../../src/harness/env/nodejs.js";
 import { InMemorySessionStorage } from "../../src/harness/session/memory-storage.js";
 import {

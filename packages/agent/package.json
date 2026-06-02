@@ -1,5 +1,5 @@
 {
-	"name": "@earendil-works/kin-agent-core",
+	"name": "@landongarrison/kin-agent-core",
 	"version": "0.75.3",
 	"description": "General-purpose agent with transport abstraction, state management, and attachment support",
 	"type": "module",
@@ -29,7 +29,7 @@
 		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"dependencies": {
-		"@earendil-works/kin-ai": "^0.75.3",
+		"@landongarrison/kin-ai": "^0.75.3",
 		"ignore": "^7.0.5",
 		"typebox": "^1.1.24",
 		"yaml": "^2.8.2"

@@ -8,11 +8,11 @@ import { createRequire } from "node:module";
 import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import * as _bundledPiAgentCore from "@earendil-works/kin-agent-core";
-import * as _bundledPiAi from "@earendil-works/kin-ai";
-import * as _bundledPiAiOauth from "@earendil-works/kin-ai/oauth";
-import type { KeyId } from "@earendil-works/kin-tui";
-import * as _bundledPiTui from "@earendil-works/kin-tui";
+import * as _bundledPiAgentCore from "@landongarrison/kin-agent-core";
+import * as _bundledPiAi from "@landongarrison/kin-ai";
+import * as _bundledPiAiOauth from "@landongarrison/kin-ai/oauth";
+import type { KeyId } from "@landongarrison/kin-tui";
+import * as _bundledPiTui from "@landongarrison/kin-tui";
 import { createJiti } from "jiti/static";
 // Static imports of packages that extensions may use.
 // These MUST be static so Bun bundles them into the compiled binary.
@@ -22,7 +22,7 @@ import * as _bundledTypeboxCompile from "typebox/compile";
 import * as _bundledTypeboxValue from "typebox/value";
 import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../../config.ts";
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
-// avoiding a circular dependency. Extensions can import from @earendil-works/kin-coding-agent.
+// avoiding a circular dependency. Extensions can import from @landongarrison/kin-coding-agent.
 import * as _bundledPiCodingAgent from "../../index.ts";
 import { createEventBus, type EventBus } from "../event-bus.ts";
 import type { ExecOptions } from "../exec.ts";
@@ -48,11 +48,11 @@ const VIRTUAL_MODULES: Record<string, unknown> = {
 	"@sinclair/typebox": _bundledTypebox,
 	"@sinclair/typebox/compile": _bundledTypeboxCompile,
 	"@sinclair/typebox/value": _bundledTypeboxValue,
-	"@earendil-works/kin-agent-core": _bundledPiAgentCore,
-	"@earendil-works/kin-tui": _bundledPiTui,
-	"@earendil-works/kin-ai": _bundledPiAi,
-	"@earendil-works/kin-ai/oauth": _bundledPiAiOauth,
-	"@earendil-works/kin-coding-agent": _bundledPiCodingAgent,
+	"@landongarrison/kin-agent-core": _bundledPiAgentCore,
+	"@landongarrison/kin-tui": _bundledPiTui,
+	"@landongarrison/kin-ai": _bundledPiAi,
+	"@landongarrison/kin-ai/oauth": _bundledPiAiOauth,
+	"@landongarrison/kin-coding-agent": _bundledPiCodingAgent,
 	"@mariozechner/kin-agent-core": _bundledPiAgentCore,
 	"@mariozechner/kin-tui": _bundledPiTui,
 	"@mariozechner/kin-ai": _bundledPiAi,
@@ -88,17 +88,17 @@ function getAliases(): Record<string, string> {
 	};
 
 	const piCodingAgentEntry = packageIndex;
-	const piAgentCoreEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@earendil-works/kin-agent-core");
-	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@earendil-works/kin-tui");
-	const piAiEntry = resolveWorkspaceOrImport("ai/dist/index.js", "@earendil-works/kin-ai");
-	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/oauth.js", "@earendil-works/kin-ai/oauth");
+	const piAgentCoreEntry = resolveWorkspaceOrImport("agent/dist/index.js", "@landongarrison/kin-agent-core");
+	const piTuiEntry = resolveWorkspaceOrImport("tui/dist/index.js", "@landongarrison/kin-tui");
+	const piAiEntry = resolveWorkspaceOrImport("ai/dist/index.js", "@landongarrison/kin-ai");
+	const piAiOauthEntry = resolveWorkspaceOrImport("ai/dist/oauth.js", "@landongarrison/kin-ai/oauth");
 
 	_aliases = {
-		"@earendil-works/kin-coding-agent": piCodingAgentEntry,
-		"@earendil-works/kin-agent-core": piAgentCoreEntry,
-		"@earendil-works/kin-tui": piTuiEntry,
-		"@earendil-works/kin-ai": piAiEntry,
-		"@earendil-works/kin-ai/oauth": piAiOauthEntry,
+		"@landongarrison/kin-coding-agent": piCodingAgentEntry,
+		"@landongarrison/kin-agent-core": piAgentCoreEntry,
+		"@landongarrison/kin-tui": piTuiEntry,
+		"@landongarrison/kin-ai": piAiEntry,
+		"@landongarrison/kin-ai/oauth": piAiOauthEntry,
 		"@mariozechner/kin-coding-agent": piCodingAgentEntry,
 		"@mariozechner/kin-agent-core": piAgentCoreEntry,
 		"@mariozechner/kin-tui": piTuiEntry,

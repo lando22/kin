@@ -17,8 +17,8 @@ import {
 	registerApiProvider,
 	resetApiProviders,
 	type SimpleStreamOptions,
-} from "@earendil-works/kin-ai";
-import { registerOAuthProvider, resetOAuthProviders } from "@earendil-works/kin-ai/oauth";
+} from "@landongarrison/kin-ai";
+import { registerOAuthProvider, resetOAuthProviders } from "@landongarrison/kin-ai/oauth";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { type Static, Type } from "typebox";

@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/kin-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@landongarrison/kin-coding-agent";
 
 const COMPACT_THRESHOLD_TOKENS = 100_000;
 

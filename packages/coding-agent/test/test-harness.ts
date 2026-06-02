@@ -10,8 +10,8 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentTool } from "@earendil-works/kin-agent-core";
-import { Agent } from "@earendil-works/kin-agent-core";
+import type { AgentTool } from "@landongarrison/kin-agent-core";
+import { Agent } from "@landongarrison/kin-agent-core";
 import type {
 	AssistantMessage,
 	AssistantMessageEvent,
@@ -24,8 +24,8 @@ import type {
 	ThinkingContent,
 	ToolCall,
 	Usage,
-} from "@earendil-works/kin-ai";
-import { createAssistantMessageEventStream } from "@earendil-works/kin-ai";
+} from "@landongarrison/kin-ai";
+import { createAssistantMessageEventStream } from "@landongarrison/kin-ai";
 import { AgentSession, type AgentSessionEvent } from "../src/core/agent-session.js";
 import { AuthStorage } from "../src/core/auth-storage.js";
 import { ModelRegistry } from "../src/core/model-registry.js";

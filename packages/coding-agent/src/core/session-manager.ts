@@ -1,5 +1,5 @@
-import { type AgentMessage, uuidv7 } from "@earendil-works/kin-agent-core";
-import type { ImageContent, Message, TextContent } from "@earendil-works/kin-ai";
+import { type AgentMessage, uuidv7 } from "@landongarrison/kin-agent-core";
+import type { ImageContent, Message, TextContent } from "@landongarrison/kin-ai";
 import { randomUUID } from "crypto";
 import {
 	appendFileSync,

@@ -45,8 +45,8 @@ import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { SandboxManager, type SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime";
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
-import { type BashOperations, createBashTool, getAgentDir } from "@earendil-works/kin-coding-agent";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
+import { type BashOperations, createBashTool, getAgentDir } from "@landongarrison/kin-coding-agent";
 
 interface SandboxConfig extends SandboxRuntimeConfig {
 	enabled?: boolean;

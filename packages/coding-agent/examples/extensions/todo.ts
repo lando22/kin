@@ -10,9 +10,9 @@
  * correct for that point in history.
  */
 
-import { StringEnum } from "@earendil-works/kin-ai";
-import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/kin-coding-agent";
-import { matchesKey, Text, truncateToWidth } from "@earendil-works/kin-tui";
+import { StringEnum } from "@landongarrison/kin-ai";
+import type { ExtensionAPI, ExtensionContext, Theme } from "@landongarrison/kin-coding-agent";
+import { matchesKey, Text, truncateToWidth } from "@landongarrison/kin-tui";
 import { Type } from "typebox";
 
 interface Todo {

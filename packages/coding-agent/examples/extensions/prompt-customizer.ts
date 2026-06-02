@@ -12,7 +12,7 @@
  * 2. Use the extension — it automatically adapts to your active tools and skills
  */
 
-import type { BuildSystemPromptOptions, ExtensionAPI } from "@earendil-works/kin-coding-agent";
+import type { BuildSystemPromptOptions, ExtensionAPI } from "@landongarrison/kin-coding-agent";
 
 /**
  * Adds tool-specific guidance that adapts to the active tool set.
@@ -32,7 +32,9 @@ function addToolGuidance(options: BuildSystemPromptOptions, basePrompt: string):
 	}
 
 	if (hasTool("bash")) {
-		parts.push("• Execute commands with the `bash` tool. Use it for file operations like `ls`, `find`, `grep`.");
+		parts.push(
+			"• Execute commands with the `bash` tool. Use it for shell workflows like `rg`, `git`, test runners, and build commands.",
+		);
 	}
 
 	if (hasTool("edit")) {

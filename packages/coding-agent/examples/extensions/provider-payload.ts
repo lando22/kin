@@ -1,6 +1,6 @@
 import { appendFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
 
 export default function (pi: ExtensionAPI) {
 	const logFile = join(process.cwd(), ".kin", "provider-payload.log");

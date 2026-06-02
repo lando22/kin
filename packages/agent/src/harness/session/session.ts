@@ -1,4 +1,4 @@
-import type { ImageContent, TextContent } from "@earendil-works/kin-ai";
+import type { ImageContent, TextContent } from "@landongarrison/kin-ai";
 import type { AgentMessage } from "../../types.ts";
 import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from "../messages.ts";
 import type {

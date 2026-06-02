@@ -10,7 +10,7 @@
  * 3. Use /commands extensions to filter by source
  */
 
-import type { ExtensionAPI, SlashCommandInfo } from "@earendil-works/kin-coding-agent";
+import type { ExtensionAPI, SlashCommandInfo } from "@landongarrison/kin-coding-agent";
 
 export default function commandsExtension(pi: ExtensionAPI) {
 	pi.registerCommand("commands", {

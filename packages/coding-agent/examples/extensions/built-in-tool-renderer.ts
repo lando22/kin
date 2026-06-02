@@ -25,9 +25,9 @@
  *   pi -e ./built-in-tool-renderer.ts
  */
 
-import type { BashToolDetails, EditToolDetails, ExtensionAPI, ReadToolDetails } from "@earendil-works/kin-coding-agent";
-import { createBashTool, createEditTool, createReadTool, createWriteTool } from "@earendil-works/kin-coding-agent";
-import { Text } from "@earendil-works/kin-tui";
+import type { BashToolDetails, EditToolDetails, ExtensionAPI, ReadToolDetails } from "@landongarrison/kin-coding-agent";
+import { createBashTool, createEditTool, createReadTool, createWriteTool } from "@landongarrison/kin-coding-agent";
+import { Text } from "@landongarrison/kin-tui";
 
 export default function (pi: ExtensionAPI) {
 	const cwd = process.cwd();

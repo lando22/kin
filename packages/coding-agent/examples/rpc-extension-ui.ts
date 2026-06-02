@@ -26,7 +26,7 @@ import {
 	ProcessTerminal,
 	SelectList,
 	TUI,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

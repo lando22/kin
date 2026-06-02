@@ -5,9 +5,9 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { Agent } from "@earendil-works/kin-agent-core";
-import { getModel, type OAuthCredentials, type OAuthProvider } from "@earendil-works/kin-ai";
-import { getOAuthApiKey } from "@earendil-works/kin-ai/oauth";
+import { Agent } from "@landongarrison/kin-agent-core";
+import { getModel, type OAuthCredentials, type OAuthProvider } from "@landongarrison/kin-ai";
+import { getOAuthApiKey } from "@landongarrison/kin-ai/oauth";
 import { AgentSession } from "../src/core/agent-session.js";
 import { AuthStorage } from "../src/core/auth-storage.js";
 import { createEventBus } from "../src/core/event-bus.js";

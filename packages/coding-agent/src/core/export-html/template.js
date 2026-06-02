@@ -591,12 +591,6 @@
             const cmd = rawCmd.replace(/[\n\t]/g, ' ').trim().slice(0, 50);
             return `[bash: ${cmd}${rawCmd.length > 50 ? '...' : ''}]`;
           }
-          case 'grep':
-            return `[grep: /${args.pattern || ''}/ in ${shortenPath(String(args.path || '.'))}]`;
-          case 'find':
-            return `[find: ${args.pattern || ''} in ${shortenPath(String(args.path || '.'))}]`;
-          case 'ls':
-            return `[ls: ${shortenPath(String(args.path || '.'))}]`;
           default: {
             const argsStr = JSON.stringify(args).slice(0, 40);
             return `[${name}: ${argsStr}${JSON.stringify(args).length > 40 ? '...' : ''}]`;
@@ -987,22 +981,6 @@
             } else if (result) {
               const output = getResultText().trim();
               if (output) html += `<div class="tool-output"><pre>${escapeHtml(output)}</pre></div>`;
-            }
-            break;
-          }
-          case 'ls': {
-            const dirPath = str(args.path);
-            const limit = args.limit;
-
-            let pathHtml = dirPath === null ? invalidArg : escapeHtml(shortenPath(dirPath || '.'));
-            if (limit !== undefined) {
-              pathHtml += ` <span class="line-count">(limit ${escapeHtml(String(limit))})</span>`;
-            }
-
-            html += `<div class="tool-header"><span class="tool-name">ls</span> <span class="tool-path">${pathHtml}</span></div>`;
-            if (result) {
-              const output = getResultText().trim();
-              if (output) html += formatExpandableOutput(output, 20);
             }
             break;
           }

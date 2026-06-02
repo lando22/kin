@@ -1,5 +1,5 @@
-import type { Model } from "@earendil-works/kin-ai";
-import { completeSimple } from "@earendil-works/kin-ai";
+import type { Model } from "@landongarrison/kin-ai";
+import { completeSimple } from "@landongarrison/kin-ai";
 import type { AgentMessage } from "../../types.ts";
 import {
 	convertToLlm,

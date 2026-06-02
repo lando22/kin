@@ -2,7 +2,7 @@
  * CLI argument parsing and help display
  */
 
-import type { ThinkingLevel } from "@earendil-works/kin-agent-core";
+import type { ThinkingLevel } from "@landongarrison/kin-agent-core";
 import chalk from "chalk";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, ENV_SESSION_DIR } from "../config.ts";
 import type { ExtensionFlag } from "../core/extensions/types.ts";
@@ -295,7 +295,7 @@ ${chalk.bold("Examples:")}
   ${APP_NAME} --thinking high "Solve this complex problem"
 
   # Read-only mode (no file modifications possible)
-  ${APP_NAME} --tools read,grep,find,ls -p "Review the code in src/"
+  ${APP_NAME} --tools read,definition -p "Review the code in src/"
 
   # Export a session file to HTML
   ${APP_NAME} --export ~/${CONFIG_DIR_NAME}/agent/sessions/--path--/session.jsonl
@@ -349,8 +349,6 @@ ${chalk.bold("Built-in Tool Names:")}
   bash   - Execute bash commands
   edit   - Edit files with find/replace
   write  - Write files (creates/overwrites)
-  grep   - Search file contents (read-only, off by default)
-  find   - Find files by glob pattern (read-only, off by default)
-  ls     - List directory contents (read-only, off by default)
+  definition - Find where a symbol is defined
 `);
 }

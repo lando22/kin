@@ -4,7 +4,7 @@
  * Replace everything - no discovery, explicit configuration.
  */
 
-import { getModel } from "@earendil-works/kin-ai";
+import { getModel } from "@landongarrison/kin-ai";
 import {
 	AuthStorage,
 	createAgentSession,
@@ -13,7 +13,7 @@ import {
 	type ResourceLoader,
 	SessionManager,
 	SettingsManager,
-} from "@earendil-works/kin-coding-agent";
+} from "@landongarrison/kin-coding-agent";
 
 // Custom auth storage location
 const authStorage = AuthStorage.create("/tmp/my-agent/auth.json");

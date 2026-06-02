@@ -1,4 +1,4 @@
-import { fauxAssistantMessage, fauxToolCall, getModel, registerFauxProvider } from "@earendil-works/kin-ai";
+import { fauxAssistantMessage, fauxToolCall, getModel, registerFauxProvider } from "@landongarrison/kin-ai";
 import { afterEach, describe, expect, it } from "vitest";
 import { AgentHarness } from "../../src/harness/agent-harness.js";
 import { NodeExecutionEnv } from "../../src/harness/env/nodejs.js";

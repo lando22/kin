@@ -2,8 +2,8 @@
  * Model resolution, scoping, and initial selection
  */
 
-import type { ThinkingLevel } from "@earendil-works/kin-agent-core";
-import { type Api, type KnownProvider, type Model, modelsAreEqual } from "@earendil-works/kin-ai";
+import type { ThinkingLevel } from "@landongarrison/kin-agent-core";
+import type { Api, KnownProvider, Model } from "@landongarrison/kin-ai";
 import chalk from "chalk";
 import { minimatch } from "minimatch";
 import { isValidThinkingLevel } from "../cli/args.ts";
@@ -50,6 +50,13 @@ export interface ScopedModel {
 	model: Model<Api>;
 	/** Thinking level if explicitly specified in pattern (e.g., "model:high"), undefined otherwise */
 	thinkingLevel?: ThinkingLevel;
+}
+
+function modelsAreEqual(
+	a: { id: string; provider: string } | null | undefined,
+	b: { id: string; provider: string } | null | undefined,
+): boolean {
+	return Boolean(a && b && a.id === b.id && a.provider === b.provider);
 }
 
 /**

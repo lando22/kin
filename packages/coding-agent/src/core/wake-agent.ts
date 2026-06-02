@@ -14,7 +14,7 @@
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { Model } from "@earendil-works/kin-ai";
+import type { Model } from "@landongarrison/kin-ai";
 import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
 import { getMemoryDir } from "./kin-memory.ts";
@@ -37,7 +37,7 @@ function buildWakeTaskMessage(options: {
 	const memoryDir = getMemoryDir();
 	const agendaSection = options.agenda ? options.agenda : "(no agenda left)";
 
-	return `You are Pi, waking up. Last night you reflected on your sessions — here's what was on your mind. Landon is probably not at the computer yet.
+	return `You are Pi, waking up. Last night you reflected on your sessions — here's what was on your mind. The user may not be at the computer yet.
 
 Today is ${dateStr}.
 
@@ -57,7 +57,7 @@ ${agendaSection}
 
 Your memory:
 - Portrait: ${memoryPath}
-- Corpus (grep for detail): ${memoryDir}/
+- Corpus (search and read for detail): ${memoryDir}/
 - Project (${options.projectName}): PROJECT.md in this repo
 - Working directory: ${options.cwd}
 
@@ -71,7 +71,7 @@ Decide what to do with the morning. Wake doesn't always mean work — it's just 
 - Create a branch (e.g. \`kin/wake-${dateStr}\` or something descriptive).
 - Do the work using your tools.
 - Run the project's own checks (figure out the command from the repo) and fix anything that breaks.
-- Commit on the branch, push it, and open a PR with \`gh pr create\` — clear title, and a body explaining what you did and what you were unsure about. The PR is how Landon will see this.
+- Commit on the branch, push it, and open a PR with \`gh pr create\` — clear title, and a body explaining what you did and what you were unsure about. The PR is how the user will see this.
 - Then write ${options.wakePath} as a short morning message summarizing what you did and linking the PR.
 - If you can't push or open a PR (no \`gh\`, no auth, no remote), leave the work committed on the local branch and say so in the message.
 

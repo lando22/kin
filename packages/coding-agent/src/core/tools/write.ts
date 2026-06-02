@@ -1,5 +1,5 @@
-import type { AgentTool } from "@earendil-works/kin-agent-core";
-import { Container, Text } from "@earendil-works/kin-tui";
+import type { AgentTool } from "@landongarrison/kin-agent-core";
+import { Container, Text } from "@landongarrison/kin-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";

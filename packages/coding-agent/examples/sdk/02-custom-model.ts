@@ -4,8 +4,8 @@
  * Shows how to select a specific model and thinking level.
  */
 
-import { getModel } from "@earendil-works/kin-ai";
-import { AuthStorage, createAgentSession, ModelRegistry } from "@earendil-works/kin-coding-agent";
+import { getModel } from "@landongarrison/kin-ai";
+import { AuthStorage, createAgentSession, ModelRegistry } from "@landongarrison/kin-coding-agent";
 
 // Set up auth storage and model registry
 const authStorage = AuthStorage.create();

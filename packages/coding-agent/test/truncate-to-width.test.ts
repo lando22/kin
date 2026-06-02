@@ -1,4 +1,4 @@
-import { truncateToWidth, visibleWidth } from "@earendil-works/kin-tui";
+import { truncateToWidth, visibleWidth } from "@landongarrison/kin-tui";
 import { describe, expect, it } from "vitest";
 
 /**

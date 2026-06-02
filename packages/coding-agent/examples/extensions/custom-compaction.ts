@@ -13,9 +13,9 @@
  *   pi --extension examples/extensions/custom-compaction.ts
  */
 
-import { complete } from "@earendil-works/kin-ai";
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
-import { convertToLlm, serializeConversation } from "@earendil-works/kin-coding-agent";
+import { complete } from "@landongarrison/kin-ai";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
+import { convertToLlm, serializeConversation } from "@landongarrison/kin-coding-agent";
 
 export default function (pi: ExtensionAPI) {
 	pi.on("session_before_compact", async (event, ctx) => {

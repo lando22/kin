@@ -1,4 +1,4 @@
-import { type Component, type Focusable, type TUI, visibleWidth } from "@earendil-works/kin-tui";
+import { type Component, type Focusable, type TUI, visibleWidth } from "@landongarrison/kin-tui";
 
 const BRAND_COLORS = ["#ffcd79", "#ffb887", "#dfa9ff", "#ff9d79"] as const;
 const WORDMARK_TEXT = "Kin";

@@ -9,9 +9,9 @@
  * 2. Use /tools to open the tool selector
  */
 
-import type { ExtensionAPI, ExtensionContext, ToolInfo } from "@earendil-works/kin-coding-agent";
-import { getSettingsListTheme } from "@earendil-works/kin-coding-agent";
-import { Container, type SettingItem, SettingsList } from "@earendil-works/kin-tui";
+import type { ExtensionAPI, ExtensionContext, ToolInfo } from "@landongarrison/kin-coding-agent";
+import { getSettingsListTheme } from "@landongarrison/kin-coding-agent";
+import { Container, type SettingItem, SettingsList } from "@landongarrison/kin-tui";
 
 // State persisted to session
 interface ToolsState {

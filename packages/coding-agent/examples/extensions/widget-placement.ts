@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
 
 export default function widgetPlacementExtension(pi: ExtensionAPI) {
 	pi.on("session_start", (_event, ctx) => {

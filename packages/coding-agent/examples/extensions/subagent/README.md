@@ -119,7 +119,7 @@ Use a chain: first have scout find the read tool, then have planner suggest impr
 **Tool call formatting** (mimics built-in tools):
 - `$ command` for bash
 - `read ~/path:1-10` for read
-- `grep /pattern/ in ~/path` for grep
+- `definition SymbolName in ~/path` for definition lookups
 - etc.
 
 ## Agent Definitions
@@ -130,7 +130,7 @@ Agents are markdown files with YAML frontmatter:
 ---
 name: my-agent
 description: What this agent does
-tools: read, grep, find, ls
+tools: read, definition
 model: claude-haiku-4-5
 ---
 
@@ -147,9 +147,9 @@ Project agents override user agents with the same name when `agentScope: "both"`
 
 | Agent | Purpose | Model | Tools |
 |-------|---------|-------|-------|
-| `scout` | Fast codebase recon | Haiku | read, grep, find, ls, bash |
-| `planner` | Implementation plans | Sonnet | read, grep, find, ls |
-| `reviewer` | Code review | Sonnet | read, grep, find, ls, bash |
+| `scout` | Fast codebase recon | Haiku | read, definition, bash |
+| `planner` | Implementation plans | Sonnet | read, definition |
+| `reviewer` | Code review | Sonnet | read, definition, bash |
 | `worker` | General-purpose | Sonnet | (all default) |
 
 ## Workflow Prompts

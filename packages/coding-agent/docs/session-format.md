@@ -34,7 +34,7 @@ Source on GitHub ([kin-mono](https://github.com/earendil-works/kin-mono)):
 - [`packages/ai/src/types.ts`](https://github.com/earendil-works/kin-mono/blob/main/packages/ai/src/types.ts) - Base message types (UserMessage, AssistantMessage, ToolResultMessage)
 - [`packages/agent/src/types.ts`](https://github.com/earendil-works/kin-mono/blob/main/packages/agent/src/types.ts) - AgentMessage union type
 
-For TypeScript definitions in your project, inspect `node_modules/@earendil-works/kin-coding-agent/dist/` and `node_modules/@earendil-works/kin-ai/dist/`.
+For TypeScript definitions in your project, inspect `node_modules/@landongarrison/kin-coding-agent/dist/` and `node_modules/@landongarrison/kin-ai/dist/`.
 
 ## Message Types
 

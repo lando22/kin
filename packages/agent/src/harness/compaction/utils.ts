@@ -1,4 +1,4 @@
-import type { Message } from "@earendil-works/kin-ai";
+import type { Message } from "@landongarrison/kin-ai";
 import type { AgentMessage } from "../../types.ts";
 
 /** File paths touched by a session branch or compaction range. */

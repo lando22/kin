@@ -1,6 +1,6 @@
 import { stripVTControlCharacters } from "node:util";
-import type { TUI } from "@earendil-works/kin-tui";
-import { visibleWidth } from "@earendil-works/kin-tui";
+import type { TUI } from "@landongarrison/kin-tui";
+import { visibleWidth } from "@landongarrison/kin-tui";
 import { describe, expect, it } from "vitest";
 import { KeybindingsManager } from "../src/core/keybindings.js";
 import { CustomEditor } from "../src/modes/interactive/components/custom-editor.js";

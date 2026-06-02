@@ -1,4 +1,4 @@
-import { setKeybindings } from "@earendil-works/kin-tui";
+import { setKeybindings } from "@landongarrison/kin-tui";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { KeybindingsManager } from "../src/core/keybindings.js";
 import type {

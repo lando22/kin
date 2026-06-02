@@ -19,10 +19,10 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
-			{ find: /^@earendil-works\/kin-ai$/, replacement: aiSrcIndex },
-			{ find: /^@earendil-works\/kin-ai\/oauth$/, replacement: aiSrcOAuth },
-			{ find: /^@earendil-works\/kin-agent-core$/, replacement: agentSrcIndex },
-			{ find: /^@earendil-works\/kin-tui$/, replacement: tuiSrcIndex },
+			{ find: /^@landongarrison\/kin-ai$/, replacement: aiSrcIndex },
+			{ find: /^@landongarrison\/kin-ai\/oauth$/, replacement: aiSrcOAuth },
+			{ find: /^@landongarrison\/kin-agent-core$/, replacement: agentSrcIndex },
+			{ find: /^@landongarrison\/kin-tui$/, replacement: tuiSrcIndex },
 			{ find: /^@mariozechner\/kin-ai$/, replacement: aiSrcIndex },
 			{ find: /^@mariozechner\/kin-ai\/oauth$/, replacement: aiSrcOAuth },
 			{ find: /^@mariozechner\/kin-agent-core$/, replacement: agentSrcIndex },

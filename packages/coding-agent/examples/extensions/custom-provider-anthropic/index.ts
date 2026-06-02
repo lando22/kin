@@ -42,8 +42,8 @@ import {
 	type Tool,
 	type ToolCall,
 	type ToolResultMessage,
-} from "@earendil-works/kin-ai";
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
+} from "@landongarrison/kin-ai";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
 
 // =============================================================================
 // OAuth Implementation (copied from packages/ai/src/utils/oauth/anthropic.ts)

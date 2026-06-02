@@ -11,7 +11,7 @@ import {
 	getAgentDir,
 	type PromptTemplate,
 	SessionManager,
-} from "@earendil-works/kin-coding-agent";
+} from "@landongarrison/kin-coding-agent";
 
 // Define custom templates
 const deployTemplate: PromptTemplate = {

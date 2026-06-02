@@ -18,7 +18,7 @@
  *   /thinking-label          Reset to the default label
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/kin-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@landongarrison/kin-coding-agent";
 
 const DEFAULT_LABEL = "Pondering...";
 

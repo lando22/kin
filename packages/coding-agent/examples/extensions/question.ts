@@ -4,8 +4,8 @@
  * Escape in editor returns to options, Escape in options cancels
  */
 
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
-import { Editor, type EditorTheme, Key, matchesKey, Text, truncateToWidth } from "@earendil-works/kin-tui";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
+import { Editor, type EditorTheme, Key, matchesKey, Text, truncateToWidth } from "@landongarrison/kin-tui";
 import { Type } from "typebox";
 
 interface OptionWithDesc {

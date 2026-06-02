@@ -1,4 +1,4 @@
-import { resetCapabilitiesCache, setCapabilities } from "@earendil-works/kin-tui";
+import { resetCapabilitiesCache, setCapabilities } from "@landongarrison/kin-tui";
 import { afterEach, describe, expect, it } from "vitest";
 import {
 	detectTerminalBackground,

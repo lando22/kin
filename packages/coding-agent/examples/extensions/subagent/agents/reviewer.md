@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Code review specialist for quality and security analysis
-tools: read, grep, find, ls, bash
+tools: read, definition, bash
 model: claude-sonnet-4-5
 ---
 

@@ -1,5 +1,5 @@
-import type { AssistantMessage } from "@earendil-works/kin-ai";
-import { Container, Markdown, type MarkdownTheme, Spacer, Text } from "@earendil-works/kin-tui";
+import type { AssistantMessage } from "@landongarrison/kin-ai";
+import { Container, Markdown, type MarkdownTheme, Spacer, Text } from "@landongarrison/kin-tui";
 import { getMarkdownTheme, theme } from "../theme/theme.ts";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";

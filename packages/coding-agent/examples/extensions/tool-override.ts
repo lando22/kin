@@ -20,8 +20,8 @@
  *   pi -e ./tool-override.ts
  */
 
-import type { TextContent } from "@earendil-works/kin-ai";
-import { type ExtensionAPI, getAgentDir, withFileMutationQueue } from "@earendil-works/kin-coding-agent";
+import type { TextContent } from "@landongarrison/kin-ai";
+import { type ExtensionAPI, getAgentDir, withFileMutationQueue } from "@landongarrison/kin-coding-agent";
 import { constants, readFileSync } from "fs";
 import { access, appendFile, readFile } from "fs/promises";
 import { join, resolve } from "path";

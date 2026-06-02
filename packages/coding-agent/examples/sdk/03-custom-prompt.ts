@@ -9,7 +9,7 @@ import {
 	DefaultResourceLoader,
 	getAgentDir,
 	SessionManager,
-} from "@earendil-works/kin-coding-agent";
+} from "@landongarrison/kin-coding-agent";
 
 const cwd = process.cwd();
 const agentDir = getAgentDir();

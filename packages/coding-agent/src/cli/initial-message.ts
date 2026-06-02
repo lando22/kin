@@ -1,4 +1,4 @@
-import type { ImageContent } from "@earendil-works/kin-ai";
+import type { ImageContent } from "@landongarrison/kin-ai";
 import type { Args } from "./args.ts";
 
 export interface InitialMessageInput {

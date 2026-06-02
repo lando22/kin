@@ -477,7 +477,7 @@ You are given one or more GitHub PR URLs: $@`,
 		writeTemplate(
 			"wr",
 			`---
-description: Finish the current task end-to-end with changelog, commit, and push
+description: Finish the current task end-to-end with checks, commit, and push
 argument-hint: "[instructions]"
 ---
 Wrap it. Additional instructions: $ARGUMENTS`,
@@ -493,16 +493,16 @@ Wrap it. Additional instructions: $ARGUMENTS`,
 		const wr = templates.find((t) => t.name === "wr");
 		expect(wr).toBeDefined();
 		expect(wr!.argumentHint).toBe("[instructions]");
-		expect(wr!.description).toBe("Finish the current task end-to-end with changelog, commit, and push");
+		expect(wr!.description).toBe("Finish the current task end-to-end with checks, commit, and push");
 	});
 
 	test("should leave argumentHint undefined when not specified", () => {
 		writeTemplate(
-			"cl",
+			"qa",
 			`---
-description: Audit changelog entries before release
+description: Run release readiness checks
 ---
-Audit changelog entries for all commits since the last release.`,
+Run release readiness checks before shipping.`,
 		);
 
 		const templates = loadPromptTemplates({
@@ -512,9 +512,9 @@ Audit changelog entries for all commits since the last release.`,
 			includeDefaults: false,
 		});
 
-		const cl = templates.find((t) => t.name === "cl");
-		expect(cl).toBeDefined();
-		expect(cl!.argumentHint).toBeUndefined();
+		const qa = templates.find((t) => t.name === "qa");
+		expect(qa).toBeDefined();
+		expect(qa!.argumentHint).toBeUndefined();
 	});
 
 	test("should ignore empty argument-hint", () => {

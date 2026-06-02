@@ -1,11 +1,11 @@
 <p align="center">
   <a href="https://kin.dev">
-    <img alt="pi logo" src="https://kin.dev/logo-auto.svg" width="128">
+    <img alt="kin logo" src="https://kin.dev/logo-auto.svg" width="128">
   </a>
 </p>
 <p align="center">
   <a href="https://discord.com/invite/3cU7Bz4UPx"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
-  <a href="https://www.npmjs.com/package/@earendil-works/kin-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@earendil-works/kin-coding-agent?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/@landongarrison/kin-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@landongarrison/kin-coding-agent?style=flat-square" /></a>
 </p>
 <p align="center">
   <a href="https://kin.dev">kin.dev</a> domain graciously donated by
@@ -17,21 +17,21 @@
 
 ---
 
-Pi is a minimal terminal coding harness. Adapt pi to your workflows, not the other way around, without having to fork and modify pi internals. Extend it with TypeScript [Extensions](#extensions), [Skills](#skills), [Prompt Templates](#prompt-templates), and [Themes](#themes). Put your extensions, skills, prompt templates, and themes in [Pi Packages](#pi-packages) and share them with others via npm or git.
+Kin is a minimal terminal coding harness. Adapt kin to your workflows, not the other way around, without having to fork and modify kin internals. Extend it with TypeScript [Extensions](#extensions), [Skills](#skills), [Prompt Templates](#prompt-templates), and [Themes](#themes). Put your extensions, skills, prompt templates, and themes in [Kin Packages](#kin-packages) and share them with others via npm or git.
 
-Pi ships with powerful defaults but skips features like sub agents and plan mode. Instead, you can ask pi to build what you want or install a third party pi package that matches your workflow.
+Kin ships with powerful defaults but skips features like sub agents and plan mode. Instead, you can ask kin to build what you want or install a third party kin package that matches your workflow.
 
-Pi runs in four modes: interactive, print or JSON, RPC for process integration, and an SDK for embedding in your own apps. See [openclaw/openclaw](https://github.com/openclaw/openclaw) for a real-world SDK integration.
+Kin runs in four modes: interactive, print or JSON, RPC for process integration, and an SDK for embedding in your own apps. See [openclaw/openclaw](https://github.com/openclaw/openclaw) for a real-world SDK integration.
 
 ## Share your OSS coding agent sessions
 
-If you use pi for open source work, please share your coding agent sessions.
+If you use kin for open source work, please share your coding agent sessions.
 
 Public OSS session data helps improve models, prompts, tools, and evaluations using real development workflows.
 
 For the full explanation, see [this post on X](https://x.com/badlogicgames/status/2037811643774652911).
 
-To publish sessions, use [`badlogic/kin-share-hf`](https://github.com/badlogic/kin-share-hf). Read its README.md for setup instructions. All you need is a Hugging Face account, the Hugging Face CLI, and `pi-share-hf`.
+To publish sessions, use [`badlogic/kin-share-hf`](https://github.com/badlogic/kin-share-hf). Read its README.md for setup instructions. All you need is a Hugging Face account, the Hugging Face CLI, and `kin-share-hf`.
 
 You can also watch [this video](https://x.com/badlogicgames/status/2041151967695634619), where I show how I publish my `kin-mono` sessions.
 
@@ -58,7 +58,7 @@ I regularly publish my own `kin-mono` work sessions here:
   - [Skills](#skills)
   - [Extensions](#extensions)
   - [Themes](#themes)
-  - [Pi Packages](#pi-packages)
+  - [Kin Packages](#kin-packages)
 - [Programmatic Usage](#programmatic-usage)
 - [Philosophy](#philosophy)
 - [CLI Reference](#cli-reference)
@@ -68,30 +68,30 @@ I regularly publish my own `kin-mono` work sessions here:
 ## Quick Start
 
 ```bash
-curl -fsSL https://kin.dev/install.sh | sh
+curl -fsSL https://lando22.github.io/kin/install.sh | sh
 ```
 
 Or with npm:
 
 ```bash
-npm install -g @earendil-works/kin-coding-agent
+npm install -g @landongarrison/kin-coding-agent
 ```
 
 Authenticate with an API key:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
-pi
+kin
 ```
 
 Or use your existing subscription:
 
 ```bash
-pi
+kin
 /login  # Then select provider
 ```
 
-Then just talk to pi. By default, pi gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [pi packages](#pi-packages).
+Then just talk to kin. By default, kin gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [kin packages](#kin-packages).
 
 **Platform notes:** [Windows](docs/windows.md) | [Termux (Android)](docs/termux.md) | [tmux](docs/tmux.md) | [Terminal setup](docs/terminal-setup.md) | [Shell aliases](docs/shell-aliases.md)
 
@@ -99,7 +99,7 @@ Then just talk to pi. By default, pi gives the model four tools: `read`, `write`
 
 ## Providers & Models
 
-For each built-in provider, pi maintains a list of tool-capable models, updated with every release. Authenticate via subscription (`/login`) or API key, then select any model from that provider via `/model` (or Ctrl+L).
+For each built-in provider, kin maintains a list of tool-capable models, updated with every release. Authenticate via subscription (`/login`) or API key, then select any model from that provider via `/model` (or Ctrl+L).
 
 **Subscriptions:**
 - Anthropic Claude Pro/Max
@@ -188,8 +188,8 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 | `/share` | Upload as private GitHub gist with shareable HTML link |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files (themes hot-reload automatically) |
 | `/hotkeys` | Show all keyboard shortcuts |
-| `/changelog` | Display version history |
-| `/quit` | Quit pi |
+| `/changelog` | Display update history |
+| `/quit` | Quit kin |
 
 ### Keyboard Shortcuts
 
@@ -218,7 +218,7 @@ Submit messages while the agent is working:
 - **Escape** aborts and restores queued messages to editor
 - **Alt+Up** retrieves queued messages back to editor
 
-On Windows Terminal, `Alt+Enter` is fullscreen by default. Remap it in [docs/terminal-setup.md](docs/terminal-setup.md) so pi can receive the follow-up shortcut.
+On Windows Terminal, `Alt+Enter` is fullscreen by default. Remap it in [docs/terminal-setup.md](docs/terminal-setup.md) so kin can receive the follow-up shortcut.
 
 Configure delivery in [settings](docs/settings.md): `steeringMode` and `followUpMode` can be `"one-at-a-time"` (default, waits for response) or `"all"` (delivers all queued at once). `transport` selects provider transport preference (`"sse"`, `"websocket"`, or `"auto"`) for providers that support multiple transports.
 
@@ -233,11 +233,11 @@ Sessions are stored as JSONL files with a tree structure. Each entry has an `id`
 Sessions auto-save to `~/.kin/agent/sessions/` organized by working directory.
 
 ```bash
-pi -c                  # Continue most recent session
-pi -r                  # Browse and select from past sessions
-pi --no-session        # Ephemeral mode (don't save)
-pi --session <path|id> # Use specific session file or ID
-pi --fork <path|id>    # Fork specific session file or ID into a new session
+kin -c                  # Continue most recent session
+kin -r                  # Browse and select from past sessions
+kin --no-session        # Ephemeral mode (don't save)
+kin --session <path|id> # Use specific session file or ID
+kin --fork <path|id>    # Fork specific session file or ID into a new session
 ```
 
 Use `/session` in interactive mode to see the current session ID before reusing it with `--session <id>` or `--fork <id>`.
@@ -285,8 +285,8 @@ See [docs/settings.md](docs/settings.md) for all options.
 
 Kin has two separate startup features:
 
-- **Update check:** fetches `https://kin.dev/api/latest-version` to check whether a newer Pi version exists. Disable it with `PI_SKIP_VERSION_CHECK=1`. Disabling update checks only turns off this check.
-- **Install/update telemetry:** after first install or a changelog-detected update, sends an anonymous version ping to `https://kin.dev/api/report-install`. Opt out by setting `enableInstallTelemetry` to `false` in `settings.json`, or by setting `KIN_TELEMETRY=0`. This does not disable update checks; Pi may still contact `kin.dev` for the latest version unless update checks are disabled or offline mode is enabled.
+- **Update check:** fetches `https://kin.dev/api/latest-version` to check whether a newer Kin version exists. Disable it with `PI_SKIP_VERSION_CHECK=1`. Disabling update checks only turns off this check.
+- **Install/update telemetry:** after first install or update, sends an anonymous version ping to `https://kin.dev/api/report-install`. Opt out by setting `enableInstallTelemetry` to `false` in `settings.json`, or by setting `KIN_TELEMETRY=0`. This does not disable update checks; Kin may still contact `kin.dev` for the latest version unless update checks are disabled or offline mode is enabled.
 
 Use `--offline` or `KIN_OFFLINE=1` to disable all startup network operations described here, including update checks, package update checks, and install/update telemetry.
 
@@ -294,7 +294,7 @@ Use `--offline` or `KIN_OFFLINE=1` to disable all startup network operations des
 
 ## Context Files
 
-Pi loads `AGENTS.md` (or `CLAUDE.md`) at startup from:
+Kin loads `AGENTS.md` (or `CLAUDE.md`) at startup from:
 - `~/.kin/agent/AGENTS.md` (global)
 - Parent directories (walking up from cwd)
 - Current directory
@@ -321,7 +321,7 @@ Review this code for bugs, security issues, and performance problems.
 Focus on: {{focus}}
 ```
 
-Place in `~/.kin/agent/prompts/`, `.kin/prompts/`, or a [pi package](#pi-packages) to share with others. See [docs/prompt-templates.md](docs/prompt-templates.md).
+Place in `~/.kin/agent/prompts/`, `.kin/prompts/`, or a [kin package](#kin-packages) to share with others. See [docs/prompt-templates.md](docs/prompt-templates.md).
 
 ### Skills
 
@@ -343,17 +343,17 @@ Place personal skills in `~/.kin/SKILLS/<skill-name>/`. See [docs/skills.md](doc
 
 <p align="center"><img src="docs/images/doom-extension.png" alt="Doom Extension" width="600"></p>
 
-TypeScript modules that extend pi with custom tools, commands, keyboard shortcuts, event handlers, and UI components.
+TypeScript modules that extend kin with custom tools, commands, keyboard shortcuts, event handlers, and UI components.
 
 ```typescript
-export default function (pi: ExtensionAPI) {
-  pi.registerTool({ name: "deploy", ... });
-  pi.registerCommand("stats", { ... });
-  pi.on("tool_call", async (event, ctx) => { ... });
+export default function (kin: ExtensionAPI) {
+  kin.registerTool({ name: "deploy", ... });
+  kin.registerCommand("stats", { ... });
+  kin.on("tool_call", async (event, ctx) => { ... });
 }
 ```
 
-The default export can also be `async`. pi waits for async extension factories before startup continues, which is useful for one-time initialization such as fetching remote model lists before calling `pi.registerProvider()`.
+The default export can also be `async`. kin waits for async extension factories before startup continues, which is useful for one-time initialization such as fetching remote model lists before calling `kin.registerProvider()`.
 
 **What's possible:**
 - Custom tools (or replace built-in tools entirely)
@@ -365,55 +365,55 @@ The default export can also be `async`. pi waits for async extension factories b
 - Git checkpointing and auto-commit
 - SSH and sandbox execution
 - MCP server integration
-- Make pi look like Claude Code
+- Make kin look like Claude Code
 - Games while waiting (yes, Doom runs)
 - ...anything you can dream up
 
-Place in `~/.kin/agent/extensions/`, `.kin/extensions/`, or a [pi package](#pi-packages) to share with others. See [docs/extensions.md](docs/extensions.md) and [examples/extensions/](examples/extensions/).
+Place in `~/.kin/agent/extensions/`, `.kin/extensions/`, or a [kin package](#kin-packages) to share with others. See [docs/extensions.md](docs/extensions.md) and [examples/extensions/](examples/extensions/).
 
 ### Themes
 
-Built-in: `dark`, `light`. Themes hot-reload: modify the active theme file and pi immediately applies changes.
+Built-in: `dark`, `light`. Themes hot-reload: modify the active theme file and kin immediately applies changes.
 
-Place in `~/.kin/agent/themes/`, `.kin/themes/`, or a [pi package](#pi-packages) to share with others. See [docs/themes.md](docs/themes.md).
+Place in `~/.kin/agent/themes/`, `.kin/themes/`, or a [kin package](#kin-packages) to share with others. See [docs/themes.md](docs/themes.md).
 
-### Pi Packages
+### Kin Packages
 
-Bundle and share extensions, skills, prompts, and themes via npm or git. Find packages on [npmjs.com](https://www.npmjs.com/search?q=keywords%3Api-package) or [Discord](https://discord.com/channels/1456806362351669492/1457744485428629628).
+Bundle and share extensions, skills, prompts, and themes via npm or git. Find packages on [npmjs.com](https://www.npmjs.com/search?q=keywords%3Akin-package) or [Discord](https://discord.com/channels/1456806362351669492/1457744485428629628).
 
-> **Security:** Pi packages run with full system access. Extensions execute arbitrary code, and skills can instruct the model to perform any action including running executables. Review source code before installing third-party packages.
+> **Security:** Kin packages run with full system access. Extensions execute arbitrary code, and skills can instruct the model to perform any action including running executables. Review source code before installing third-party packages.
 
 ```bash
-pi install npm:@foo/kin-tools
-pi install npm:@foo/kin-tools@1.2.3      # pinned version
-pi install git:github.com/user/repo
-pi install git:github.com/user/repo@v1  # tag or commit
-pi install git:git@github.com:user/repo
-pi install git:git@github.com:user/repo@v1  # tag or commit
-pi install https://github.com/user/repo
-pi install https://github.com/user/repo@v1      # tag or commit
-pi install ssh://git@github.com/user/repo
-pi install ssh://git@github.com/user/repo@v1    # tag or commit
-pi remove npm:@foo/kin-tools
-pi uninstall npm:@foo/kin-tools          # alias for remove
-pi list
-pi update                               # update pi and packages (skips pinned packages)
-pi update --extensions                  # update packages only
-pi update --self                        # update pi only
-pi update --self --force                # reinstall pi even if current
-pi update npm:@foo/kin-tools             # update one package
-pi config                               # enable/disable extensions, skills, prompts, themes
+kin install npm:@foo/kin-tools
+kin install npm:@foo/kin-tools@1.2.3      # pinned version
+kin install git:github.com/user/repo
+kin install git:github.com/user/repo@v1  # tag or commit
+kin install git:git@github.com:user/repo
+kin install git:git@github.com:user/repo@v1  # tag or commit
+kin install https://github.com/user/repo
+kin install https://github.com/user/repo@v1      # tag or commit
+kin install ssh://git@github.com/user/repo
+kin install ssh://git@github.com/user/repo@v1    # tag or commit
+kin remove npm:@foo/kin-tools
+kin uninstall npm:@foo/kin-tools          # alias for remove
+kin list
+kin update                               # update kin and packages (skips pinned packages)
+kin update --extensions                  # update packages only
+kin update --self                        # update kin only
+kin update --self --force                # reinstall kin even if current
+kin update npm:@foo/kin-tools             # update one package
+kin config                               # enable/disable extensions, skills, prompts, themes
 ```
 
 Packages install to `~/.kin/agent/git/` (git) or `~/.kin/agent/npm/` (npm). Use `-l` for project-local installs (`.kin/git/`, `.kin/npm/`). Git packages install dependencies with `npm install --omit=dev` by default, so runtime deps must be listed under `dependencies`; when `npmCommand` is configured, git packages use plain `install` for compatibility with wrappers. If you use a Node version manager and want package installs to reuse a stable npm context, set `npmCommand` in `settings.json`, for example `["mise", "exec", "node@20", "--", "npm"]`.
 
-Create a package by adding a `pi` key to `package.json`:
+Create a package by adding a `kin` key to `package.json`:
 
 ```json
 {
-  "name": "my-pi-package",
-  "keywords": ["pi-package"],
-  "pi": {
+  "name": "my-kin-package",
+  "keywords": ["kin-package"],
+  "kin": {
     "extensions": ["./extensions"],
     "skills": ["./skills"],
     "prompts": ["./prompts"],
@@ -422,7 +422,7 @@ Create a package by adding a `pi` key to `package.json`:
 }
 ```
 
-Without a `pi` manifest, pi auto-discovers from conventional directories (`extensions/`, `skills/`, `prompts/`, `themes/`).
+Without a `kin` manifest, kin auto-discovers from conventional directories (`extensions/`, `skills/`, `prompts/`, `themes/`).
 
 See [docs/packages.md](docs/packages.md).
 
@@ -433,7 +433,7 @@ See [docs/packages.md](docs/packages.md).
 ### SDK
 
 ```typescript
-import { AuthStorage, createAgentSession, ModelRegistry, SessionManager } from "@earendil-works/kin-coding-agent";
+import { AuthStorage, createAgentSession, ModelRegistry, SessionManager } from "@landongarrison/kin-coding-agent";
 
 const authStorage = AuthStorage.create();
 const modelRegistry = ModelRegistry.create(authStorage);
@@ -455,7 +455,7 @@ See [docs/sdk.md](docs/sdk.md) and [examples/sdk/](examples/sdk/).
 For non-Node.js integrations, use RPC mode over stdin/stdout:
 
 ```bash
-pi --mode rpc
+kin --mode rpc
 ```
 
 RPC mode uses strict LF-delimited JSONL framing. Clients must split records on `\n` only. Do not use generic line readers like Node `readline`, which also split on Unicode separators inside JSON payloads.
@@ -466,11 +466,11 @@ See [docs/rpc.md](docs/rpc.md) for the protocol.
 
 ## Philosophy
 
-Pi is aggressively extensible so it doesn't have to dictate your workflow. Features that other tools bake in can be built with [extensions](#extensions), [skills](#skills), or installed from third-party [pi packages](#pi-packages). This keeps the core minimal while letting you shape pi to fit how you work.
+Kin is aggressively extensible so it doesn't have to dictate your workflow. Features that other tools bake in can be built with [extensions](#extensions), [skills](#skills), or installed from third-party [kin packages](#kin-packages). This keeps the core minimal while letting you shape kin to fit how you work.
 
 **No MCP.** Build CLI tools with READMEs (see [Skills](#skills)), or build an extension that adds MCP support. [Why?](https://mariozechner.at/posts/2025-11-02-what-if-you-dont-need-mcp/)
 
-**No sub-agents.** There's many ways to do this. Spawn pi instances via tmux, or build your own with [extensions](#extensions), or install a package that does it your way.
+**No sub-agents.** There's many ways to do this. Spawn kin instances via tmux, or build your own with [extensions](#extensions), or install a package that does it your way.
 
 **No permission popups.** Run in a container, or build your own confirmation flow with [extensions](#extensions) inline with your environment and security requirements.
 
@@ -487,22 +487,22 @@ Read the [blog post](https://mariozechner.at/posts/2025-11-30-kin-coding-agent/)
 ## CLI Reference
 
 ```bash
-pi [options] [@files...] [messages...]
+kin [options] [@files...] [messages...]
 ```
 
 ### Package Commands
 
 ```bash
-pi install <source> [-l]     # Install package, -l for project-local
-pi remove <source> [-l]      # Remove package
-pi uninstall <source> [-l]   # Alias for remove
-pi update [source|self|pi]   # Update pi and packages (skips pinned packages)
-pi update --extensions       # Update packages only
-pi update --self             # Update pi only
-pi update --self --force     # Reinstall pi even if current
-pi update --extension <src>  # Update one package
-pi list                      # List installed packages
-pi config                    # Enable/disable package resources
+kin install <source> [-l]     # Install package, -l for project-local
+kin remove <source> [-l]      # Remove package
+kin uninstall <source> [-l]   # Alias for remove
+kin update [source|self|kin]   # Update kin and packages (skips pinned packages)
+kin update --extensions       # Update packages only
+kin update --self             # Update kin only
+kin update --self --force     # Reinstall kin even if current
+kin update --extension <src>  # Update one package
+kin list                      # List installed packages
+kin config                    # Enable/disable package resources
 ```
 
 ### Context Transfer
@@ -523,10 +523,10 @@ kin import [archive.tar.gz]   # Import personal context from an archive
 | `--mode json` | Output all events as JSON lines (see [docs/json.md](docs/json.md)) |
 | `--mode rpc` | RPC mode for process integration (see [docs/rpc.md](docs/rpc.md)) |
 
-In print mode, pi also reads piped stdin and merges it into the initial prompt:
+In print mode, kin also reads piped stdin and merges it into the initial prompt:
 
 ```bash
-cat README.md | pi -p "Summarize this text"
+cat README.md | kin -p "Summarize this text"
 ```
 
 ### Model Options
@@ -559,7 +559,7 @@ cat README.md | pi -p "Summarize this text"
 | `--no-builtin-tools`, `-nbt` | Disable built-in tools by default but keep extension/custom tools enabled |
 | `--no-tools`, `-nt` | Disable all tools by default |
 
-Available built-in tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`
+Available built-in tools: `read`, `bash`, `edit`, `write`, `definition`
 
 ### Resource Options
 
@@ -592,40 +592,40 @@ Combine `--no-*` with explicit flags to load exactly what you need, ignoring set
 Prefix files with `@` to include in the message:
 
 ```bash
-pi @prompt.md "Answer this"
-pi -p @screenshot.png "What's in this image?"
-pi @code.ts @test.ts "Review these files"
+kin @prompt.md "Answer this"
+kin -p @screenshot.png "What's in this image?"
+kin @code.ts @test.ts "Review these files"
 ```
 
 ### Examples
 
 ```bash
 # Interactive with initial prompt
-pi "List all .ts files in src/"
+kin "List all .ts files in src/"
 
 # Non-interactive
-pi -p "Summarize this codebase"
+kin -p "Summarize this codebase"
 
 # Non-interactive with piped stdin
-cat README.md | pi -p "Summarize this text"
+cat README.md | kin -p "Summarize this text"
 
 # Different model
-pi --provider openai --model gpt-4o "Help me refactor"
+kin --provider openai --model gpt-4o "Help me refactor"
 
 # Model with provider prefix (no --provider needed)
-pi --model openai/gpt-4o "Help me refactor"
+kin --model openai/gpt-4o "Help me refactor"
 
 # Model with thinking level shorthand
-pi --model sonnet:high "Solve this complex problem"
+kin --model sonnet:high "Solve this complex problem"
 
 # Limit model cycling
-pi --models "claude-*,gpt-4o"
+kin --models "claude-*,gpt-4o"
 
 # Read-only mode
-pi --tools read,grep,find,ls -p "Review the code"
+kin --tools read,definition -p "Review the code"
 
 # High thinking level
-pi --thinking high "Solve this complex problem"
+kin --thinking high "Solve this complex problem"
 ```
 
 ### Environment Variables
@@ -636,7 +636,7 @@ pi --thinking high "Solve this complex problem"
 | `KIN_CODING_AGENT_SESSION_DIR` | Override session storage directory (overridden by `--session-dir`) |
 | `KIN_PACKAGE_DIR` | Override package directory (useful for Nix/Guix where store paths tokenize poorly) |
 | `KIN_OFFLINE` | Disable startup network operations, including update checks, package update checks, and install/update telemetry |
-| `PI_SKIP_VERSION_CHECK` | Skip the Pi version update check at startup. This prevents the `kin.dev` latest-version request |
+| `PI_SKIP_VERSION_CHECK` | Skip the Kin version update check at startup. This prevents the `kin.dev` latest-version request |
 | `KIN_TELEMETRY` | Override install/update telemetry. Use `1`/`true`/`yes` to enable or `0`/`false`/`no` to disable. This does not disable update checks |
 | `PI_CACHE_RETENTION` | Set to `long` for extended prompt cache (Anthropic: 1h, OpenAI: 24h) |
 | `VISUAL`, `EDITOR` | External editor for Ctrl+G |
@@ -655,6 +655,6 @@ MIT
 
 ## See Also
 
-- [@earendil-works/kin-ai](https://www.npmjs.com/package/@earendil-works/kin-ai): Core LLM toolkit
-- [@earendil-works/kin-agent-core](https://www.npmjs.com/package/@earendil-works/kin-agent-core): Agent framework
-- [@earendil-works/kin-tui](https://www.npmjs.com/package/@earendil-works/kin-tui): Terminal UI components
+- [@landongarrison/kin-ai](https://www.npmjs.com/package/@landongarrison/kin-ai): Core LLM toolkit
+- [@landongarrison/kin-agent-core](https://www.npmjs.com/package/@landongarrison/kin-agent-core): Agent framework
+- [@landongarrison/kin-tui](https://www.npmjs.com/package/@landongarrison/kin-tui): Terminal UI components

@@ -5,13 +5,12 @@ import {
 	type TUI,
 	truncateToWidth,
 	visibleWidth,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import { APP_NAME } from "../../../config.ts";
 import type { AppKeybinding, KeybindingsManager } from "../../../core/keybindings.ts";
 import { theme } from "../theme/theme.ts";
 
 const MIN_FRAMED_EDITOR_WIDTH = 16;
-const PROMPT_MARKER = "›";
 
 function padToWidth(text: string, width: number): string {
 	const currentWidth = visibleWidth(text);
@@ -112,7 +111,7 @@ export class CustomEditor extends Editor {
 		const isEmpty = this.getText().length === 0;
 
 		for (let i = 0; i < contentLines.length; i++) {
-			const prefix = i === 0 ? `${theme.fg("accent", PROMPT_MARKER)} ` : "  ";
+			const prefix = "  ";
 			let content = (contentLines[i] ?? "").trimEnd();
 			if (isEmpty && i === 0) {
 				content += theme.fg("dim", " Type a command...");

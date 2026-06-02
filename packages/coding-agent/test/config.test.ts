@@ -51,7 +51,7 @@ afterEach(() => {
 function createNpmPrefixInstall(template = "pi-prefix-"): { prefix: string; packageDir: string } {
 	const prefix = mkdtempSync(join(tmpdir(), template));
 	const root = join(prefix, "lib", "node_modules");
-	const scopeDir = join(root, "@earendil-works");
+	const scopeDir = join(root, "@landongarrison");
 	const packageDir = join(scopeDir, "kin-coding-agent");
 	mkdirSync(packageDir, { recursive: true });
 	tempDir = prefix;
@@ -108,7 +108,7 @@ function createBunGlobalInstall(): { packageDir: string } {
 	const prefix = join(temp, ".bun");
 	const bunBin = join(prefix, "bin");
 	const root = join(prefix, "install", "global", "node_modules");
-	const scopeDir = join(root, "@earendil-works");
+	const scopeDir = join(root, "@landongarrison");
 	const packageDir = join(scopeDir, "kin-coding-agent");
 	mkdirSync(packageDir, { recursive: true });
 	mkdirSync(bunBin, { recursive: true });
@@ -148,12 +148,12 @@ function createFakeBunScript(bunBin: string): string {
 describe("detectInstallMethod", () => {
 	test("detects pnpm from Windows .pnpm install paths", () => {
 		setExecPath(
-			"C:\\Users\\Admin\\Documents\\pnpm-repository\\global\\5\\.pnpm\\@earendil-works+kin-coding-agent@0.67.68\\node_modules\\@earendil-works\\kin-coding-agent\\dist\\cli.js",
+			"C:\\Users\\Admin\\Documents\\pnpm-repository\\global\\5\\.pnpm\\@landongarrison+kin-coding-agent@0.67.68\\node_modules\\@landongarrison\\kin-coding-agent\\dist\\cli.js",
 		);
 
 		expect(detectInstallMethod()).toBe("pnpm");
-		expect(getUpdateInstruction("@earendil-works/kin-coding-agent")).toBe(
-			"Run: pnpm install -g @earendil-works/kin-coding-agent",
+		expect(getUpdateInstruction("@landongarrison/kin-coding-agent")).toBe(
+			"Run: pnpm install -g @landongarrison/kin-coding-agent",
 		);
 	});
 
@@ -161,22 +161,22 @@ describe("detectInstallMethod", () => {
 		setExecPath("/usr/local/bin/node");
 
 		expect(detectInstallMethod()).toBe("unknown");
-		expect(getSelfUpdateCommand("@earendil-works/kin-coding-agent")).toBeUndefined();
-		expect(getUpdateInstruction("@earendil-works/kin-coding-agent")).toBe(
-			"Update @earendil-works/kin-coding-agent using the package manager, wrapper, or source checkout that provides this installation.",
+		expect(getSelfUpdateCommand("@landongarrison/kin-coding-agent")).toBeUndefined();
+		expect(getUpdateInstruction("@landongarrison/kin-coding-agent")).toBe(
+			"Update @landongarrison/kin-coding-agent using the package manager, wrapper, or source checkout that provides this installation.",
 		);
 	});
 
 	test("self-updates npm installs from custom prefixes", () => {
 		const { prefix } = createNpmPrefixInstall();
 
-		const command = getSelfUpdateCommand("@earendil-works/kin-coding-agent");
+		const command = getSelfUpdateCommand("@landongarrison/kin-coding-agent");
 
 		expect(detectInstallMethod()).toBe("npm");
 		expect(command).toEqual({
 			command: "npm",
-			args: ["--prefix", prefix, "install", "-g", "@earendil-works/kin-coding-agent"],
-			display: `npm --prefix ${prefix} install -g @earendil-works/kin-coding-agent`,
+			args: ["--prefix", prefix, "install", "-g", "@landongarrison/kin-coding-agent"],
+			display: `npm --prefix ${prefix} install -g @landongarrison/kin-coding-agent`,
 		});
 	});
 
@@ -207,52 +207,52 @@ describe("detectInstallMethod", () => {
 	test("self-update respects configured npmCommand", () => {
 		const { prefix } = createNpmPrefixInstall();
 
-		const command = getSelfUpdateCommand("@earendil-works/kin-coding-agent", ["npm", "--prefix", prefix]);
+		const command = getSelfUpdateCommand("@landongarrison/kin-coding-agent", ["npm", "--prefix", prefix]);
 
 		expect(command).toEqual({
 			command: "npm",
-			args: ["--prefix", prefix, "install", "-g", "@earendil-works/kin-coding-agent"],
-			display: `npm --prefix ${prefix} install -g @earendil-works/kin-coding-agent`,
+			args: ["--prefix", prefix, "install", "-g", "@landongarrison/kin-coding-agent"],
+			display: `npm --prefix ${prefix} install -g @landongarrison/kin-coding-agent`,
 		});
 	});
 
 	test("self-update treats empty npmCommand as unset", () => {
 		const { prefix } = createNpmPrefixInstall();
 
-		const command = getSelfUpdateCommand("@earendil-works/kin-coding-agent", []);
+		const command = getSelfUpdateCommand("@landongarrison/kin-coding-agent", []);
 
-		expect(command?.args).toEqual(["--prefix", prefix, "install", "-g", "@earendil-works/kin-coding-agent"]);
+		expect(command?.args).toEqual(["--prefix", prefix, "install", "-g", "@landongarrison/kin-coding-agent"]);
 	});
 
 	test("quotes npm self-update display paths", () => {
 		const { prefix } = createNpmPrefixInstall("pi prefix ");
 
-		const command = getSelfUpdateCommand("@earendil-works/kin-coding-agent");
+		const command = getSelfUpdateCommand("@landongarrison/kin-coding-agent");
 
-		expect(command?.display).toBe(`npm --prefix "${prefix}" install -g @earendil-works/kin-coding-agent`);
+		expect(command?.display).toBe(`npm --prefix "${prefix}" install -g @landongarrison/kin-coding-agent`);
 	});
 
 	test("does not infer Windows npm custom prefixes from package paths", () => {
-		const packageDir = "C:\\Users\\Admin\\npm prefix\\node_modules\\@earendil-works\\kin-coding-agent";
+		const packageDir = "C:\\Users\\Admin\\npm prefix\\node_modules\\@landongarrison\\kin-coding-agent";
 		process.env.KIN_PACKAGE_DIR = packageDir;
 		setExecPath(`${packageDir}\\dist\\cli.js`);
 
 		expect(detectInstallMethod()).toBe("npm");
-		expect(getUpdateInstruction("@earendil-works/kin-coding-agent")).toBe(
-			"Run: npm install -g @earendil-works/kin-coding-agent",
+		expect(getUpdateInstruction("@landongarrison/kin-coding-agent")).toBe(
+			"Run: npm install -g @landongarrison/kin-coding-agent",
 		);
 	});
 
 	test("self-updates bun global installs from bun pm bin", () => {
 		createBunGlobalInstall();
 
-		const command = getSelfUpdateCommand("@earendil-works/kin-coding-agent");
+		const command = getSelfUpdateCommand("@landongarrison/kin-coding-agent");
 
 		expect(detectInstallMethod()).toBe("bun");
 		expect(command).toEqual({
 			command: "bun",
-			args: ["install", "-g", "@earendil-works/kin-coding-agent"],
-			display: "bun install -g @earendil-works/kin-coding-agent",
+			args: ["install", "-g", "@landongarrison/kin-coding-agent"],
+			display: "bun install -g @landongarrison/kin-coding-agent",
 		});
 	});
 
@@ -285,8 +285,8 @@ describe("detectInstallMethod", () => {
 		const temp = mkdtempSync(join(tmpdir(), "pi-pnpm11-"));
 		const binDir = join(temp, "bin");
 		const root = join(temp, "Library", "pnpm", "global", "v11");
-		const packageName = "@earendil-works/kin-coding-agent";
-		const globalPackageDir = join(root, "11e9a", "node_modules", "@earendil-works", "kin-coding-agent");
+		const packageName = "@landongarrison/kin-coding-agent";
+		const globalPackageDir = join(root, "11e9a", "node_modules", "@landongarrison", "kin-coding-agent");
 		const storePackageDir = join(
 			temp,
 			"Library",
@@ -294,12 +294,12 @@ describe("detectInstallMethod", () => {
 			"store",
 			"v11",
 			"links",
-			"@earendil-works",
+			"@landongarrison",
 			"kin-coding-agent",
 			"0.75.0",
 			"hash",
 			"node_modules",
-			"@earendil-works",
+			"@landongarrison",
 			"kin-coding-agent",
 		);
 		mkdirSync(globalPackageDir, { recursive: true });
@@ -378,8 +378,8 @@ describe("detectInstallMethod", () => {
 		const { packageDir } = createNpmPrefixInstall();
 		chmodSync(packageDir, 0o500);
 
-		expect(getSelfUpdateCommand("@earendil-works/kin-coding-agent")).toBeUndefined();
-		expect(getSelfUpdateUnavailableInstruction("@earendil-works/kin-coding-agent")).toContain(
+		expect(getSelfUpdateCommand("@landongarrison/kin-coding-agent")).toBeUndefined();
+		expect(getSelfUpdateUnavailableInstruction("@landongarrison/kin-coding-agent")).toContain(
 			"the install path is not writable",
 		);
 	});

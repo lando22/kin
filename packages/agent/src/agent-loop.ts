@@ -10,7 +10,7 @@ import {
 	streamSimple,
 	type ToolResultMessage,
 	validateToolArguments,
-} from "@earendil-works/kin-ai";
+} from "@landongarrison/kin-ai";
 import type {
 	AgentContext,
 	AgentEvent,

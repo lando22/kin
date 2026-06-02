@@ -2,9 +2,9 @@
  * Extension runner - executes extensions and manages their lifecycle.
  */
 
-import type { AgentMessage } from "@earendil-works/kin-agent-core";
-import type { ImageContent, Model } from "@earendil-works/kin-ai";
-import type { KeyId } from "@earendil-works/kin-tui";
+import type { AgentMessage } from "@landongarrison/kin-agent-core";
+import type { ImageContent, Model } from "@landongarrison/kin-ai";
+import type { KeyId } from "@landongarrison/kin-tui";
 import { type Theme, theme } from "../../modes/interactive/theme/theme.ts";
 import type { ResourceDiagnostic } from "../diagnostics.ts";
 import type { KeybindingsConfig } from "../keybindings.ts";

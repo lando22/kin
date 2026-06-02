@@ -5,7 +5,7 @@
  * When forking, offers to restore code to that point in history.
  */
 
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
 
 export default function (pi: ExtensionAPI) {
 	const checkpoints = new Map<string, string>();

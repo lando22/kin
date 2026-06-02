@@ -1,4 +1,4 @@
-import type { ImageContent, Model, SimpleStreamOptions, TextContent, Transport } from "@earendil-works/kin-ai";
+import type { ImageContent, Model, SimpleStreamOptions, TextContent, Transport } from "@landongarrison/kin-ai";
 import type { AgentEvent, AgentMessage, AgentTool, QueueMode, ThinkingLevel } from "../index.ts";
 import type { Session } from "./session/session.ts";
 

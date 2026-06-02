@@ -6,7 +6,7 @@ import {
 	type Model,
 	registerFauxProvider,
 	type Usage,
-} from "@earendil-works/kin-ai";
+} from "@landongarrison/kin-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	type CompactionPreparation,

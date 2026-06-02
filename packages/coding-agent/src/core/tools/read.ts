@@ -1,7 +1,7 @@
 import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
-import type { AgentTool } from "@earendil-works/kin-agent-core";
-import type { Api, ImageContent, Model, TextContent } from "@earendil-works/kin-ai";
-import { Text } from "@earendil-works/kin-tui";
+import type { AgentTool } from "@landongarrison/kin-agent-core";
+import type { Api, ImageContent, Model, TextContent } from "@landongarrison/kin-ai";
+import { Text } from "@landongarrison/kin-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";

@@ -5,9 +5,9 @@
  * and after compaction the session is reloaded.
  */
 
-import type { AgentMessage, StreamFn, ThinkingLevel } from "@earendil-works/kin-agent-core";
-import type { AssistantMessage, Context, Model, SimpleStreamOptions, Usage } from "@earendil-works/kin-ai";
-import { completeSimple } from "@earendil-works/kin-ai";
+import type { AgentMessage, StreamFn, ThinkingLevel } from "@landongarrison/kin-agent-core";
+import type { AssistantMessage, Context, Model, SimpleStreamOptions, Usage } from "@landongarrison/kin-ai";
+import { completeSimple } from "@landongarrison/kin-ai";
 import {
 	convertToLlm,
 	createBranchSummaryMessage,

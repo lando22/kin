@@ -8,8 +8,8 @@
  * - Edge case tests (wide chars, styled text, emoji)
  */
 
-import type { ExtensionAPI, ExtensionCommandContext, Theme } from "@earendil-works/kin-coding-agent";
-import { CURSOR_MARKER, type Focusable, matchesKey, visibleWidth } from "@earendil-works/kin-tui";
+import type { ExtensionAPI, ExtensionCommandContext, Theme } from "@landongarrison/kin-coding-agent";
+import { CURSOR_MARKER, type Focusable, matchesKey, visibleWidth } from "@landongarrison/kin-tui";
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("overlay-test", {

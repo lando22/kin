@@ -1,7 +1,7 @@
 ---
 name: planner
 description: Creates implementation plans from context and requirements
-tools: read, grep, find, ls
+tools: read, definition
 model: claude-sonnet-4-5
 ---
 

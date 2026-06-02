@@ -1,4 +1,4 @@
-import { Text } from "@earendil-works/kin-tui";
+import { Text } from "@landongarrison/kin-tui";
 import { Type } from "typebox";
 import { keyText } from "../../modes/interactive/components/keybinding-hints.ts";
 import type { Theme } from "../../modes/interactive/theme/theme.ts";

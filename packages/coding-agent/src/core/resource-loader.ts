@@ -10,7 +10,6 @@ export type { ResourceCollision, ResourceDiagnostic } from "./diagnostics.ts";
 
 import { canonicalizePath, isLocalPath } from "../utils/paths.ts";
 import { createEventBus, type EventBus } from "./event-bus.ts";
-import { createExtensionRuntime, loadExtensionFromFactory, loadExtensions } from "./extensions/loader.ts";
 import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "./extensions/types.ts";
 import { DefaultPackageManager, type PathMetadata } from "./package-manager.ts";
 import type { PromptTemplate } from "./prompt-templates.ts";
@@ -36,6 +35,57 @@ export interface ResourceLoader {
 	getAppendSystemPrompt(): string[];
 	extendResources(paths: ResourceExtensionPaths): void;
 	reload(): Promise<void>;
+}
+
+type LoadExtensionFromFactory = (
+	factory: ExtensionFactory,
+	cwd: string,
+	eventBus: EventBus,
+	runtime: ExtensionRuntime,
+	extensionPath?: string,
+) => Promise<Extension>;
+
+function createEmptyExtensionRuntime(): ExtensionRuntime {
+	const notInitialized = () => {
+		throw new Error("Extension runtime not initialized. Action methods cannot be called during extension loading.");
+	};
+	const state: { staleMessage?: string } = {};
+	const assertActive = () => {
+		if (state.staleMessage) {
+			throw new Error(state.staleMessage);
+		}
+	};
+	const runtime: ExtensionRuntime = {
+		sendMessage: notInitialized,
+		sendUserMessage: notInitialized,
+		appendEntry: notInitialized,
+		setSessionName: notInitialized,
+		getSessionName: notInitialized,
+		setLabel: notInitialized,
+		getActiveTools: notInitialized,
+		getAllTools: notInitialized,
+		setActiveTools: notInitialized,
+		refreshTools: () => {},
+		getCommands: notInitialized,
+		setModel: () => Promise.reject(new Error("Extension runtime not initialized")),
+		getThinkingLevel: notInitialized,
+		setThinkingLevel: notInitialized,
+		flagValues: new Map(),
+		pendingProviderRegistrations: [],
+		assertActive,
+		invalidate: (message) => {
+			state.staleMessage ??=
+				message ??
+				"This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.fork(), ctx.switchSession(), or ctx.reload().";
+		},
+		registerProvider: (name, config, extensionPath = "<unknown>") => {
+			runtime.pendingProviderRegistrations.push({ name, config, extensionPath });
+		},
+		unregisterProvider: (name) => {
+			runtime.pendingProviderRegistrations = runtime.pendingProviderRegistrations.filter((r) => r.name !== name);
+		},
+	};
+	return runtime;
 }
 
 function resolvePromptInput(input: string | undefined, description: string): string | undefined {
@@ -234,7 +284,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		this.systemPromptOverride = options.systemPromptOverride;
 		this.appendSystemPromptOverride = options.appendSystemPromptOverride;
 
-		this.extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
+		this.extensionsResult = { extensions: [], errors: [], runtime: createEmptyExtensionRuntime() };
 		this.skills = [];
 		this.skillDiagnostics = [];
 		this.prompts = [];
@@ -396,10 +446,17 @@ export class DefaultResourceLoader implements ResourceLoader {
 			? cliEnabledExtensions
 			: this.mergePaths(cliEnabledExtensions, enabledExtensions);
 
-		const extensionsResult = await loadExtensions(extensionPaths, this.cwd, this.eventBus);
-		const inlineExtensions = await this.loadExtensionFactories(extensionsResult.runtime);
-		extensionsResult.extensions.push(...inlineExtensions.extensions);
-		extensionsResult.errors.push(...inlineExtensions.errors);
+		const hasExtensionInputs = extensionPaths.length > 0 || this.extensionFactories.length > 0;
+		let extensionsResult: LoadExtensionsResult;
+		if (hasExtensionInputs) {
+			const { loadExtensionFromFactory, loadExtensions } = await import("./extensions/loader.ts");
+			extensionsResult = await loadExtensions(extensionPaths, this.cwd, this.eventBus);
+			const inlineExtensions = await this.loadExtensionFactories(extensionsResult.runtime, loadExtensionFromFactory);
+			extensionsResult.extensions.push(...inlineExtensions.extensions);
+			extensionsResult.errors.push(...inlineExtensions.errors);
+		} else {
+			extensionsResult = { extensions: [], errors: [], runtime: createEmptyExtensionRuntime() };
+		}
 
 		// Detect extension conflicts (tools, commands, flags with same names from different extensions)
 		// Keep all extensions loaded. Conflicts are reported as diagnostics, and precedence is handled by load order.
@@ -766,7 +823,10 @@ export class DefaultResourceLoader implements ResourceLoader {
 		}
 	}
 
-	private async loadExtensionFactories(runtime: ExtensionRuntime): Promise<{
+	private async loadExtensionFactories(
+		runtime: ExtensionRuntime,
+		loadExtensionFromFactory: LoadExtensionFromFactory,
+	): Promise<{
 		extensions: Extension[];
 		errors: Array<{ path: string; error: string }>;
 	}> {

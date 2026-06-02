@@ -1,5 +1,5 @@
-import type { AgentTool } from "@earendil-works/kin-agent-core";
-import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/kin-ai";
+import type { AgentTool } from "@landongarrison/kin-agent-core";
+import { fauxAssistantMessage, fauxToolCall } from "@landongarrison/kin-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import { createHarness, type Harness } from "../harness.js";

@@ -75,8 +75,6 @@ The whole flow should feel like one natural conversation, not two separate inter
 export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "init", description: "Start Kin onboarding" },
 	{ name: "reinit", description: "Re-run Kin onboarding without wiping memory" },
-	{ name: "kin", description: "Show Kin onboarding splash" },
-	{ name: "demo", description: "Preview the onboarding splash animation" },
 	{ name: "new", description: "Start a new session" },
 	{ name: "resume", description: "Resume a different session" },
 	{ name: "copy", description: "Copy last agent message to clipboard" },
@@ -84,8 +82,6 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "session", description: "Show session info and stats" },
 	{ name: "model", description: "Select model" },
 	{ name: "compact", description: "Manually compact the session context" },
-	{ name: "reflect", description: "Generate a reflection on today's work" },
-	{ name: "note", description: "Write a file note for a specific source file" },
 	{ name: "login", description: "Configure provider authentication" },
 	{ name: "logout", description: "Remove provider authentication" },
 	{ name: "quit", description: `Quit ${APP_NAME}` },

@@ -1,5 +1,5 @@
-import type { AgentMessage } from "@earendil-works/kin-agent-core";
-import type { AssistantMessage, Model } from "@earendil-works/kin-ai";
+import type { AgentMessage } from "@landongarrison/kin-agent-core";
+import type { AssistantMessage, Model } from "@landongarrison/kin-ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type CompactionPreparation, compact, generateSummary } from "../src/core/compaction/index.js";
 
@@ -7,8 +7,8 @@ const { completeSimpleMock } = vi.hoisted(() => ({
 	completeSimpleMock: vi.fn(),
 }));
 
-vi.mock("@earendil-works/kin-ai", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("@earendil-works/kin-ai")>();
+vi.mock("@landongarrison/kin-ai", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@landongarrison/kin-ai")>();
 	return {
 		...actual,
 		completeSimple: completeSimpleMock,

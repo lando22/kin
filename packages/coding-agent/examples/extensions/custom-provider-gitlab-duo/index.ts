@@ -20,8 +20,8 @@ import {
 	type SimpleStreamOptions,
 	streamSimpleAnthropic,
 	streamSimpleOpenAIResponses,
-} from "@earendil-works/kin-ai";
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
+} from "@landongarrison/kin-ai";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
 
 // =============================================================================
 // Constants

@@ -1,18 +1,18 @@
-# @earendil-works/kin-agent-core
+# @landongarrison/kin-agent-core
 
-Stateful agent with tool execution and event streaming. Built on `@earendil-works/kin-ai`.
+Stateful agent with tool execution and event streaming. Built on `@landongarrison/kin-ai`.
 
 ## Installation
 
 ```bash
-npm install @earendil-works/kin-agent-core
+npm install @landongarrison/kin-agent-core
 ```
 
 ## Quick Start
 
 ```typescript
-import { Agent } from "@earendil-works/kin-agent-core";
-import { getModel } from "@earendil-works/kin-ai";
+import { Agent } from "@landongarrison/kin-agent-core";
+import { getModel } from "@landongarrison/kin-ai";
 
 const agent = new Agent({
   initialState: {
@@ -355,7 +355,7 @@ Follow-up messages are checked only when there are no more tool calls and no ste
 Extend `AgentMessage` via declaration merging:
 
 ```typescript
-declare module "@earendil-works/kin-agent-core" {
+declare module "@landongarrison/kin-agent-core" {
   interface CustomAgentMessages {
     notification: { role: "notification"; text: string; timestamp: number };
   }
@@ -436,7 +436,7 @@ Return `terminate: true` from `execute()` or `afterToolCall` to hint that the ag
 For browser apps that proxy through a backend:
 
 ```typescript
-import { Agent, streamProxy } from "@earendil-works/kin-agent-core";
+import { Agent, streamProxy } from "@landongarrison/kin-agent-core";
 
 const agent = new Agent({
   streamFn: (model, context, options) =>
@@ -453,7 +453,7 @@ const agent = new Agent({
 For direct control without the Agent class:
 
 ```typescript
-import { agentLoop, agentLoopContinue } from "@earendil-works/kin-agent-core";
+import { agentLoop, agentLoopContinue } from "@landongarrison/kin-agent-core";
 
 const context: AgentContext = {
   systemPrompt: "You are helpful.",

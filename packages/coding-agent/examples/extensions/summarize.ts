@@ -1,7 +1,7 @@
-import { complete, getModel } from "@earendil-works/kin-ai";
-import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/kin-coding-agent";
-import { DynamicBorder, getMarkdownTheme } from "@earendil-works/kin-coding-agent";
-import { Container, Markdown, matchesKey, Text } from "@earendil-works/kin-tui";
+import { complete, getModel } from "@landongarrison/kin-ai";
+import type { ExtensionAPI, ExtensionCommandContext } from "@landongarrison/kin-coding-agent";
+import { DynamicBorder, getMarkdownTheme } from "@landongarrison/kin-coding-agent";
+import { Container, Markdown, matchesKey, Text } from "@landongarrison/kin-tui";
 
 type ContentBlock = {
 	type?: string;

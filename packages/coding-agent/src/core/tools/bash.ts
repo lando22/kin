@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
-import type { AgentTool } from "@earendil-works/kin-agent-core";
-import { Container, Text, truncateToWidth } from "@earendil-works/kin-tui";
+import type { AgentTool } from "@landongarrison/kin-agent-core";
+import { Container, Text, truncateToWidth } from "@landongarrison/kin-tui";
 import { spawn } from "child_process";
 import { type Static, Type } from "typebox";
 import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
@@ -282,7 +282,7 @@ export function createBashToolDefinition(
 		name: "bash",
 		label: "bash",
 		description: `Execute a bash command in the current working directory. Returns stdout and stderr.${persistenceNote} Output is truncated to last ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds.`,
-		promptSnippet: "Execute bash commands (ls, grep, find, etc.)",
+		promptSnippet: "Execute bash commands (rg, git, tests, build scripts, etc.)",
 		parameters: bashSchema,
 		async execute(
 			_toolCallId,

@@ -2,8 +2,8 @@
  * Shared utilities for compaction and branch summarization.
  */
 
-import type { AgentMessage } from "@earendil-works/kin-agent-core";
-import type { Message } from "@earendil-works/kin-ai";
+import type { AgentMessage } from "@landongarrison/kin-agent-core";
+import type { Message } from "@landongarrison/kin-ai";
 
 // ============================================================================
 // File Operation Tracking

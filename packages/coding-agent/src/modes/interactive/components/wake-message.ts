@@ -5,7 +5,7 @@ import {
 	type TUI,
 	truncateToWidth,
 	visibleWidth,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import { getMarkdownTheme, theme } from "../theme/theme.ts";
 
 const WAKE_BORDER_COLOR = "#ffcd79";

@@ -1,5 +1,5 @@
-import type { AssistantMessage, ImageContent, Model, TextContent, Usage } from "@earendil-works/kin-ai";
-import { completeSimple } from "@earendil-works/kin-ai";
+import type { AssistantMessage, ImageContent, Model, TextContent, Usage } from "@landongarrison/kin-ai";
+import { completeSimple } from "@landongarrison/kin-ai";
 import type { AgentMessage, ThinkingLevel } from "../../types.ts";
 import {
 	convertToLlm,

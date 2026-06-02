@@ -7,7 +7,7 @@
  */
 
 import { basename, join } from "node:path";
-import type { Model } from "@earendil-works/kin-ai";
+import type { Model } from "@landongarrison/kin-ai";
 import chalk from "chalk";
 import { getAgentDir } from "../config.ts";
 import { createAgentSessionServices } from "../core/agent-session-services.ts";

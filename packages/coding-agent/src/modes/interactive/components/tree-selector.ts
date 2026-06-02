@@ -8,7 +8,7 @@ import {
 	Text,
 	TruncatedText,
 	truncateToWidth,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import type { SessionTreeNode } from "../../../core/session-manager.ts";
 import { theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
@@ -873,20 +873,6 @@ class TreeList implements Component {
 					.trim()
 					.slice(0, 50);
 				return `[bash: ${cmd}${rawCmd.length > 50 ? "..." : ""}]`;
-			}
-			case "grep": {
-				const pattern = String(args.pattern || "");
-				const path = shortenPath(String(args.path || "."));
-				return `[grep: /${pattern}/ in ${path}]`;
-			}
-			case "find": {
-				const pattern = String(args.pattern || "");
-				const path = shortenPath(String(args.path || "."));
-				return `[find: ${pattern} in ${path}]`;
-			}
-			case "ls": {
-				const path = shortenPath(String(args.path || "."));
-				return `[ls: ${path}]`;
 			}
 			default: {
 				// Custom tool - show name and truncated JSON args

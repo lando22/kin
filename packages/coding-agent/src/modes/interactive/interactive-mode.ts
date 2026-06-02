@@ -8,7 +8,7 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@earendil-works/kin-agent-core";
+import type { AgentMessage } from "@landongarrison/kin-agent-core";
 import {
 	type AssistantMessage,
 	getProviders,
@@ -17,7 +17,7 @@ import {
 	type Model,
 	type OAuthProviderId,
 	type OAuthSelectPrompt,
-} from "@earendil-works/kin-ai";
+} from "@landongarrison/kin-ai";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -27,14 +27,12 @@ import type {
 	OverlayHandle,
 	OverlayOptions,
 	SlashCommand,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import {
 	CombinedAutocompleteProvider,
 	type Component,
 	Container,
 	fuzzyFilter,
-	getCapabilities,
-	hyperlink,
 	Loader,
 	type LoaderIndicatorOptions,
 	Markdown,
@@ -47,17 +45,15 @@ import {
 	TUI,
 	truncateToWidth,
 	visibleWidth,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import {
 	APP_NAME,
 	APP_TITLE,
-	CHANGELOG_URL,
 	getAgentDir,
 	getAuthPath,
 	getDebugLogPath,
 	getDocsPath,
 	getKinDir,
-	getSessionsDir,
 	VERSION,
 } from "../../config.ts";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session.ts";
@@ -74,29 +70,11 @@ import type {
 } from "../../core/extensions/index.ts";
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/footer-data-provider.ts";
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
-import {
-	deleteFileNote,
-	getKinMemoryDir,
-	getMemoryDir,
-	readFileNote,
-	readMemoryContent,
-	readProjectContent,
-	resetKinMemory,
-	writeFileNote,
-} from "../../core/kin-memory.ts";
+import { getKinMemoryDir, getMemoryDir, resetKinMemory } from "../../core/kin-memory.ts";
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider } from "../../core/model-resolver.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
 import { BUILT_IN_PROVIDER_DISPLAY_NAMES } from "../../core/provider-display-names.ts";
-import {
-	findSessionsForDate,
-	generateReflection,
-	getReflectionPath,
-	parseReflectionUpdates,
-	writeMemoryContent,
-	writeProjectContent,
-	writeReflection,
-} from "../../core/reflect.ts";
 import type { ResourceDiagnostic } from "../../core/resource-loader.ts";
 import { formatMissingSessionCwdPrompt, MissingSessionCwdError } from "../../core/session-cwd.ts";
 import { type SessionContext, SessionManager } from "../../core/session-manager.ts";
@@ -107,7 +85,6 @@ import {
 } from "../../core/slash-commands.ts";
 import type { SourceInfo } from "../../core/source-info.ts";
 import { isInstallTelemetryEnabled } from "../../core/telemetry.ts";
-import { resolveReadPath } from "../../core/tools/path-utils.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
 import { formatWakeContextMessage, markWakeSeen, readUnseenWake } from "../../core/wake.ts";
 import { getChangelogPath, getNewEntries, parseChangelog } from "../../utils/changelog.ts";
@@ -377,7 +354,6 @@ export class InteractiveMode {
 
 	private lastSigintTime = 0;
 	private lastEscapeTime = 0;
-	private changelogMarkdown: string | undefined = undefined;
 	private wakeMarkdown: string | undefined = undefined;
 	private wakeContextQueued = false;
 	private startupNoticesShown = false;
@@ -449,7 +425,7 @@ export class InteractiveMode {
 	// Header container that holds the built-in or custom header
 	private headerContainer: Container;
 
-	// Built-in header (logo + keybinding hints + changelog)
+	// Built-in header (logo + keybinding hints)
 	private builtInHeader: Component | undefined = undefined;
 
 	// Custom header from extension (undefined = use built-in header)
@@ -658,7 +634,7 @@ export class InteractiveMode {
 		}
 		this.startupNoticesShown = true;
 
-		if (!this.changelogMarkdown && !this.wakeMarkdown) {
+		if (!this.wakeMarkdown) {
 			return;
 		}
 
@@ -674,24 +650,6 @@ export class InteractiveMode {
 			this.queueWakeForNextTurn();
 			markWakeSeen();
 		}
-
-		if (this.changelogMarkdown) {
-			this.chatContainer.addChild(new DynamicBorder());
-			if (this.settingsManager.getCollapseChangelog()) {
-				const versionMatch = this.changelogMarkdown.match(/##\s+\[?(\d+\.\d+\.\d+)\]?/);
-				const latestVersion = versionMatch ? versionMatch[1] : this.version;
-				const condensedText = `Updated to v${latestVersion}. Use ${theme.bold("/changelog")} to view full changelog.`;
-				this.chatContainer.addChild(new Text(condensedText, 1, 0));
-			} else {
-				this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
-				this.chatContainer.addChild(new Spacer(1));
-				this.chatContainer.addChild(
-					new Markdown(this.changelogMarkdown.trim(), 1, 0, this.getMarkdownThemeWithSettings()),
-				);
-				this.chatContainer.addChild(new Spacer(1));
-			}
-			this.chatContainer.addChild(new DynamicBorder());
-		}
 	}
 
 	async init(): Promise<void> {
@@ -699,12 +657,12 @@ export class InteractiveMode {
 
 		this.registerSignalHandlers();
 
-		// Load changelog (only show new entries, skip for resumed sessions)
-		this.changelogMarkdown = this.getChangelogForDisplay();
+		// Keep update bookkeeping quiet; do not surface update notes on startup.
+		this.recordChangelogVersionForTelemetry();
 		this.wakeMarkdown = this.getWakeForDisplay();
 
 		// Ensure fd and rg are available (downloads if missing, adds to PATH via getBinDir)
-		// Both are needed: fd for autocomplete, rg for grep tool and bash commands
+		// fd powers autocomplete, and rg is useful for bash-driven search workflows.
 		const [fdPath] = await Promise.all([ensureTool("fd"), ensureTool("rg")]);
 		this.fdPath = fdPath;
 
@@ -982,13 +940,12 @@ export class InteractiveMode {
 	}
 
 	/**
-	 * Get changelog entries to display on startup.
-	 * Only shows new entries since last seen version, skips for resumed sessions.
+	 * Record the current changelog version for telemetry without showing entries on startup.
 	 */
-	private getChangelogForDisplay(): string | undefined {
+	private recordChangelogVersionForTelemetry(): void {
 		// Skip changelog for resumed/continued sessions (already have messages)
 		if (this.session.state.messages.length > 0) {
-			return undefined;
+			return;
 		}
 
 		const lastVersion = this.settingsManager.getLastChangelogVersion();
@@ -999,17 +956,14 @@ export class InteractiveMode {
 			// Fresh install - record the version, send telemetry, don't show changelog
 			this.settingsManager.setLastChangelogVersion(VERSION);
 			this.reportInstallTelemetry(VERSION);
-			return undefined;
+			return;
 		}
 
 		const newEntries = getNewEntries(entries, lastVersion);
 		if (newEntries.length > 0) {
 			this.settingsManager.setLastChangelogVersion(VERSION);
 			this.reportInstallTelemetry(VERSION);
-			return newEntries.map((e) => e.content).join("\n\n");
 		}
-
-		return undefined;
 	}
 
 	/**
@@ -2630,12 +2584,6 @@ export class InteractiveMode {
 				await this.runReinitOnboardingFlow();
 				return;
 			}
-			if (text === "/demo" || text === "/kin") {
-				this.editor.setText("");
-				await this.handleDemoCommand();
-				return;
-			}
-
 			if (text === "/copy") {
 				await this.handleCopyCommand();
 				this.editor.setText("");
@@ -2698,16 +2646,6 @@ export class InteractiveMode {
 			if (text === "/resume") {
 				this.showSessionSelector();
 				this.editor.setText("");
-				return;
-			}
-			if (text.startsWith("/note ")) {
-				this.editor.setText("");
-				await this.handleNoteCommand(text);
-				return;
-			}
-			if (text === "/reflect") {
-				this.editor.setText("");
-				this.handleReflectCommand();
 				return;
 			}
 			if (text === "/quit") {
@@ -3718,10 +3656,6 @@ export class InteractiveMode {
 	showNewVersionNotification(release: LatestKinRelease): void {
 		const action = theme.fg("accent", `${APP_NAME} update`);
 		const updateInstruction = theme.fg("muted", `New version ${release.version} is available. Run `) + action;
-		const changelogLink = getCapabilities().hyperlinks
-			? hyperlink(theme.fg("accent", "open changelog"), CHANGELOG_URL)
-			: theme.fg("accent", CHANGELOG_URL);
-		const changelogLine = theme.fg("muted", "Changelog: ") + changelogLink;
 		const note = release.note?.trim();
 
 		this.chatContainer.addChild(new Spacer(1));
@@ -3738,7 +3672,6 @@ export class InteractiveMode {
 			);
 			this.chatContainer.addChild(new Spacer(1));
 		}
-		this.chatContainer.addChild(new Text(changelogLine, 1, 0));
 		this.chatContainer.addChild(new DynamicBorder((text) => theme.fg("warning", text)));
 		this.ui.requestRender();
 	}
@@ -4252,10 +4185,6 @@ export class InteractiveMode {
 		});
 	}
 
-	private async handleDemoCommand(): Promise<void> {
-		await this.runReinitOnboardingFlow();
-	}
-
 	private async showOnboardingAuthSelector(): Promise<void> {
 		const apiKeyLabel = "Log in with an API key";
 		const providerLabel = "Use a supported provider (Codex)";
@@ -4311,101 +4240,6 @@ export class InteractiveMode {
 				},
 				{ triggerTurn: true },
 			);
-		} catch (error) {
-			this.showError(error instanceof Error ? error.message : String(error));
-		}
-	}
-
-	private async handleReflectCommand(): Promise<void> {
-		this.showWarning("Generating reflection...");
-		try {
-			const sessionDir = this.settingsManager.getSessionDir() ?? getSessionsDir();
-			// Prefer deepseek-v4-flash for reflections (Gemini produces empty responses)
-			const model =
-				this.session.modelRegistry.find("openrouter", "deepseek/deepseek-v4-flash") ??
-				this.runtimeHost.session.model;
-			if (!model) {
-				this.showError("No model configured for reflection.");
-				return;
-			}
-			const sessions = findSessionsForDate(sessionDir);
-			if (sessions.length === 0) {
-				this.showWarning("No sessions found for today. Nothing to reflect on.");
-				return;
-			}
-
-			const uniqueCwds = [...new Set(sessions.map((s) => s.cwd).filter((c) => c && c !== "unknown"))];
-			this.showWarning(`Reading ${sessions.length} session(s) across ${uniqueCwds.length} project(s)...`);
-
-			// Read current memory and all project contexts
-			const currentMemory = readMemoryContent();
-			const projectContexts = uniqueCwds.map((projectCwd) => ({
-				name: path.basename(projectCwd),
-				content: readProjectContent(projectCwd),
-			}));
-
-			const rawResponse = await generateReflection(model, sessions, {
-				date: new Date(),
-				currentMemory,
-				projectContexts,
-			});
-
-			// Parse out optional memory/project updates
-			const { reflectionText, memoryUpdate, projectUpdates } = parseReflectionUpdates(rawResponse);
-
-			// Write reflection
-			writeReflection(reflectionText);
-
-			// Write memory update if present
-			if (memoryUpdate !== null) {
-				writeMemoryContent(memoryUpdate);
-				this.showWarning("Memory updated in ~/.kin/Memory/MEMORY.md!");
-			}
-
-			// Write named project updates
-			for (const [projectName, content] of Object.entries(projectUpdates)) {
-				if (!projectName) continue;
-				const targetCwd = uniqueCwds.find((c) => path.basename(c) === projectName);
-				if (targetCwd) {
-					writeProjectContent(targetCwd, content);
-					this.showWarning(`Project context updated for "${projectName}"!`);
-				}
-			}
-
-			const refPath = getReflectionPath();
-			this.chatContainer.addChild(new Spacer(1));
-			this.chatContainer.addChild(new Text(theme.fg("success", `Reflection written to ${refPath}`), 1, 0));
-			this.chatContainer.addChild(new Text(reflectionText, 1, 0));
-			this.chatContainer.addChild(new Spacer(1));
-			this.ui.requestRender();
-		} catch (error) {
-			this.showError(error instanceof Error ? error.message : String(error));
-		}
-	}
-
-	private async handleNoteCommand(text: string): Promise<void> {
-		const args = text.slice(6).trim();
-		if (!args) {
-			this.showWarning("Usage: /note <path>");
-			return;
-		}
-		const resolvedPath = resolveReadPath(args, this.sessionManager.getCwd());
-		const existingNote = readFileNote(resolvedPath);
-		try {
-			const noteContent = await this.showExtensionEditor(`Note for ${args}`, existingNote ?? "");
-			if (noteContent === undefined) {
-				return; // Cancelled
-			}
-			if (noteContent.trim()) {
-				writeFileNote(resolvedPath, noteContent.trim());
-				this.chatContainer.addChild(new Spacer(1));
-				this.chatContainer.addChild(new Text(theme.fg("success", `Note saved for ${args}`), 1, 0));
-			} else {
-				deleteFileNote(resolvedPath);
-				this.chatContainer.addChild(new Spacer(1));
-				this.chatContainer.addChild(new Text(theme.fg("dim", `Note cleared for ${args}`), 1, 0));
-			}
-			this.ui.requestRender();
 		} catch (error) {
 			this.showError(error instanceof Error ? error.message : String(error));
 		}

@@ -19,9 +19,9 @@
  *   /overlay-streaming  - Multiple input panels with simulated streaming (Tab to cycle focus)
  */
 
-import type { ExtensionAPI, ExtensionCommandContext, Theme } from "@earendil-works/kin-coding-agent";
-import type { Component, OverlayAnchor, OverlayHandle, OverlayOptions, TUI } from "@earendil-works/kin-tui";
-import { matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/kin-tui";
+import type { ExtensionAPI, ExtensionCommandContext, Theme } from "@landongarrison/kin-coding-agent";
+import type { Component, OverlayAnchor, OverlayHandle, OverlayOptions, TUI } from "@landongarrison/kin-tui";
+import { matchesKey, truncateToWidth, visibleWidth } from "@landongarrison/kin-tui";
 import { spawn } from "child_process";
 
 // Global handle for toggle demo (in real code, use a more elegant pattern)

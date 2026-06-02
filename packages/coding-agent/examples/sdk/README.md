@@ -32,7 +32,7 @@ npx tsx examples/sdk/01-minimal.ts
 ## Quick Reference
 
 ```typescript
-import { getModel } from "@earendil-works/kin-ai";
+import { getModel } from "@landongarrison/kin-ai";
 import {
   AuthStorage,
   createAgentSession,
@@ -40,7 +40,7 @@ import {
   ModelRegistry,
   SessionManager,
   SettingsManager,
-} from "@earendil-works/kin-coding-agent";
+} from "@landongarrison/kin-coding-agent";
 
 // Auth and models setup
 const authStorage = AuthStorage.create();
@@ -61,7 +61,7 @@ await loader.reload();
 const { session } = await createAgentSession({ resourceLoader: loader, authStorage, modelRegistry });
 
 // Read-only
-const { session } = await createAgentSession({ tools: ["read", "grep", "find", "ls"], authStorage, modelRegistry });
+const { session } = await createAgentSession({ tools: ["read", "definition"], authStorage, modelRegistry });
 
 // In-memory
 const { session } = await createAgentSession({

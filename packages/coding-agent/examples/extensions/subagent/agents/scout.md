@@ -1,7 +1,7 @@
 ---
 name: scout
 description: Fast codebase recon that returns compressed context for handoff to other agents
-tools: read, grep, find, ls, bash
+tools: read, definition, bash
 model: claude-haiku-4-5
 ---
 
@@ -15,7 +15,7 @@ Thoroughness (infer from task, default medium):
 - Thorough: Trace all dependencies, check tests/types
 
 Strategy:
-1. grep/find to locate relevant code
+1. Use definition for symbol lookups and bash search commands when you need broader code discovery
 2. Read key sections (not entire files)
 3. Identify types, interfaces, key functions
 4. Note dependencies between files

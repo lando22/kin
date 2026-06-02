@@ -9,16 +9,18 @@
  * pre-stuffed into the prompt in one shot.
  */
 
-import { closeSync, existsSync, openSync, readdirSync, readSync } from "node:fs";
+import { closeSync, existsSync, openSync, readdirSync, readSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
-import type { Model } from "@earendil-works/kin-ai";
+import type { Model } from "@landongarrison/kin-ai";
+import { getSkillsDir } from "../config.ts";
 import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
 import { getMemoryDir, readCorpusHealth } from "./kin-memory.ts";
-import { formatAgeShort } from "./memory-freshness.ts";
+import { ageInDays, formatAgeShort } from "./memory-freshness.ts";
 import { formatLocalDate, getAgendaPath, getReflectionPath } from "./reflect.ts";
 import { SessionManager } from "./session-manager.ts";
+import { loadSkillsFromDir } from "./skills.ts";
 
 // =============================================================================
 // Session Index
@@ -188,7 +190,7 @@ export function generateSessionIndex(sessionDir: string, date: Date = new Date()
 	if (olderSessions.length > 0) {
 		lines.push("## Older");
 		lines.push(
-			`${olderSessions.length} sessions — low relevance unless you're chasing something specific. Browse with: ls -lt ${sessionDir}`,
+			`${olderSessions.length} sessions — low relevance unless you're chasing something specific. Browse with: find the directory and sort by mtime in bash if you need to dig deeper.`,
 		);
 		lines.push("");
 	}
@@ -217,10 +219,40 @@ export function formatCorpusHealth(homeDir = homedir()): string | null {
 			e.accessCount === 0
 				? "never read via the read tool"
 				: `read ${e.accessCount}× (last ${formatAgeShort(e.daysSinceAccess ?? 0)} ago)`;
-		// Old and unread/cold → worth a look. A soft hint: reads via grep aren't counted, so confirm by reading it.
+		// Old and unread/cold → worth a look. A soft hint: search-led discoveries aren't counted, so confirm by reading it.
 		const cold = e.daysSinceAccess === null || e.daysSinceAccess >= CORPUS_REVIEW_AGE_DAYS;
 		const flag = e.ageDays >= CORPUS_REVIEW_AGE_DAYS && cold ? "  ← review candidate" : "";
 		return `- ${e.file} — written ${formatAgeShort(e.ageDays)} ago, ${reads}${flag}`;
+	});
+
+	return lines.join("\n");
+}
+
+// =============================================================================
+// Skills landscape
+// =============================================================================
+
+/**
+ * The current skill landscape: every personal skill with its description and age.
+ * Memory captures user/project context; a skill captures *how to do a class of task*.
+ * Reflect reads this so it patches/extends an existing skill instead of minting a
+ * near-duplicate — the same anti-sprawl discipline the corpus health report applies
+ * to notes. Returns null when there are no skills yet (nothing to compare against).
+ */
+export function formatSkillsLandscape(skillsDir = getSkillsDir()): string | null {
+	if (!existsSync(skillsDir)) return null;
+
+	const { skills } = loadSkillsFromDir({ dir: skillsDir, source: "user" });
+	if (skills.length === 0) return null;
+
+	const lines = skills.map((s) => {
+		let age = "";
+		try {
+			age = ` (written ${formatAgeShort(ageInDays(statSync(s.filePath).mtimeMs))} ago)`;
+		} catch {
+			// best-effort age; skip if the file vanished mid-scan
+		}
+		return `- ${s.name}${age} — ${s.description}`;
 	});
 
 	return lines.join("\n");
@@ -234,7 +266,9 @@ function buildReflectTaskMessage(sessionIndex: string, reflectionPath: string, a
 	const dateStr = formatLocalDate(date);
 	const memoryPath = join(homedir(), ".kin", "Memory", "MEMORY.md");
 	const memoryDir = getMemoryDir();
+	const skillsDir = getSkillsDir();
 	const corpusHealth = formatCorpusHealth();
+	const skillsLandscape = formatSkillsLandscape(skillsDir);
 
 	const corpusHealthSection = corpusHealth
 		? `
@@ -245,8 +279,22 @@ Your corpus today (stalest first; "review candidate" = old and not read lately, 
 
 ${corpusHealth}
 
-Reads located via grep aren't counted, so a low read count is a hint, not proof — read a candidate before judging it.`
+Reads located through search aren't counted, so a low read count is a hint, not proof — read a candidate before judging it.`
 		: "";
+
+	const skillsSection = skillsLandscape
+		? `
+
+---
+
+Your skills today (what you already know how to do — patch one of these before minting anything new):
+
+${skillsLandscape}`
+		: `
+
+---
+
+You have no skills yet. When a session teaches you a durable, repeatable way to do a *class* of task, that's a skill waiting to be written.`;
 
 	return `You are Pi in a reflective state — not responding to a user, just thinking on your own.
 
@@ -259,7 +307,9 @@ ${sessionIndex}
 Your memory:
 - Portrait (always loaded): ${memoryPath}
 - Corpus (atomic notes, grepped on demand): ${memoryDir}/
+- Skills (procedures, loaded by their description when a task matches): ${skillsDir}/
 ${corpusHealthSection}
+${skillsSection}
 
 ---
 
@@ -270,6 +320,7 @@ Use your tools however makes sense. Some things worth doing:
 - Read your portrait and project files to get oriented
 - Garden memory with targeted edits: mint atomic corpus notes for referenceable facts, update the portrait only for ambient facts, and merge/expire/reconcile what's already there — be surgical, keep the portrait small
 - Tend the corpus: skim the review candidates above. Merge notes that say the same thing, rewrite ones that have gone stale, and delete a note outright if it's wrong, redundant, or no longer useful — a smaller true corpus beats a large rotting one. Don't prune a note just for being old; confirm it's actually dead before removing it.
+- Tend skills (${skillsDir}/): memory captures user/project context and the state of things; a skill captures *how to do a class of task*. If today's work produced a durable, repeatable procedure — a debugging path, a build/release sequence, a convention this codebase insists on — write it down as a skill so a future session starts already knowing. Preference order: (1) PATCH an existing skill above if one covers the territory; (2) add a concrete example or reference file under an existing skill; (3) only CREATE a new skill when nothing fits, and name it at the CLASS level (e.g. \`releasing-a-package\`, never \`fix-bug-1234\` or \`debug-todays-error\` — if the name only makes sense for today, it's the wrong altitude). A skill is a folder \`${skillsDir}/<name>/SKILL.md\` with YAML frontmatter (\`name\`, \`description\`); the description is the trigger you'll match on later, so make it precise. Do NOT encode environment failures or "X is broken" as a skill — those harden into refusals you cite against yourself long after the problem is fixed; capture the FIX instead. A smooth session with no durable technique warrants no skill — don't force one.
 
 When you have thought it through, write two things:
 
@@ -297,7 +348,7 @@ This is what your morning self (wake) acts on. Skip it entirely if there's nothi
 - safe-unattended: yes | no
 \`\`\`
 
-Only fill "Proposed work" when there's something specific you could actually do, and be honest with \`safe-unattended\` — if a change is risky, ambiguous, or needs Landon's call, mark it \`no\` and let wake raise it as a message instead of doing it.
+Only fill "Proposed work" when there's something specific you could actually do, and be honest with \`safe-unattended\` — if a change is risky, ambiguous, or needs the user's call, mark it \`no\` and let wake raise it as a message instead of doing it.
 
 Recent sessions are most relevant. Anything older than a week is usually low signal unless you're following a specific thread.
 

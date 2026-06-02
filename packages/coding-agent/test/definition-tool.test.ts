@@ -63,9 +63,9 @@ describe("definition tool", () => {
 		expect(out).toContain("py_user.py:1:");
 	});
 
-	test("returns a grep-fallback hint when nothing matches", async () => {
+	test("returns a bash-with-rg fallback hint when nothing matches", async () => {
 		const out = await find("NoSuchSymbol");
 		expect(out.toLowerCase()).toContain("no definition found");
-		expect(out).toContain("grep");
+		expect(out).toContain("bash with rg");
 	});
 });

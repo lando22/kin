@@ -30,7 +30,7 @@
 ### Fixed
 
 - Fixed Bun-compiled release binaries failing to start when Bun's built-in undici shim lacks npm undici's `install` export ([#4661](https://github.com/earendil-works/kin-mono/pull/4661) by [@dmasiero](https://github.com/dmasiero)).
-- Fixed Xiaomi MiMo generated model metadata to replay assistant tool-call messages with `reasoning_content` for thinking-mode multi-turn requests, inherited from `@earendil-works/kin-ai` ([#4678](https://github.com/earendil-works/kin/issues/4678)).
+- Fixed Xiaomi MiMo generated model metadata to replay assistant tool-call messages with `reasoning_content` for thinking-mode multi-turn requests, inherited from `@landongarrison/kin-ai` ([#4678](https://github.com/earendil-works/kin/issues/4678)).
 - Fixed Windows external editor handoff so vim/nvim can receive input after opening from the TUI ([#4612](https://github.com/earendil-works/kin/issues/4612)).
 - Fixed Windows npm self-updates to move loaded native dependency packages out of the active install before reinstalling pi ([#4157](https://github.com/earendil-works/kin/issues/4157)).
 - Fixed `pi update --self` detection for pnpm v11 global installs whose package path resolves through the pnpm store ([#4647](https://github.com/earendil-works/kin/issues/4647)).
@@ -42,17 +42,17 @@
 ### Fixed
 
 - Fixed config selectors to scale their visible row count to terminal height ([#4243](https://github.com/earendil-works/kin-mono/pull/4243) by [@samjonester](https://github.com/samjonester)).
-- Fixed Anthropic-compatible API-key requests to ignore unrelated `ANTHROPIC_AUTH_TOKEN` environment values, avoiding invalid bearer credentials for providers such as Xiaomi MiMo inherited from `@earendil-works/kin-ai` ([#4342](https://github.com/earendil-works/kin/issues/4342)).
-- Fixed Amazon Bedrock message conversion to skip unknown content blocks instead of failing the stream, inherited from `@earendil-works/kin-ai` ([#4223](https://github.com/earendil-works/kin/issues/4223)).
-- Fixed Azure OpenAI Responses and OpenAI Responses error formatting to prefix HTTP status codes onto `errorMessage`, so transient 5xx and 429 errors are correctly matched by the agent-level auto-retry classifier inherited from `@earendil-works/kin-ai` ([#4232](https://github.com/earendil-works/kin/issues/4232)).
-- Fixed OpenCode Go Kimi reasoning replay by normalizing streamed `reasoning` fields back to `reasoning_content` for OpenCode Go only, inherited from `@earendil-works/kin-ai` ([#4251](https://github.com/earendil-works/kin/issues/4251)).
-- Fixed Xiaomi MiMo model metadata to use the OpenAI-compatible endpoints and `openai-completions` API, restoring multi-turn thinking/tool-call sessions inherited from `@earendil-works/kin-ai` ([#4505](https://github.com/earendil-works/kin/issues/4505)).
+- Fixed Anthropic-compatible API-key requests to ignore unrelated `ANTHROPIC_AUTH_TOKEN` environment values, avoiding invalid bearer credentials for providers such as Xiaomi MiMo inherited from `@landongarrison/kin-ai` ([#4342](https://github.com/earendil-works/kin/issues/4342)).
+- Fixed Amazon Bedrock message conversion to skip unknown content blocks instead of failing the stream, inherited from `@landongarrison/kin-ai` ([#4223](https://github.com/earendil-works/kin/issues/4223)).
+- Fixed Azure OpenAI Responses and OpenAI Responses error formatting to prefix HTTP status codes onto `errorMessage`, so transient 5xx and 429 errors are correctly matched by the agent-level auto-retry classifier inherited from `@landongarrison/kin-ai` ([#4232](https://github.com/earendil-works/kin/issues/4232)).
+- Fixed OpenCode Go Kimi reasoning replay by normalizing streamed `reasoning` fields back to `reasoning_content` for OpenCode Go only, inherited from `@landongarrison/kin-ai` ([#4251](https://github.com/earendil-works/kin/issues/4251)).
+- Fixed Xiaomi MiMo model metadata to use the OpenAI-compatible endpoints and `openai-completions` API, restoring multi-turn thinking/tool-call sessions inherited from `@landongarrison/kin-ai` ([#4505](https://github.com/earendil-works/kin/issues/4505)).
 - Fixed JSON parse failures for compressed fetch responses under Node 26.0 by installing undici fetch globals alongside pi's global dispatcher ([#4650](https://github.com/earendil-works/kin/issues/4650), [#4652](https://github.com/earendil-works/kin/issues/4652), [#4653](https://github.com/earendil-works/kin/issues/4653)).
 - Fixed npm-family package commands on Windows to avoid shell argument splitting when install prefixes contain spaces ([#4623](https://github.com/earendil-works/kin/issues/4623)).
 
 ### Removed
 
-- Removed non-working OpenAI Codex fast model variants inherited from `@earendil-works/kin-ai`.
+- Removed non-working OpenAI Codex fast model variants inherited from `@landongarrison/kin-ai`.
 
 ## [0.75.0] - 2026-05-17
 
@@ -64,24 +64,24 @@
 
 - Fixed compaction summary calls to use custom agent stream functions, preserving proxy-backed LLM routing ([#4484](https://github.com/earendil-works/kin/issues/4484)).
 - Fixed system prompt and context file boundaries to use explicit XML tags instead of Markdown headings, reducing inconsistent boundary ingestion by models ([#4541](https://github.com/earendil-works/kin-mono/pull/4541) by [@herrnel](https://github.com/herrnel)).
-- Fixed OpenAI Codex generated model metadata to use the current upstream model list inherited from `@earendil-works/kin-ai` ([#4603](https://github.com/earendil-works/kin-mono/pull/4603) by [@mattiacerutti](https://github.com/mattiacerutti)).
-- Fixed GitHub Copilot GPT model thinking metadata inherited from `@earendil-works/kin-ai` to map unsupported minimal thinking to low ([#4622](https://github.com/earendil-works/kin-mono/pull/4622) by [@mattiacerutti](https://github.com/mattiacerutti)).
+- Fixed OpenAI Codex generated model metadata to use the current upstream model list inherited from `@landongarrison/kin-ai` ([#4603](https://github.com/earendil-works/kin-mono/pull/4603) by [@mattiacerutti](https://github.com/mattiacerutti)).
+- Fixed GitHub Copilot GPT model thinking metadata inherited from `@landongarrison/kin-ai` to map unsupported minimal thinking to low ([#4622](https://github.com/earendil-works/kin-mono/pull/4622) by [@mattiacerutti](https://github.com/mattiacerutti)).
 - Fixed user-scoped npm pi packages to install under `~/.kin/agent/npm/` instead of npm's global package root, avoiding permission errors with system-managed Node installs ([#4587](https://github.com/earendil-works/kin/issues/4587)).
 - Fixed Mistral requests failing after the global fetch proxy/timeout workaround by removing the custom fetch override and using undici 8 dispatcher support instead ([#4619](https://github.com/earendil-works/kin/issues/4619)).
-- Fixed default output token requests for models whose advertised output limit is effectively their full context window, avoiding impossible provider requests inherited from `@earendil-works/kin-ai` ([#4614](https://github.com/earendil-works/kin/issues/4614)).
+- Fixed default output token requests for models whose advertised output limit is effectively their full context window, avoiding impossible provider requests inherited from `@landongarrison/kin-ai` ([#4614](https://github.com/earendil-works/kin/issues/4614)).
 
 ## [0.74.1] - 2026-05-16
 
 ### New Features
 
-- **Image generation support** - Added image generation APIs, generated image model metadata, and built-in OpenRouter image generation support inherited from `@earendil-works/kin-ai`.
+- **Image generation support** - Added image generation APIs, generated image model metadata, and built-in OpenRouter image generation support inherited from `@landongarrison/kin-ai`.
 - **Together AI provider** - Added Together AI as a built-in provider with `/login` API-key auth, default model resolution, and setup docs. See [README.md#providers--models](README.md#providers--models) and [docs/providers.md](docs/providers.md).
 - **Windows ARM64 standalone binaries** - Added standalone release artifacts for Windows ARM64.
-- **Improved terminal and markdown rendering** - Added markdown list indentation, task-list checkbox rendering, large markdown robustness, and inline image placement fixes inherited from `@earendil-works/kin-tui`.
+- **Improved terminal and markdown rendering** - Added markdown list indentation, task-list checkbox rendering, large markdown robustness, and inline image placement fixes inherited from `@landongarrison/kin-tui`.
 
 ### Added
 
-- Added image generation support from `@earendil-works/kin-ai`, including image generation APIs, image model metadata, and built-in OpenRouter image generation support ([#3887](https://github.com/earendil-works/kin-mono/pull/3887) by [@cristinaponcela](https://github.com/cristinaponcela)).
+- Added image generation support from `@landongarrison/kin-ai`, including image generation APIs, image model metadata, and built-in OpenRouter image generation support ([#3887](https://github.com/earendil-works/kin-mono/pull/3887) by [@cristinaponcela](https://github.com/cristinaponcela)).
 - Added Together AI to built-in provider setup, `/login` API-key auth, and default model resolution ([#3624](https://github.com/earendil-works/kin-mono/pull/3624) by [@Nutlope](https://github.com/Nutlope)).
 - Added Windows ARM64 standalone binary release artifacts ([#4458](https://github.com/earendil-works/kin/pull/4458) by [@brianmichel](https://github.com/brianmichel)).
 
@@ -105,8 +105,8 @@
 - Fixed uncaught interactive-mode exceptions to restore the terminal before exiting ([#4426](https://github.com/earendil-works/kin-mono/pull/4426) by [@ofa1](https://github.com/ofa1)).
 - Fixed ANSI stripping to match `strip-ansi` behavior after dependency removal.
 - Fixed UUIDv7 sequence generation shared by session IDs after dependency removal.
-- Fixed OpenRouter cached-token usage accounting, Fireworks caching compatibility, and OpenAI Codex WebSocket proxy handling inherited from `@earendil-works/kin-ai`.
-- Fixed markdown list wrapping, task-list checkboxes, large markdown rendering, WezTerm Kitty keyboard escape handling, and short-viewport inline image placement inherited from `@earendil-works/kin-tui`.
+- Fixed OpenRouter cached-token usage accounting, Fireworks caching compatibility, and OpenAI Codex WebSocket proxy handling inherited from `@landongarrison/kin-ai`.
+- Fixed markdown list wrapping, task-list checkboxes, large markdown rendering, WezTerm Kitty keyboard escape handling, and short-viewport inline image placement inherited from `@landongarrison/kin-tui`.
 - Fixed theme sharing across package scopes so extensions do not crash with `Theme not initialized` ([#4333](https://github.com/earendil-works/kin/issues/4333)).
 - Fixed keybinding hints to show Option instead of Alt on macOS ([#4289](https://github.com/earendil-works/kin/issues/4289)).
 - Fixed the interactive update notification to render the changelog as an OSC 8 hyperlink when the terminal supports hyperlinks ([#4280](https://github.com/earendil-works/kin/issues/4280)).
@@ -115,13 +115,13 @@
 
 ### Changed
 
-- Updated repository links and package references for the move to `earendil-works/kin-mono` and `@earendil-works/*` package scopes.
+- Updated repository links and package references for the move to `earendil-works/kin-mono` and `@landongarrison/*` package scopes.
 
 ## [0.73.1] - 2026-05-07
 
 ### New Features
 
-- **Self-update support for the npm scope migration**: `pi update --self` now supports the upcoming package rename from `@mariozechner/kin-coding-agent` to `@earendil-works/kin-coding-agent`. After the new package is published, existing global installs can update through the normal self-update flow; pi will uninstall the old global package and install the package name returned by the version check endpoint.
+- **Self-update support for the npm scope migration**: `pi update --self` now supports the upcoming package rename from `@mariozechner/kin-coding-agent` to `@landongarrison/kin-coding-agent`. After the new package is published, existing global installs can update through the normal self-update flow; pi will uninstall the old global package and install the package name returned by the version check endpoint.
 - **Interactive OAuth login selection**: OAuth providers can now present multiple login choices in `/login`, enabling provider-specific interactive authentication flows. See [Providers](docs/providers.md).
 - **JSONC-style `models.json` parsing**: `models.json` now allows comments and trailing commas, making custom provider and model configuration easier to maintain. See [Providers](docs/providers.md) and [Custom Providers](docs/custom-provider.md).
 

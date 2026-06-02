@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline";
-import type { AgentTool } from "@earendil-works/kin-agent-core";
-import { Text } from "@earendil-works/kin-tui";
+import type { AgentTool } from "@landongarrison/kin-agent-core";
+import { Text } from "@landongarrison/kin-tui";
 import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
@@ -23,7 +23,7 @@ import { truncateLine } from "./truncate.ts";
  * It is intentionally NOT a language server: no per-language server process, no cold start. It
  * builds a ripgrep regex covering the common declaration forms across the languages Kin works in.
  * That trades a little recall (it won't catch every exotic definition form, e.g. a class method
- * with no leading keyword) for near-zero cost — and the model still has grep for the rest.
+ * with no leading keyword) for near-zero cost — and the model still has bash with rg for the rest.
  */
 
 const definitionSchema = Type.Object({
@@ -101,7 +101,7 @@ function formatDefinitionCall(args: { name?: string; path?: string } | undefined
 	const rawPath = str(args?.path);
 	const where = rawPath ? shortenPath(rawPath) : ".";
 	const nameDisplay = name === null ? invalidArgText(theme) : theme.fg("accent", name || "");
-	return theme.fg("toolTitle", theme.bold("definition")) + " " + nameDisplay + theme.fg("toolOutput", ` in ${where}`);
+	return `${theme.fg("toolTitle", theme.bold("definition"))} ${nameDisplay}${theme.fg("toolOutput", ` in ${where}`)}`;
 }
 
 function formatDefinitionResult(
@@ -129,7 +129,7 @@ export function createDefinitionToolDefinition(
 		name: "definition",
 		label: "definition",
 		description:
-			"Find where a name is defined — the declaration site of a function, class, type, interface, variable, etc. Language-aware (searches common declaration forms across languages) and respects .gitignore. Prefer this over grep when you want to jump to a symbol's definition; use grep for content/text search or to find usages. Returns file:line for each candidate declaration. If it finds nothing (e.g. a class method with no leading keyword), fall back to grep.",
+			"Find where a name is defined — the declaration site of a function, class, type, interface, variable, etc. Language-aware (searches common declaration forms across languages) and respects .gitignore. Prefer this when you want to jump to a symbol's definition; use bash with rg for content/text search or to find usages. Returns file:line for each candidate declaration. If it finds nothing (e.g. a class method with no leading keyword), fall back to bash with rg.",
 		promptSnippet: "Find where a symbol (function/class/type/etc.) is defined",
 		parameters: definitionSchema,
 		async execute(_toolCallId, { name, path: searchDir }: { name: string; path?: string }, signal?: AbortSignal) {
@@ -226,7 +226,7 @@ export function createDefinitionToolDefinition(
 										content: [
 											{
 												type: "text",
-												text: `No definition found for "${name}". It may be a class method, an unusual declaration form, or defined elsewhere — try the grep tool.`,
+												text: `No definition found for "${name}". It may be a class method, an unusual declaration form, or defined elsewhere — try bash with rg.`,
 											},
 										],
 										details: undefined,

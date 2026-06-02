@@ -1,4 +1,4 @@
-import { complete, createAssistantMessageEventStream, getModel, getProviders, Type } from "@earendil-works/kin-ai";
+import { complete, createAssistantMessageEventStream, getModel, getProviders, Type } from "@landongarrison/kin-ai";
 import {
 	Agent,
 	bashExecutionToText,
@@ -15,7 +15,7 @@ import {
 	streamProxy,
 	toError,
 	truncateHead,
-} from "@earendil-works/kin-agent-core";
+} from "@landongarrison/kin-agent-core";
 
 // Keep this entry browser-safe. It is bundled by scripts/check-browser-smoke.mjs
 // to catch accidental Node-only runtime imports in browser-facing package exports.

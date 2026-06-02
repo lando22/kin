@@ -2,8 +2,8 @@
  * Hello Tool - Minimal custom tool example
  */
 
-import { Type } from "@earendil-works/kin-ai";
-import { defineTool, type ExtensionAPI } from "@earendil-works/kin-coding-agent";
+import { Type } from "@landongarrison/kin-ai";
+import { defineTool, type ExtensionAPI } from "@landongarrison/kin-coding-agent";
 
 const helloTool = defineTool({
 	name: "hello",

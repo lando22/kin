@@ -1,5 +1,5 @@
 {
-	"name": "@earendil-works/kin-ai",
+	"name": "@landongarrison/kin-ai",
 	"version": "0.75.3",
 	"description": "Unified LLM API with automatic model discovery and provider configuration",
 	"type": "module",

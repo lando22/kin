@@ -16,11 +16,11 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentToolResult } from "@earendil-works/kin-agent-core";
-import type { Message } from "@earendil-works/kin-ai";
-import { StringEnum } from "@earendil-works/kin-ai";
-import { type ExtensionAPI, getMarkdownTheme, withFileMutationQueue } from "@earendil-works/kin-coding-agent";
-import { Container, Markdown, Spacer, Text } from "@earendil-works/kin-tui";
+import type { AgentToolResult } from "@landongarrison/kin-agent-core";
+import type { Message } from "@landongarrison/kin-ai";
+import { StringEnum } from "@landongarrison/kin-ai";
+import { type ExtensionAPI, getMarkdownTheme, withFileMutationQueue } from "@landongarrison/kin-coding-agent";
+import { Container, Markdown, Spacer, Text } from "@landongarrison/kin-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.js";
 
@@ -103,24 +103,6 @@ function formatToolCall(
 		case "edit": {
 			const rawPath = (args.file_path || args.path || "...") as string;
 			return themeFg("muted", "edit ") + themeFg("accent", shortenPath(rawPath));
-		}
-		case "ls": {
-			const rawPath = (args.path || ".") as string;
-			return themeFg("muted", "ls ") + themeFg("accent", shortenPath(rawPath));
-		}
-		case "find": {
-			const pattern = (args.pattern || "*") as string;
-			const rawPath = (args.path || ".") as string;
-			return themeFg("muted", "find ") + themeFg("accent", pattern) + themeFg("dim", ` in ${shortenPath(rawPath)}`);
-		}
-		case "grep": {
-			const pattern = (args.pattern || "") as string;
-			const rawPath = (args.path || ".") as string;
-			return (
-				themeFg("muted", "grep ") +
-				themeFg("accent", `/${pattern}/`) +
-				themeFg("dim", ` in ${shortenPath(rawPath)}`)
-			);
 		}
 		default: {
 			const argsStr = JSON.stringify(args);

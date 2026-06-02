@@ -5,8 +5,8 @@
  * without paying for an extra follow-up LLM turn.
  */
 
-import { defineTool, type ExtensionAPI } from "@earendil-works/kin-coding-agent";
-import { Text } from "@earendil-works/kin-tui";
+import { defineTool, type ExtensionAPI } from "@landongarrison/kin-coding-agent";
+import { Text } from "@landongarrison/kin-tui";
 import { Type } from "typebox";
 
 interface StructuredOutputDetails {

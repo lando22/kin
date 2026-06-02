@@ -1,4 +1,4 @@
-import { fauxAssistantMessage } from "@earendil-works/kin-ai";
+import { fauxAssistantMessage } from "@landongarrison/kin-ai";
 import { afterEach, describe, expect, it } from "vitest";
 import { createHarness, type Harness } from "../harness.js";
 

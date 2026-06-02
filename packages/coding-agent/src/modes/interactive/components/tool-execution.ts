@@ -7,7 +7,7 @@ import {
 	Spacer,
 	Text,
 	type TUI,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import type { ToolDefinition, ToolRenderContext } from "../../../core/extensions/types.ts";
 import { createAllToolDefinitions, type ToolName } from "../../../core/tools/index.ts";
 import { getTextOutput as getRenderedTextOutput } from "../../../core/tools/render-utils.ts";

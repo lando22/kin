@@ -1,4 +1,4 @@
-import { Container, type SelectItem, SelectList, type SelectListLayoutOptions } from "@earendil-works/kin-tui";
+import { Container, type SelectItem, SelectList, type SelectListLayoutOptions } from "@landongarrison/kin-tui";
 import { getSelectListTheme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 

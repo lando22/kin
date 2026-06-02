@@ -6,7 +6,7 @@ import {
 	type MarkdownTheme,
 	type SelectListTheme,
 	type SettingsListTheme,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import chalk from "chalk";
 import { type Static, Type } from "typebox";
 import { Compile } from "typebox/compile";
@@ -731,7 +731,7 @@ export function getDefaultTheme(): string {
 // ============================================================================
 
 // Use globalThis to share theme across module loaders (tsx + jiti in dev mode)
-const THEME_KEY = Symbol.for("@earendil-works/kin-coding-agent:theme");
+const THEME_KEY = Symbol.for("@landongarrison/kin-coding-agent:theme");
 const THEME_KEY_OLD = Symbol.for("@mariozechner/kin-coding-agent:theme");
 
 // Export theme as a getter that reads from globalThis

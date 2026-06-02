@@ -1,4 +1,4 @@
-import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel } from "@earendil-works/kin-ai";
+import { type AssistantMessage, type AssistantMessageEvent, EventStream, getModel } from "@landongarrison/kin-ai";
 import { describe, expect, it } from "vitest";
 import { Agent } from "../src/index.js";
 

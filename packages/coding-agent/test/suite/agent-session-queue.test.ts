@@ -1,6 +1,6 @@
-import type { AgentTool } from "@earendil-works/kin-agent-core";
-import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/kin-ai";
-import type { ExtensionAPI } from "@earendil-works/kin-coding-agent";
+import type { AgentTool } from "@landongarrison/kin-agent-core";
+import { fauxAssistantMessage, fauxToolCall } from "@landongarrison/kin-ai";
+import type { ExtensionAPI } from "@landongarrison/kin-coding-agent";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import { createHarness, getAssistantTexts, getMessageText, getUserTexts, type Harness } from "./harness.js";

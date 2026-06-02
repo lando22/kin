@@ -1,4 +1,4 @@
-import type { Component } from "@earendil-works/kin-tui";
+import type { Component } from "@landongarrison/kin-tui";
 import { theme } from "../theme/theme.ts";
 
 /**

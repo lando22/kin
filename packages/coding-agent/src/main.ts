@@ -7,14 +7,11 @@
 
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
-import { type ImageContent, modelsAreEqual } from "@earendil-works/kin-ai";
-import { ProcessTerminal, setKeybindings, TUI } from "@earendil-works/kin-tui";
+import type { ImageContent } from "@landongarrison/kin-ai";
 import chalk from "chalk";
 import { type Args, type Mode, parseArgs, printHelp } from "./cli/args.ts";
 import { processFileArguments } from "./cli/file-processor.ts";
 import { buildInitialMessage } from "./cli/initial-message.ts";
-import { listModels } from "./cli/list-models.ts";
-import { selectSession } from "./cli/session-picker.ts";
 import { ENV_SESSION_DIR, expandTildePath, getAgentDir, getPackageDir, VERSION } from "./config.ts";
 import { type CreateAgentSessionRuntimeFactory, createAgentSessionRuntime } from "./core/agent-session-runtime.ts";
 import {
@@ -24,7 +21,6 @@ import {
 } from "./core/agent-session-services.ts";
 import { formatNoModelsAvailableMessage } from "./core/auth-guidance.ts";
 import { AuthStorage } from "./core/auth-storage.ts";
-import { exportFromFile } from "./core/export-html/index.ts";
 import type { ExtensionFactory } from "./core/extensions/types.ts";
 import { KeybindingsManager } from "./core/keybindings.ts";
 import type { ModelRegistry } from "./core/model-registry.ts";
@@ -41,13 +37,7 @@ import { SessionManager } from "./core/session-manager.ts";
 import { SettingsManager } from "./core/settings-manager.ts";
 import { printTimings, resetTimings, time } from "./core/timings.ts";
 import { runMigrations, showDeprecationWarnings } from "./migrations.ts";
-import { isContextTransferCommand, runContextTransferMode } from "./modes/context-transfer-mode.ts";
-import { InteractiveMode, runPrintMode, runRpcMode } from "./modes/index.ts";
-import { ExtensionSelectorComponent } from "./modes/interactive/components/extension-selector.ts";
 import { initTheme, stopThemeWatcher } from "./modes/interactive/theme/theme.ts";
-import { isReflectCommand, runReflectMode } from "./modes/reflect-mode.ts";
-import { isWakeCommand, runWakeMode } from "./modes/wake-mode.ts";
-import { handleConfigCommand, handlePackageCommand } from "./package-manager-cli.ts";
 import { isLocalPath } from "./utils/paths.ts";
 import { cleanupWindowsSelfUpdateQuarantine } from "./utils/windows-self-update.ts";
 
@@ -98,6 +88,40 @@ function isTruthyEnvFlag(value: string | undefined): boolean {
 }
 
 type AppMode = "interactive" | "print" | "json" | "rpc";
+
+function isPackageCommand(args: string[]): boolean {
+	const command = args[0];
+	return (
+		command === "install" ||
+		command === "remove" ||
+		command === "uninstall" ||
+		command === "update" ||
+		command === "list"
+	);
+}
+
+function isConfigCommand(args: string[]): boolean {
+	return args[0] === "config";
+}
+
+function isContextTransferCommand(args: string[]): boolean {
+	return args[0] === "export" || args[0] === "import";
+}
+
+function isReflectCommand(args: string[]): boolean {
+	return args[0] === "reflect";
+}
+
+function isWakeCommand(args: string[]): boolean {
+	return args[0] === "wake";
+}
+
+function modelsAreEqual(
+	a: { id: string; provider: string } | null | undefined,
+	b: { id: string; provider: string } | null | undefined,
+): boolean {
+	return Boolean(a && b && a.id === b.id && a.provider === b.provider);
+}
 
 function resolveAppMode(parsed: Args, stdinIsTTY: boolean): AppMode {
 	if (parsed.mode === "rpc") {
@@ -267,6 +291,7 @@ async function createSessionManager(
 	if (parsed.resume) {
 		initTheme(settingsManager.getTheme(), true);
 		try {
+			const { selectSession } = await import("./cli/session-picker.ts");
 			const selectedPath = await selectSession(
 				(onProgress) => SessionManager.list(cwd, sessionDir, onProgress),
 				SessionManager.listAll,
@@ -390,6 +415,10 @@ async function promptForMissingSessionCwd(
 	issue: SessionCwdIssue,
 	settingsManager: SettingsManager,
 ): Promise<string | undefined> {
+	const [{ ProcessTerminal, setKeybindings, TUI }, { ExtensionSelectorComponent }] = await Promise.all([
+		import("@landongarrison/kin-tui"),
+		import("./modes/interactive/components/extension-selector.ts"),
+	]);
 	initTheme(settingsManager.getTheme());
 	setKeybindings(KeybindingsManager.create());
 
@@ -436,20 +465,28 @@ export async function main(args: string[], options?: MainOptions) {
 		cleanupWindowsSelfUpdateQuarantine(getPackageDir());
 	}
 
-	if (await handlePackageCommand(args)) {
-		return;
+	if (isPackageCommand(args)) {
+		const { handlePackageCommand } = await import("./package-manager-cli.ts");
+		if (await handlePackageCommand(args)) {
+			return;
+		}
 	}
 
-	if (await handleConfigCommand(args)) {
-		return;
+	if (isConfigCommand(args)) {
+		const { handleConfigCommand } = await import("./package-manager-cli.ts");
+		if (await handleConfigCommand(args)) {
+			return;
+		}
 	}
 
 	if (isContextTransferCommand(args)) {
+		const { runContextTransferMode } = await import("./modes/context-transfer-mode.ts");
 		const exitCode = await runContextTransferMode(args);
 		process.exit(exitCode);
 	}
 
 	if (isReflectCommand(args)) {
+		const { runReflectMode } = await import("./modes/reflect-mode.ts");
 		const reflectDate =
 			args.includes("--date") && args[args.indexOf("--date") + 1]
 				? new Date(args[args.indexOf("--date") + 1])
@@ -459,6 +496,7 @@ export async function main(args: string[], options?: MainOptions) {
 	}
 
 	if (isWakeCommand(args)) {
+		const { runWakeMode } = await import("./modes/wake-mode.ts");
 		const wakeDate =
 			args.includes("--date") && args[args.indexOf("--date") + 1]
 				? new Date(args[args.indexOf("--date") + 1])
@@ -492,6 +530,7 @@ export async function main(args: string[], options?: MainOptions) {
 	if (parsed.export) {
 		let result: string;
 		try {
+			const { exportFromFile } = await import("./core/export-html/index.ts");
 			const outputPath = parsed.messages.length > 0 ? parsed.messages[0] : undefined;
 			result = await exportFromFile(parsed.export, outputPath);
 		} catch (error: unknown) {
@@ -655,6 +694,7 @@ export async function main(args: string[], options?: MainOptions) {
 
 	if (parsed.listModels !== undefined) {
 		const searchPattern = typeof parsed.listModels === "string" ? parsed.listModels : undefined;
+		const { listModels } = await import("./cli/list-models.ts");
 		await listModels(modelRegistry, searchPattern);
 		process.exit(0);
 	}
@@ -703,8 +743,10 @@ export async function main(args: string[], options?: MainOptions) {
 
 	if (appMode === "rpc") {
 		printTimings();
+		const { runRpcMode } = await import("./modes/rpc/rpc-mode.ts");
 		await runRpcMode(runtime);
 	} else if (appMode === "interactive") {
+		const { InteractiveMode } = await import("./modes/interactive/interactive-mode.ts");
 		const interactiveMode = new InteractiveMode(runtime, {
 			migratedProviders,
 			modelFallbackMessage,
@@ -732,6 +774,7 @@ export async function main(args: string[], options?: MainOptions) {
 		await interactiveMode.run();
 	} else {
 		printTimings();
+		const { runPrintMode } = await import("./modes/print-mode.ts");
 		const exitCode = await runPrintMode(runtime, {
 			mode: toPrintOutputMode(appMode),
 			messages: parsed.messages,

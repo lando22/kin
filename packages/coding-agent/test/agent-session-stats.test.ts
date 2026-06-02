@@ -1,5 +1,5 @@
-import { Agent } from "@earendil-works/kin-agent-core";
-import { type AssistantMessage, getModel, type Usage } from "@earendil-works/kin-ai";
+import { Agent } from "@landongarrison/kin-agent-core";
+import { type AssistantMessage, getModel, type Usage } from "@landongarrison/kin-ai";
 import { describe, expect, it } from "vitest";
 import { AgentSession } from "../src/core/agent-session.js";
 import { AuthStorage } from "../src/core/auth-storage.js";

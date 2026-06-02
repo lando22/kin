@@ -14,7 +14,7 @@ import type {
 	AgentToolUpdateCallback,
 	ThinkingLevel,
 	ToolExecutionMode,
-} from "@earendil-works/kin-agent-core";
+} from "@landongarrison/kin-agent-core";
 import type {
 	Api,
 	AssistantMessageEvent,
@@ -27,7 +27,7 @@ import type {
 	SimpleStreamOptions,
 	TextContent,
 	ToolResultMessage,
-} from "@earendil-works/kin-ai";
+} from "@landongarrison/kin-ai";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -38,7 +38,7 @@ import type {
 	OverlayHandle,
 	OverlayOptions,
 	TUI,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import type { Static, TSchema } from "typebox";
 import type { Theme } from "../../modes/interactive/theme/theme.ts";
 import type { BashResult } from "../bash-executor.ts";
@@ -65,12 +65,6 @@ import type {
 	BashToolDetails,
 	BashToolInput,
 	EditToolInput,
-	FindToolDetails,
-	FindToolInput,
-	GrepToolDetails,
-	GrepToolInput,
-	LsToolDetails,
-	LsToolInput,
 	ReadToolDetails,
 	ReadToolInput,
 	WriteToolInput,
@@ -226,12 +220,12 @@ export interface ExtensionUIContext {
 	 * - `keybindings`: KeybindingsManager for app-level keybindings
 	 *
 	 * For full app keybinding support (escape, ctrl+d, model switching, etc.),
-	 * extend `CustomEditor` from `@earendil-works/kin-coding-agent` and call
+	 * extend `CustomEditor` from `@landongarrison/kin-coding-agent` and call
 	 * `super.handleInput(data)` for keys you don't handle.
 	 *
 	 * @example
 	 * ```ts
-	 * import { CustomEditor } from "@earendil-works/kin-coding-agent";
+	 * import { CustomEditor } from "@landongarrison/kin-coding-agent";
 	 *
 	 * class VimEditor extends CustomEditor {
 	 *   private mode: "normal" | "insert" = "insert";
@@ -793,21 +787,6 @@ export interface WriteToolCallEvent extends ToolCallEventBase {
 	input: WriteToolInput;
 }
 
-export interface GrepToolCallEvent extends ToolCallEventBase {
-	toolName: "grep";
-	input: GrepToolInput;
-}
-
-export interface FindToolCallEvent extends ToolCallEventBase {
-	toolName: "find";
-	input: FindToolInput;
-}
-
-export interface LsToolCallEvent extends ToolCallEventBase {
-	toolName: "ls";
-	input: LsToolInput;
-}
-
 export interface CustomToolCallEvent extends ToolCallEventBase {
 	toolName: string;
 	input: Record<string, unknown>;
@@ -824,9 +803,6 @@ export type ToolCallEvent =
 	| ReadToolCallEvent
 	| EditToolCallEvent
 	| WriteToolCallEvent
-	| GrepToolCallEvent
-	| FindToolCallEvent
-	| LsToolCallEvent
 	| CustomToolCallEvent;
 
 interface ToolResultEventBase {
@@ -857,21 +833,6 @@ export interface WriteToolResultEvent extends ToolResultEventBase {
 	details: undefined;
 }
 
-export interface GrepToolResultEvent extends ToolResultEventBase {
-	toolName: "grep";
-	details: GrepToolDetails | undefined;
-}
-
-export interface FindToolResultEvent extends ToolResultEventBase {
-	toolName: "find";
-	details: FindToolDetails | undefined;
-}
-
-export interface LsToolResultEvent extends ToolResultEventBase {
-	toolName: "ls";
-	details: LsToolDetails | undefined;
-}
-
 export interface CustomToolResultEvent extends ToolResultEventBase {
 	toolName: string;
 	details: unknown;
@@ -883,9 +844,6 @@ export type ToolResultEvent =
 	| ReadToolResultEvent
 	| EditToolResultEvent
 	| WriteToolResultEvent
-	| GrepToolResultEvent
-	| FindToolResultEvent
-	| LsToolResultEvent
 	| CustomToolResultEvent;
 
 // Type guards for ToolResultEvent
@@ -900,15 +858,6 @@ export function isEditToolResult(e: ToolResultEvent): e is EditToolResultEvent {
 }
 export function isWriteToolResult(e: ToolResultEvent): e is WriteToolResultEvent {
 	return e.toolName === "write";
-}
-export function isGrepToolResult(e: ToolResultEvent): e is GrepToolResultEvent {
-	return e.toolName === "grep";
-}
-export function isFindToolResult(e: ToolResultEvent): e is FindToolResultEvent {
-	return e.toolName === "find";
-}
-export function isLsToolResult(e: ToolResultEvent): e is LsToolResultEvent {
-	return e.toolName === "ls";
 }
 
 /**
@@ -935,9 +884,6 @@ export function isToolCallEventType(toolName: "bash", event: ToolCallEvent): eve
 export function isToolCallEventType(toolName: "read", event: ToolCallEvent): event is ReadToolCallEvent;
 export function isToolCallEventType(toolName: "edit", event: ToolCallEvent): event is EditToolCallEvent;
 export function isToolCallEventType(toolName: "write", event: ToolCallEvent): event is WriteToolCallEvent;
-export function isToolCallEventType(toolName: "grep", event: ToolCallEvent): event is GrepToolCallEvent;
-export function isToolCallEventType(toolName: "find", event: ToolCallEvent): event is FindToolCallEvent;
-export function isToolCallEventType(toolName: "ls", event: ToolCallEvent): event is LsToolCallEvent;
 export function isToolCallEventType<TName extends string, TInput extends Record<string, unknown>>(
 	toolName: TName,
 	event: ToolCallEvent,

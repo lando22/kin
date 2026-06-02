@@ -11,8 +11,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { Message, Model } from "@earendil-works/kin-ai";
-import { completeSimple } from "@earendil-works/kin-ai";
+import type { Message, Model } from "@landongarrison/kin-ai";
+import { completeSimple } from "@landongarrison/kin-ai";
 import { formatLocalDate } from "./reflect.ts";
 
 // =============================================================================

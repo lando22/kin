@@ -3,9 +3,9 @@ import {
 	type ExtensionAPI,
 	type ExtensionContext,
 	type KeybindingsManager,
-} from "@earendil-works/kin-coding-agent";
-import type { Component, EditorTheme, TUI } from "@earendil-works/kin-tui";
-import { truncateToWidth, visibleWidth } from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-coding-agent";
+import type { Component, EditorTheme, TUI } from "@landongarrison/kin-tui";
+import { truncateToWidth, visibleWidth } from "@landongarrison/kin-tui";
 
 function fitBorder(
 	left: string,

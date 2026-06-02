@@ -439,7 +439,7 @@ interface PackageJson {
 const pkg = JSON.parse(readFileSync(getPackageJsonPath(), "utf-8")) as PackageJson;
 
 const kinConfigName: string | undefined = pkg.kinConfig?.name;
-export const PACKAGE_NAME: string = pkg.name || "@earendil-works/kin-coding-agent";
+export const PACKAGE_NAME: string = pkg.name || "@landongarrison/kin-coding-agent";
 export const APP_NAME: string = kinConfigName || "kin";
 export const APP_TITLE = "Kin";
 export const CONFIG_DIR_NAME: string = pkg.kinConfig?.configDir || ".kin";

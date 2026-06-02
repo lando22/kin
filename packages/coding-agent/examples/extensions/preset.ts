@@ -16,8 +16,8 @@
  *     "provider": "openai-codex",
  *     "model": "gpt-5.2-codex",
  *     "thinkingLevel": "high",
- *     "tools": ["read", "grep", "find", "ls"],
- *     "instructions": "You are in PLANNING MODE. Your job is to deeply understand the problem and create a detailed implementation plan.\n\nRules:\n- DO NOT make any changes. You cannot edit or write files.\n- Read files IN FULL (no offset/limit) to get complete context. Partial reads miss critical details.\n- Explore thoroughly: grep for related code, find similar patterns, understand the architecture.\n- Ask clarifying questions if requirements are ambiguous. Do not assume.\n- Identify risks, edge cases, and dependencies before proposing solutions.\n\nOutput:\n- Create a structured plan with numbered steps.\n- For each step: what to change, why, and potential risks.\n- List files that will be modified.\n- Note any tests that should be added or updated.\n\nWhen done, ask the user if they want you to:\n1. Write the plan to a markdown file (e.g., PLAN.md)\n2. Create a GitHub issue with the plan\n3. Proceed to implementation (they should switch to 'implement' preset)"
+ *     "tools": ["read", "bash", "definition"],
+ *     "instructions": "You are in PLANNING MODE. Your job is to deeply understand the problem and create a detailed implementation plan.\n\nRules:\n- DO NOT make any changes. You cannot edit or write files.\n- Read files IN FULL (no offset/limit) to get complete context. Partial reads miss critical details.\n- Explore thoroughly with read, definition, and bash search commands. Understand the architecture before proposing edits.\n- Ask clarifying questions if requirements are ambiguous. Do not assume.\n- Identify risks, edge cases, and dependencies before proposing solutions.\n\nOutput:\n- Create a structured plan with numbered steps.\n- For each step: what to change, why, and potential risks.\n- List files that will be modified.\n- Note any tests that should be added or updated.\n\nWhen done, ask the user if they want you to:\n1. Write the plan to a markdown file (e.g., PLAN.md)\n2. Create a GitHub issue with the plan\n3. Proceed to implementation (they should switch to 'implement' preset)"
  *   },
  *   "implement": {
  *     "provider": "anthropic",
@@ -40,10 +40,10 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Api, Model } from "@earendil-works/kin-ai";
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/kin-coding-agent";
-import { DynamicBorder, getAgentDir } from "@earendil-works/kin-coding-agent";
-import { Container, Key, type SelectItem, SelectList, Text } from "@earendil-works/kin-tui";
+import type { Api, Model } from "@landongarrison/kin-ai";
+import type { ExtensionAPI, ExtensionContext } from "@landongarrison/kin-coding-agent";
+import { DynamicBorder, getAgentDir } from "@landongarrison/kin-coding-agent";
+import { Container, Key, type SelectItem, SelectList, Text } from "@landongarrison/kin-tui";
 
 // Preset configuration
 interface Preset {

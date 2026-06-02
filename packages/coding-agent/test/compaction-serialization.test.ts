@@ -1,4 +1,4 @@
-import type { Message } from "@earendil-works/kin-ai";
+import type { Message } from "@landongarrison/kin-ai";
 import { describe, expect, it } from "vitest";
 import { serializeConversation } from "../src/core/compaction/utils.js";
 

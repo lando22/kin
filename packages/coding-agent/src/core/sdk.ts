@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import { Agent, type AgentMessage, type ThinkingLevel } from "@earendil-works/kin-agent-core";
-import { clampThinkingLevel, type Message, type Model, streamSimple } from "@earendil-works/kin-ai";
+import { Agent, type AgentMessage, type ThinkingLevel } from "@landongarrison/kin-agent-core";
+import { clampThinkingLevel, type Message, type Model, streamSimple } from "@landongarrison/kin-ai";
 import { getAgentDir } from "../config.ts";
 import { AgentSession } from "./agent-session.ts";
 import { formatNoModelsAvailableMessage } from "./auth-guidance.ts";
@@ -19,10 +19,8 @@ import { time } from "./timings.ts";
 import {
 	createBashTool,
 	createCodingTools,
+	createDefinitionTool,
 	createEditTool,
-	createFindTool,
-	createGrepTool,
-	createLsTool,
 	createReadOnlyTools,
 	createReadTool,
 	createWriteTool,
@@ -120,11 +118,9 @@ export {
 	createReadOnlyTools,
 	createReadTool,
 	createBashTool,
+	createDefinitionTool,
 	createEditTool,
 	createWriteTool,
-	createGrepTool,
-	createFindTool,
-	createLsTool,
 };
 
 // Helper functions kept private so the public SDK surface stays centered on session creation.
@@ -173,7 +169,7 @@ function getAttributionHeaders(
  * const { session } = await createAgentSession();
  *
  * // With explicit model
- * import { getModel } from '@earendil-works/kin-ai';
+ * import { getModel } from '@landongarrison/kin-ai';
  * const { session } = await createAgentSession({
  *   model: getModel('anthropic', 'claude-opus-4-5'),
  *   thinkingLevel: 'high',

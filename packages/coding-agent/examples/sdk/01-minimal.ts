@@ -5,7 +5,7 @@
  * from cwd and ~/.kin/agent. Model chosen from settings or first available.
  */
 
-import { createAgentSession } from "@earendil-works/kin-coding-agent";
+import { createAgentSession } from "@landongarrison/kin-coding-agent";
 
 const { session } = await createAgentSession();
 

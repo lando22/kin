@@ -1,6 +1,6 @@
 import * as os from "node:os";
-import type { ImageContent, TextContent } from "@earendil-works/kin-ai";
-import { getCapabilities, getImageDimensions, imageFallback } from "@earendil-works/kin-tui";
+import type { ImageContent, TextContent } from "@landongarrison/kin-ai";
+import { getCapabilities, getImageDimensions, imageFallback } from "@landongarrison/kin-tui";
 import { stripAnsi } from "../../utils/ansi.ts";
 import { sanitizeBinaryOutput } from "../../utils/shell.ts";
 

@@ -1,6 +1,6 @@
-import type { AgentMessage } from "@earendil-works/kin-agent-core";
-import type { AssistantMessage, ToolResultMessage, Usage } from "@earendil-works/kin-ai";
-import { Container, Text, type TUI } from "@earendil-works/kin-tui";
+import type { AgentMessage } from "@landongarrison/kin-agent-core";
+import type { AssistantMessage, ToolResultMessage, Usage } from "@landongarrison/kin-ai";
+import { Container, Text, type TUI } from "@landongarrison/kin-tui";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import type { AgentSessionEvent } from "../../../src/core/agent-session.js";
 import type { SessionContext } from "../../../src/core/session-manager.js";

@@ -45,7 +45,7 @@
 	},
 	"version": "0.0.3",
 	"dependencies": {
-		"@earendil-works/kin-coding-agent": "^0.75.3"
+		"@landongarrison/kin-coding-agent": "^0.75.3"
 	},
 	"overrides": {
 		"rimraf": "6.1.2",

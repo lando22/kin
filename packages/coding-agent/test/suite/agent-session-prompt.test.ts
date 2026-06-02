@@ -1,8 +1,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentTool } from "@earendil-works/kin-agent-core";
-import { fauxAssistantMessage, fauxToolCall, type Model } from "@earendil-works/kin-ai";
+import type { AgentTool } from "@landongarrison/kin-agent-core";
+import { fauxAssistantMessage, fauxToolCall, type Model } from "@landongarrison/kin-ai";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { PromptTemplate } from "../../src/core/prompt-templates.js";

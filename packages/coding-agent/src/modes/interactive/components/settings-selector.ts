@@ -1,5 +1,5 @@
-import type { ThinkingLevel } from "@earendil-works/kin-agent-core";
-import type { Transport } from "@earendil-works/kin-ai";
+import type { ThinkingLevel } from "@landongarrison/kin-agent-core";
+import type { Transport } from "@landongarrison/kin-ai";
 import {
 	Container,
 	getCapabilities,
@@ -10,7 +10,7 @@ import {
 	SettingsList,
 	Spacer,
 	Text,
-} from "@earendil-works/kin-tui";
+} from "@landongarrison/kin-tui";
 import type { WarningSettings } from "../../../core/settings-manager.ts";
 import { getSelectListTheme, getSettingsListTheme, theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
@@ -248,7 +248,7 @@ export class SettingsSelectorComponent extends Container {
 			{
 				id: "collapse-changelog",
 				label: "Collapse changelog",
-				description: "Show condensed changelog after updates",
+				description: "Keep update history condensed when explicitly shown",
 				currentValue: config.collapseChangelog ? "true" : "false",
 				values: ["true", "false"],
 			},
@@ -262,7 +262,7 @@ export class SettingsSelectorComponent extends Container {
 			{
 				id: "install-telemetry",
 				label: "Install telemetry",
-				description: "Send an anonymous version/update ping after changelog-detected updates",
+				description: "Send an anonymous install/update version ping",
 				currentValue: config.enableInstallTelemetry ? "true" : "false",
 				values: ["true", "false"],
 			},

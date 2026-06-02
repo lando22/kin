@@ -44,7 +44,7 @@ export function normalizeMode(mode: SubagentMode | undefined): SubagentMode {
 }
 
 /** Explore subagents get read-only tools, so they structurally cannot modify the repo. */
-export const EXPLORE_TOOLS = ["read", "grep", "find", "ls", "definition"] as const;
+export const EXPLORE_TOOLS = ["read", "definition"] as const;
 /** Work subagents get the full mutating set so they can implement, run, and fix. */
 export const WORK_TOOLS = ["bash", "read", "edit", "write", "definition"] as const;
 

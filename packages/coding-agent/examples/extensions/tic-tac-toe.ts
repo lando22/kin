@@ -17,9 +17,9 @@
  * separate variables. Only the agent cursor is ever exposed to the agent.
  */
 
-import { StringEnum } from "@earendil-works/kin-ai";
-import type { ExtensionAPI, ExtensionContext, Theme, ToolExecutionMode } from "@earendil-works/kin-coding-agent";
-import { type Component, matchesKey, Text, truncateToWidth, visibleWidth } from "@earendil-works/kin-tui";
+import { StringEnum } from "@landongarrison/kin-ai";
+import type { ExtensionAPI, ExtensionContext, Theme, ToolExecutionMode } from "@landongarrison/kin-coding-agent";
+import { type Component, matchesKey, Text, truncateToWidth, visibleWidth } from "@landongarrison/kin-tui";
 import { Type } from "typebox";
 
 // Thrown from the tool on illegal actions. The agent runtime surfaces thrown

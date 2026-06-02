@@ -1,4 +1,4 @@
-import { type ExecFileException, execFile, spawnSync } from "child_process";
+import { type ExecFileException, execFile } from "child_process";
 import { existsSync, type FSWatcher, readFileSync, statSync, unwatchFile, watchFile } from "fs";
 import { dirname, join, resolve } from "path";
 import { closeWatcher, FS_WATCH_RETRY_DELAY_MS, watchWithErrorHandler } from "../utils/fs-watch.ts";
@@ -45,17 +45,6 @@ function findGitPaths(cwd: string): GitPaths | null {
 		if (parent === dir) return null;
 		dir = parent;
 	}
-}
-
-/** Ask git for the current branch. Returns null on detached HEAD or if git is unavailable. */
-function resolveBranchWithGitSync(repoDir: string): string | null {
-	const result = spawnSync("git", ["--no-optional-locks", "symbolic-ref", "--quiet", "--short", "HEAD"], {
-		cwd: repoDir,
-		encoding: "utf8",
-		stdio: ["ignore", "pipe", "ignore"],
-	});
-	const branch = result.status === 0 ? result.stdout.trim() : "";
-	return branch || null;
 }
 
 /** Ask git for the current branch asynchronously. Returns null on detached HEAD or if git is unavailable. */
@@ -107,12 +96,14 @@ export class FooterDataProvider {
 		this.cwd = cwd;
 		this.gitPaths = findGitPaths(cwd);
 		this.setupGitWatcher();
+		void this.refreshGitBranchAsync();
 	}
 
 	/** Current git branch, null if not in repo, "detached" if detached HEAD */
 	getGitBranch(): string | null {
 		if (this.cachedBranch === undefined) {
-			this.cachedBranch = this.resolveGitBranchSync();
+			void this.refreshGitBranchAsync();
+			return null;
 		}
 		return this.cachedBranch;
 	}
@@ -166,7 +157,7 @@ export class FooterDataProvider {
 		this.cachedBranch = undefined;
 		this.gitPaths = findGitPaths(cwd);
 		this.setupGitWatcher();
-		this.notifyBranchChange();
+		void this.refreshGitBranchAsync();
 	}
 
 	/** Internal: cleanup */
@@ -207,7 +198,7 @@ export class FooterDataProvider {
 		try {
 			const nextBranch = await this.resolveGitBranchAsync();
 			if (this.disposed) return;
-			if (this.cachedBranch !== undefined && this.cachedBranch !== nextBranch) {
+			if (this.cachedBranch !== nextBranch) {
 				this.cachedBranch = nextBranch;
 				this.notifyBranchChange();
 				return;
@@ -219,20 +210,6 @@ export class FooterDataProvider {
 				this.refreshPending = false;
 				this.scheduleRefresh();
 			}
-		}
-	}
-
-	private resolveGitBranchSync(): string | null {
-		try {
-			if (!this.gitPaths) return null;
-			const content = readFileSync(this.gitPaths.headPath, "utf8").trim();
-			if (content.startsWith("ref: refs/heads/")) {
-				const branch = content.slice(16);
-				return branch === ".invalid" ? (resolveBranchWithGitSync(this.gitPaths.repoDir) ?? "detached") : branch;
-			}
-			return "detached";
-		} catch {
-			return null;
 		}
 	}
 

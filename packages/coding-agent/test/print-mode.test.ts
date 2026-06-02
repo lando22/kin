@@ -1,4 +1,4 @@
-import type { AssistantMessage, ImageContent } from "@earendil-works/kin-ai";
+import type { AssistantMessage, ImageContent } from "@landongarrison/kin-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SessionShutdownEvent } from "../src/index.js";
 import { runPrintMode } from "../src/modes/print-mode.js";
