@@ -87,7 +87,6 @@ import type { SourceInfo } from "../../core/source-info.ts";
 import { isInstallTelemetryEnabled } from "../../core/telemetry.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
 import { formatWakeContextMessage, markWakeSeen, readUnseenWake } from "../../core/wake.ts";
-import { getChangelogPath, getNewEntries, parseChangelog } from "../../utils/changelog.ts";
 import { copyToClipboard } from "../../utils/clipboard.ts";
 import { extensionForImageMimeType, readClipboardImage } from "../../utils/clipboard-image.ts";
 import { parseGitUrl } from "../../utils/git.ts";
@@ -657,8 +656,7 @@ export class InteractiveMode {
 
 		this.registerSignalHandlers();
 
-		// Keep update bookkeeping quiet; do not surface update notes on startup.
-		this.recordChangelogVersionForTelemetry();
+		this.reportInstallTelemetryIfNeeded();
 		this.wakeMarkdown = this.getWakeForDisplay();
 
 		// Ensure fd and rg are available (downloads if missing, adds to PATH via getBinDir)
@@ -939,29 +937,13 @@ export class InteractiveMode {
 		return undefined;
 	}
 
-	/**
-	 * Record the current changelog version for telemetry without showing entries on startup.
-	 */
-	private recordChangelogVersionForTelemetry(): void {
-		// Skip changelog for resumed/continued sessions (already have messages)
+	private reportInstallTelemetryIfNeeded(): void {
 		if (this.session.state.messages.length > 0) {
 			return;
 		}
 
-		const lastVersion = this.settingsManager.getLastChangelogVersion();
-		const changelogPath = getChangelogPath();
-		const entries = parseChangelog(changelogPath);
-
-		if (!lastVersion) {
-			// Fresh install - record the version, send telemetry, don't show changelog
-			this.settingsManager.setLastChangelogVersion(VERSION);
-			this.reportInstallTelemetry(VERSION);
-			return;
-		}
-
-		const newEntries = getNewEntries(entries, lastVersion);
-		if (newEntries.length > 0) {
-			this.settingsManager.setLastChangelogVersion(VERSION);
+		if (this.settingsManager.getLastInstallTelemetryVersion() !== VERSION) {
+			this.settingsManager.setLastInstallTelemetryVersion(VERSION);
 			this.reportInstallTelemetry(VERSION);
 		}
 	}

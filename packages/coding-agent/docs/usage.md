@@ -51,7 +51,6 @@ Type `/` in the editor to open command completion. Extensions can register custo
 | `/share` | Upload as private GitHub gist with shareable HTML link |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files |
 | `/hotkeys` | Show all keyboard shortcuts |
-| `/changelog` | Display update history |
 | `/quit` | Quit kin |
 
 ## Message Queue

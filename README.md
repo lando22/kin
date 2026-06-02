@@ -3,10 +3,6 @@
 </p>
 <p align="center"><em>Your personal intelligence. Remembers. Learns. Helps.</em></p>
 
-> New issues and PRs from new contributors are auto-closed by default. Maintainers review auto-closed issues daily. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
-
 # Kin Agent Harness Mono Repo
 
 This is the home of the kin agent harness project including our self extensible coding agent.
@@ -61,10 +57,6 @@ I regularly publish my own `kin-mono` work sessions here:
 | **[@landongarrison/kin-tui](packages/tui)** | Terminal UI library with differential rendering |
 
 For Slack/chat automation and workflows see [earendil-works/kin-chat](https://github.com/earendil-works/kin-chat).
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and agents).
 
 ## Development
 

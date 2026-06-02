@@ -8,10 +8,8 @@ import { dirname, join } from "path";
 import { CONFIG_DIR_NAME, getAgentDir, getBinDir } from "./config.ts";
 import { migrateKeybindingsConfig } from "./core/keybindings.ts";
 
-const MIGRATION_GUIDE_URL =
-	"https://github.com/earendil-works/kin-mono/blob/main/packages/coding-agent/CHANGELOG.md#extensions-migration";
-const EXTENSIONS_DOC_URL =
-	"https://github.com/earendil-works/kin-mono/blob/main/packages/coding-agent/docs/extensions.md";
+const MIGRATION_GUIDE_URL = "https://github.com/lando22/kin/blob/main/packages/coding-agent/docs/extensions.md";
+const EXTENSIONS_DOC_URL = "https://github.com/lando22/kin/blob/main/packages/coding-agent/docs/extensions.md";
 
 /**
  * Migrate legacy oauth.json and settings.json apiKeys to auth.json.

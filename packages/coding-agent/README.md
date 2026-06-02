@@ -13,10 +13,6 @@
   <a href="https://exe.dev"><img src="docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
 </p>
 
-> New issues and PRs from new contributors are auto-closed by default. Maintainers review auto-closed issues daily. See [CONTRIBUTING.md](../../CONTRIBUTING.md).
-
----
-
 Kin is a minimal terminal coding harness. Adapt kin to your workflows, not the other way around, without having to fork and modify kin internals. Extend it with TypeScript [Extensions](#extensions), [Skills](#skills), [Prompt Templates](#prompt-templates), and [Themes](#themes). Put your extensions, skills, prompt templates, and themes in [Kin Packages](#kin-packages) and share them with others via npm or git.
 
 Kin ships with powerful defaults but skips features like sub agents and plan mode. Instead, you can ask kin to build what you want or install a third party kin package that matches your workflow.
@@ -188,7 +184,6 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 | `/share` | Upload as private GitHub gist with shareable HTML link |
 | `/reload` | Reload keybindings, extensions, skills, prompts, and context files (themes hot-reload automatically) |
 | `/hotkeys` | Show all keyboard shortcuts |
-| `/changelog` | Display update history |
 | `/quit` | Quit kin |
 
 ### Keyboard Shortcuts
@@ -645,7 +640,7 @@ kin --thinking high "Solve this complex problem"
 
 ## Contributing & Development
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines and [docs/development.md](docs/development.md) for setup, forking, and debugging.
+See [docs/development.md](docs/development.md) for setup, forking, and debugging.
 
 ---
 

@@ -315,7 +315,7 @@ export function getUpdateInstruction(packageName: string): string {
 // =============================================================================
 
 /**
- * Get the base directory for resolving package assets (themes, package.json, README.md, CHANGELOG.md).
+ * Get the base directory for resolving package assets (themes, package.json, README.md).
  * - For Bun binary: returns the directory containing the executable
  * - For Node.js (dist/): returns __dirname (the dist/ directory)
  * - For tsx (src/): returns parent directory (the package root)
@@ -396,11 +396,6 @@ export function getExamplesPath(): string {
 	return resolve(join(getPackageDir(), "examples"));
 }
 
-/** Get path to CHANGELOG.md */
-export function getChangelogPath(): string {
-	return resolve(join(getPackageDir(), "CHANGELOG.md"));
-}
-
 /**
  * Get path to built-in interactive assets directory.
  * - For Bun binary: assets/ next to executable
@@ -432,7 +427,6 @@ interface PackageJson {
 		name?: string;
 		configDir?: string;
 		disableVersionCheck?: boolean;
-		changelogUrl?: string;
 	};
 }
 
@@ -445,7 +439,6 @@ export const APP_TITLE = "Kin";
 export const CONFIG_DIR_NAME: string = pkg.kinConfig?.configDir || ".kin";
 export const VERSION: string = pkg.version || "0.0.0";
 export const VERSION_CHECK_DISABLED: boolean = pkg.kinConfig?.disableVersionCheck === true;
-export const CHANGELOG_URL: string = pkg.kinConfig?.changelogUrl || "https://kin.dev/changelog";
 
 // e.g., KIN_CODING_AGENT_DIR or TAU_CODING_AGENT_DIR
 export const ENV_AGENT_DIR = `${APP_NAME.toUpperCase()}_CODING_AGENT_DIR`;
