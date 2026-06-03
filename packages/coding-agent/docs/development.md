@@ -5,8 +5,8 @@ See [AGENTS.md](../../../AGENTS.md) for additional guidelines.
 ## Setup
 
 ```bash
-git clone https://github.com/earendil-works/kin-mono
-cd kin-mono
+git clone https://github.com/lando22/kin
+cd kin
 npm install
 npm run build
 ```
@@ -14,10 +14,10 @@ npm run build
 Run from source:
 
 ```bash
-/path/to/kin-mono/kin-test.sh
+/path/to/kin/kin-test.sh
 ```
 
-The script can be run from any directory. Pi keeps the caller's current working directory.
+The script can be run from any directory. Kin keeps the caller's current working directory.
 
 ## Forking / Rebranding
 

@@ -1,6 +1,6 @@
 > pi can help you create pi packages. Ask it to bundle your extensions, skills, prompt templates, or themes.
 
-# Pi Packages
+# Kin Packages
 
 Pi packages bundle extensions, skills, prompt templates, and themes so you can share them through npm or git. A package can declare resources in `package.json` under the `pi` key, or use conventional directories.
 

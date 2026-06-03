@@ -60,7 +60,7 @@ export default function (pi: ExtensionAPI) {
 }
 ```
 
-The extension factory can also be `async`. For dynamic model discovery, fetch and register models in the factory instead of `session_start`. pi waits for the factory before startup continues, so the provider is available during interactive startup and to `pi --list-models`.
+The extension factory can also be `async`. For dynamic model discovery, fetch and register models in the factory instead of `session_start`. kin waits for the factory before startup continues, so the provider is available during interactive startup and to `kin --list-models`.
 
 ## Override Existing Provider
 
@@ -346,12 +346,12 @@ interface OAuthCredentials {
 For providers with non-standard APIs, implement `streamSimple`. Study the existing provider implementations before writing your own:
 
 **Reference implementations:**
-- [anthropic.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/ai/src/providers/anthropic.ts) - Anthropic Messages API
-- [mistral.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/ai/src/providers/mistral.ts) - Mistral Conversations API
-- [openai-completions.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/ai/src/providers/openai-completions.ts) - OpenAI Chat Completions
-- [openai-responses.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/ai/src/providers/openai-responses.ts) - OpenAI Responses API
-- [google.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/ai/src/providers/google.ts) - Google Generative AI
-- [amazon-bedrock.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/ai/src/providers/amazon-bedrock.ts) - AWS Bedrock
+- [anthropic.ts](https://github.com/lando22/kin/blob/main/packages/ai/src/providers/anthropic.ts) - Anthropic Messages API
+- [mistral.ts](https://github.com/lando22/kin/blob/main/packages/ai/src/providers/mistral.ts) - Mistral Conversations API
+- [openai-completions.ts](https://github.com/lando22/kin/blob/main/packages/ai/src/providers/openai-completions.ts) - OpenAI Chat Completions
+- [openai-responses.ts](https://github.com/lando22/kin/blob/main/packages/ai/src/providers/openai-responses.ts) - OpenAI Responses API
+- [google.ts](https://github.com/lando22/kin/blob/main/packages/ai/src/providers/google.ts) - Google Generative AI
+- [amazon-bedrock.ts](https://github.com/lando22/kin/blob/main/packages/ai/src/providers/amazon-bedrock.ts) - AWS Bedrock
 
 ### Stream Pattern
 
@@ -514,7 +514,7 @@ When a request exceeds the model's context window, pi can recover automatically 
 Detection runs on the finalized assistant message:
 
 - `stopReason === "error"`
-- `errorMessage` matches one of pi's known overflow patterns (see [`packages/ai/src/utils/overflow.ts`](https://github.com/earendil-works/kin-mono/blob/main/packages/ai/src/utils/overflow.ts))
+- `errorMessage` matches one of pi's known overflow patterns (see [`packages/ai/src/utils/overflow.ts`](https://github.com/lando22/kin/blob/main/packages/ai/src/utils/overflow.ts))
 
 If your provider returns overflow errors with a message pi does not recognize, normalize the error from the same extension that registers the provider. Use a `message_end` handler to rewrite the assistant message so its `errorMessage` starts with a phrase pi recognizes. The generic fallback `context_length_exceeded` is the safest choice.
 
@@ -577,7 +577,7 @@ pi.registerProvider("my-provider", {
 
 ## Testing Your Implementation
 
-Test your provider against the same test suites used by built-in providers. Copy and adapt these test files from [packages/ai/test/](https://github.com/earendil-works/kin-mono/tree/main/packages/ai/test):
+Test your provider against the same test suites used by built-in providers. Copy and adapt these test files from [packages/ai/test/](https://github.com/lando22/kin/tree/main/packages/ai/test):
 
 | Test | Purpose |
 |------|---------|

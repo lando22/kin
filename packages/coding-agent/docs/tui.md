@@ -4,7 +4,7 @@
 
 Extensions and custom tools can render custom TUI components for interactive user interfaces. This page covers the component system and available building blocks.
 
-**Source:** [`@landongarrison/kin-tui`](https://github.com/earendil-works/kin-mono/tree/main/packages/tui)
+**Source:** [`@landongarrison/kin-tui`](https://github.com/lando22/kin/tree/main/packages/tui)
 
 ## Component Interface
 

@@ -52,7 +52,7 @@ vim ~/.kin/agent/themes/my-theme.json
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/earendil-works/kin/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+  "$schema": "https://raw.githubusercontent.com/lando22/kin/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
   "name": "my-theme",
   "vars": {
     "primary": "#00aaff",
@@ -122,7 +122,7 @@ vim ~/.kin/agent/themes/my-theme.json
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/earendil-works/kin/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+  "$schema": "https://raw.githubusercontent.com/lando22/kin/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
   "name": "my-theme",
   "vars": {
     "blue": "#0066cc",

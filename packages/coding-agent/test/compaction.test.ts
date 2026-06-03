@@ -1,8 +1,6 @@
 import type { AgentMessage } from "@landongarrison/kin-agent-core";
 import type { AssistantMessage, Usage } from "@landongarrison/kin-ai";
 import { getModel } from "@landongarrison/kin-ai";
-import { readFileSync } from "fs";
-import { join } from "path";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	type CompactionSettings,
@@ -19,8 +17,6 @@ import {
 	buildSessionContext,
 	type CompactionEntry,
 	type ModelChangeEntry,
-	migrateSessionEntries,
-	parseSessionEntries,
 	type SessionEntry,
 	type SessionMessageEntry,
 	type ThinkingLevelChangeEntry,
@@ -31,11 +27,23 @@ import {
 // ============================================================================
 
 function loadLargeSessionEntries(): SessionEntry[] {
-	const sessionPath = join(__dirname, "fixtures/large-session.jsonl");
-	const content = readFileSync(sessionPath, "utf-8");
-	const entries = parseSessionEntries(content);
-	migrateSessionEntries(entries); // Add id/parentId for v1 fixtures
-	return entries.filter((e): e is SessionEntry => e.type !== "session");
+	const entries: SessionEntry[] = [createModelChangeEntry("anthropic", "claude-sonnet-4-5")];
+	const longUserContent = "context ".repeat(250);
+	const longAssistantContent = "response ".repeat(250);
+
+	for (let i = 0; i < 75; i++) {
+		entries.push(createMessageEntry(createUserMessage(`Synthetic user turn ${i}: ${longUserContent}`)));
+		entries.push(
+			createMessageEntry(
+				createAssistantMessage(
+					`Synthetic assistant turn ${i}: ${longAssistantContent}`,
+					createMockUsage(0, 200, (i + 1) * 1000, 0),
+				),
+			),
+		);
+	}
+
+	return entries;
 }
 
 function createMockUsage(input: number, output: number, cacheRead = 0, cacheWrite = 0): Usage {

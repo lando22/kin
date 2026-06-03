@@ -214,7 +214,7 @@ export default async function (pi: ExtensionAPI) {
 }
 ```
 
-This pattern makes the fetched models available during normal startup and to `pi --list-models`.
+This pattern makes the fetched models available during normal startup and to `kin --list-models`.
 
 ### Extension Styles
 
@@ -675,7 +675,7 @@ Use this to update extension UI when `pi.setThinkingLevel()`, model changes, or 
 
 Fired after `tool_execution_start`, before the tool executes. **Can block.** Use `isToolCallEventType` to narrow and get typed inputs.
 
-Before `tool_call` runs, pi waits for previously emitted Agent events to finish draining through `AgentSession`. This means `ctx.sessionManager` is up to date through the current assistant tool-calling message.
+Before `tool_call` runs, kin waits for previously emitted Agent events to finish draining through `AgentSession`. This means `ctx.sessionManager` is up to date through the current assistant tool-calling message.
 
 In the default parallel tool execution mode, sibling tool calls from the same assistant message are preflighted sequentially, then executed concurrently. `tool_call` is not guaranteed to see sibling tool results from that same assistant message in `ctx.sessionManager`.
 
@@ -1373,7 +1373,7 @@ Labels persist in the session and survive restarts. Use them to mark important p
 
 Register a command.
 
-If multiple extensions register the same command name, pi keeps them all and assigns numeric invocation suffixes in load order, for example `/review:1` and `/review:2`.
+If multiple extensions register the same command name, kin keeps them all and assigns numeric invocation suffixes in load order, for example `/review:1` and `/review:2`.
 
 ```typescript
 pi.registerCommand("stats", {
@@ -1544,7 +1544,7 @@ Register or override a model provider dynamically. Useful for proxies, custom en
 
 Calls made during the extension factory function are queued and applied once the runner initialises. Calls made after that — for example from a command handler following a user setup flow — take effect immediately without requiring a `/reload`.
 
-If you need to discover models from a remote endpoint, prefer an async extension factory over deferring the fetch to `session_start`. pi waits for the factory before startup continues, so the registered models are available immediately, including to `pi --list-models`.
+If you need to discover models from a remote endpoint, prefer an async extension factory over deferring the fetch to `session_start`. kin waits for the factory before startup continues, so the registered models are available immediately, including to `kin --list-models`.
 
 ```typescript
 // Register a new provider with custom models
@@ -1833,7 +1833,7 @@ pi -e ./tool-override.ts
 Alternatively, use `--no-builtin-tools` to start without any built-in tools while keeping extension tools enabled:
 ```bash
 # No built-in tools, only extension tools
-pi --no-builtin-tools -e ./my-extension.ts
+kin --no-builtin-tools -e ./my-extension.ts
 ```
 
 See [examples/extensions/tool-override.ts](../examples/extensions/tool-override.ts) for a complete example that overrides `read` with logging and access control.
@@ -1845,11 +1845,11 @@ See [examples/extensions/tool-override.ts](../examples/extensions/tool-override.
 **Your implementation must match the exact result shape**, including the `details` type. The UI and session logic depend on these shapes for rendering and state tracking.
 
 Built-in tool implementations:
-- [read.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/coding-agent/src/core/tools/read.ts) - `ReadToolDetails`
-- [bash.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/coding-agent/src/core/tools/bash.ts) - `BashToolDetails`
-- [edit.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/coding-agent/src/core/tools/edit.ts)
-- [write.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/coding-agent/src/core/tools/write.ts)
-- [definition.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/coding-agent/src/core/tools/definition.ts) - `DefinitionToolDetails`
+- [read.ts](https://github.com/lando22/kin/blob/main/packages/coding-agent/src/core/tools/read.ts) - `ReadToolDetails`
+- [bash.ts](https://github.com/lando22/kin/blob/main/packages/coding-agent/src/core/tools/bash.ts) - `BashToolDetails`
+- [edit.ts](https://github.com/lando22/kin/blob/main/packages/coding-agent/src/core/tools/edit.ts)
+- [write.ts](https://github.com/lando22/kin/blob/main/packages/coding-agent/src/core/tools/write.ts)
+- [definition.ts](https://github.com/lando22/kin/blob/main/packages/coding-agent/src/core/tools/definition.ts) - `DefinitionToolDetails`
 
 ### Remote Execution
 
@@ -1972,7 +1972,7 @@ export default function (pi: ExtensionAPI) {
 
 ### Custom Rendering
 
-Tools can provide `renderCall` and `renderResult` for custom TUI display. See [tui.md](tui.md) for the full component API and [tool-execution.ts](https://github.com/earendil-works/kin-mono/blob/main/packages/coding-agent/src/modes/interactive/components/tool-execution.ts) for how tool rows are composed.
+Tools can provide `renderCall` and `renderResult` for custom TUI display. See [tui.md](tui.md) for the full component API and [tool-execution.ts](https://github.com/lando22/kin/blob/main/packages/coding-agent/src/modes/interactive/components/tool-execution.ts) for how tool rows are composed.
 
 By default, tool output is wrapped in a `Box` that handles padding and background. A defined `renderCall` or `renderResult` must return a `Component`. If a slot renderer is not defined, `tool-execution.ts` uses fallback rendering for that slot.
 
