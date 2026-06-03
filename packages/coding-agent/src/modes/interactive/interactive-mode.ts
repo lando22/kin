@@ -70,7 +70,7 @@ import type {
 } from "../../core/extensions/index.ts";
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/footer-data-provider.ts";
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
-import { getKinMemoryDir, getMemoryDir, resetKinMemory } from "../../core/kin-memory.ts";
+import { getMemoryDir, resetKinMemory, shouldRunFirstRunOnboarding } from "../../core/kin-memory.ts";
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider } from "../../core/model-resolver.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
@@ -3877,9 +3877,9 @@ export class InteractiveMode {
 		this.ui.requestRender();
 	}
 
-	/** Returns true if Kin has never been set up on this machine (no ~/.kin/ directory). */
+	/** Returns true until Kin has a non-blank personal portrait. */
 	private isFirstRun(): boolean {
-		return !fs.existsSync(getKinMemoryDir());
+		return shouldRunFirstRunOnboarding();
 	}
 
 	/**

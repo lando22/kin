@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { readCorpusIndex } from "../src/core/kin-memory.js";
+import { readCorpusIndex, shouldRunFirstRunOnboarding } from "../src/core/kin-memory.js";
 
 describe("readCorpusIndex", () => {
 	let home: string;
@@ -53,5 +53,15 @@ describe("readCorpusIndex", () => {
 
 		expect(readCorpusIndex(home)).toEqual([]);
 		expect(readCorpusIndex(join(home, "does-not-exist"))).toEqual([]);
+	});
+
+	test("first-run onboarding waits for a non-blank personal portrait", () => {
+		expect(shouldRunFirstRunOnboarding(home)).toBe(true);
+
+		writeFileSync(join(memoryDir, "MEMORY.md"), "   \n\n");
+		expect(shouldRunFirstRunOnboarding(home)).toBe(true);
+
+		writeFileSync(join(memoryDir, "MEMORY.md"), "Landon likes direct, warm collaboration.\n");
+		expect(shouldRunFirstRunOnboarding(home)).toBe(false);
 	});
 });

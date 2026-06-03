@@ -49,6 +49,11 @@ export function readMemoryContent(homeDir = homedir()): string | null {
 	return readTrimmedFile(join(getMemoryDir(homeDir), "MEMORY.md"));
 }
 
+/** First-run onboarding is needed until a non-blank personal portrait exists. */
+export function shouldRunFirstRunOnboarding(homeDir = homedir()): boolean {
+	return readMemoryContent(homeDir) === null;
+}
+
 /** One corpus note as it appears in the always-loaded index: filename, one-line summary, and age. */
 export interface CorpusIndexEntry {
 	file: string;
