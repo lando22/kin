@@ -5,7 +5,6 @@
 </p>
 <p align="center">
   <a href="https://discord.com/invite/3cU7Bz4UPx"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
-  <a href="https://www.npmjs.com/package/@landongarrison/kin-coding-agent"><img alt="npm" src="https://img.shields.io/npm/v/@landongarrison/kin-coding-agent?style=flat-square" /></a>
 </p>
 <p align="center">
   <a href="https://kin.dev">kin.dev</a> domain graciously donated by
@@ -65,12 +64,6 @@ I regularly publish my own `kin-mono` work sessions here:
 
 ```bash
 curl -fsSL https://lando22.github.io/kin/install.sh | sh
-```
-
-Or with npm:
-
-```bash
-npm install -g @landongarrison/kin-coding-agent
 ```
 
 Authenticate with an API key:

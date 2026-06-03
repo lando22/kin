@@ -10,19 +10,14 @@ On linux or mac you can install Kin with curl:
 curl -fsSL https://lando22.github.io/kin/install.sh | sh
 ```
 
-Or alternatively with npm:
+To uninstall kin itself:
 
 ```bash
-npm install -g @landongarrison/kin-coding-agent
+rm -rf ~/.local/share/kin
+rm -f ~/.local/bin/kin
 ```
 
-To uninstall kin itself, use npm for curl and npm installs:
-
-```bash
-npm uninstall -g @landongarrison/kin-coding-agent
-```
-
-For pnpm, Yarn, or Bun installs, use the matching global remove command: `pnpm remove -g @landongarrison/kin-coding-agent`, `yarn global remove @landongarrison/kin-coding-agent`, or `bun uninstall -g @landongarrison/kin-coding-agent`.
+Uninstalling kin leaves settings, credentials, sessions, and installed kin packages in `~/.kin/`.
 
 Then run it in a project directory:
 

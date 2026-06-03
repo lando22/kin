@@ -27,7 +27,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/earendil-works/kin-mono.git",
+		"url": "git+https://github.com/lando22/kin.git",
 		"directory": "packages/tui"
 	},
 	"engines": {

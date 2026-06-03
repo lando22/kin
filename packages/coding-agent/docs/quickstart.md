@@ -5,40 +5,24 @@ This page gets you from install to a useful first kin session.
 ## Install
 
 On macOS or Linux, install Kin with the one-line installer. It downloads a
-prebuilt `kin` binary (no Node.js required) and falls back to npm if your
-platform has no binary:
+prebuilt `kin` binary (no Node.js required):
 
 ```bash
 curl -fsSL https://lando22.github.io/kin/install.sh | sh
 ```
 
-Or install from npm directly (requires Node.js 22+):
-
-```bash
-npm install -g @landongarrison/kin-coding-agent
-```
-
-On Windows, use npm or see [Windows setup](windows.md).
+On Windows, download the latest `kin-windows-*.zip` from [GitHub Releases](https://github.com/lando22/kin/releases) or see [Windows setup](windows.md).
 
 ### Uninstall
 
-Use the package manager that installed kin. The curl installer uses npm globally, so curl and npm installs are removed with npm:
+Remove the files created by the curl installer:
 
 ```bash
-# curl installer or npm install -g
-npm uninstall -g @landongarrison/kin-coding-agent
-
-# pnpm
-pnpm remove -g @landongarrison/kin-coding-agent
-
-# Yarn
-yarn global remove @landongarrison/kin-coding-agent
-
-# Bun
-bun uninstall -g @landongarrison/kin-coding-agent
+rm -rf ~/.local/share/kin
+rm -f ~/.local/bin/kin
 ```
 
-Uninstalling kin leaves settings, credentials, sessions, and installed kin packages in `~/.kin/agent/`.
+Uninstalling kin leaves settings, credentials, sessions, and installed kin packages in `~/.kin/`.
 
 Then start kin in the project directory you want it to work on:
 

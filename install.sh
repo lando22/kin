@@ -6,8 +6,7 @@
 #   curl -fsSL https://lando22.github.io/kin/install.sh | sh
 #
 # Downloads a prebuilt `kin` binary for your platform from GitHub Releases
-# (no Node.js required). Falls back to a global npm install if no prebuilt
-# binary matches your platform.
+# (no Node.js required).
 #
 # Environment overrides:
 #   KIN_INSTALL_REPO    GitHub repo that hosts the release binaries
@@ -15,13 +14,10 @@
 #
 # NOTE: For the binary path to work, that repo must be PUBLIC and have a
 # GitHub Release with assets named kin-<os>-<arch>.tar.gz (the build-binaries
-# workflow produces these on tag push). Until then, this script automatically
-# falls back to installing from npm.
+# workflow produces these on tag push).
 #   KIN_INSTALL_VERSION Tag to install, e.g. v0.75.3 (default: latest)
 #   KIN_INSTALL_DIR     Where program files go (default: ~/.local/share/kin)
 #   KIN_INSTALL_BIN     Where the `kin` symlink goes (default: ~/.local/bin)
-#   KIN_NPM_PACKAGE     npm package for the fallback path
-#                       (default: @landongarrison/kin-coding-agent)
 #
 set -eu
 
@@ -32,7 +28,6 @@ REPO="${KIN_INSTALL_REPO:-lando22/kin}"
 VERSION="${KIN_INSTALL_VERSION:-latest}"
 INSTALL_DIR="${KIN_INSTALL_DIR:-$HOME/.local/share/kin}"
 BIN_DIR="${KIN_INSTALL_BIN:-$HOME/.local/bin}"
-NPM_PACKAGE="${KIN_NPM_PACKAGE:-@landongarrison/kin-coding-agent}"
 
 # ----------------------------------------------------------------------------
 # Pretty output
@@ -111,28 +106,13 @@ detect_platform() {
 }
 
 # ----------------------------------------------------------------------------
-# npm fallback
-# ----------------------------------------------------------------------------
-install_via_npm() {
-	step "Falling back to npm"
-	have npm || die "No prebuilt binary for your platform and npm is not installed.
-       Install Node.js 22+ (https://nodejs.org) and re-run, or install manually:
-         npm install -g $NPM_PACKAGE"
-	info "npm install -g $NPM_PACKAGE"
-	npm install -g "$NPM_PACKAGE" || die "npm install failed."
-	ok "Installed $NPM_PACKAGE via npm."
-	printf '\n%sRun %skin%s to get started.%s\n\n' "$BOLD" "$CYAN" "$RESET$BOLD" "$RESET"
-	exit 0
-}
-
-# ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
 banner
 
 platform="$(detect_platform)" || {
 	warn "Unsupported platform: $(uname -s)/$(uname -m)."
-	install_via_npm
+	die "No prebuilt Kin binary is available for this platform."
 }
 ok "Detected platform: ${BOLD}${platform}${RESET}"
 
@@ -151,8 +131,8 @@ trap 'rm -rf "$tmp"' EXIT INT TERM
 step "Downloading Kin (${VERSION})"
 info "$url"
 if ! download "$url" "$tmp/$asset"; then
-	warn "Could not download a prebuilt binary (release or asset may not exist yet)."
-	install_via_npm
+	die "Could not download $asset. The GitHub release or asset may not exist yet:
+       $url"
 fi
 ok "Downloaded $asset"
 

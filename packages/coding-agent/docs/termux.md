@@ -1,6 +1,6 @@
 # Termux (Android) Setup
 
-Pi runs on Android via [Termux](https://termux.dev/), a terminal emulator and Linux environment for Android.
+Kin can run on Android via [Termux](https://termux.dev/), a terminal emulator and Linux environment for Android, after you build or install a compatible binary.
 
 ## Prerequisites
 
@@ -14,16 +14,16 @@ Pi runs on Android via [Termux](https://termux.dev/), a terminal emulator and Li
 pkg update && pkg upgrade
 
 # Install dependencies
-pkg install nodejs termux-api git
+pkg install termux-api git
 
-# Install pi
-npm install -g @landongarrison/kin-coding-agent
+# Kin does not publish a Termux npm package or Android prebuilt binary yet.
+# Build from source or use a supported macOS/Linux/Windows release asset.
 
 # Create config directory
 mkdir -p ~/.kin/agent
 
-# Run pi
-pi
+# Run kin after installing a compatible binary
+kin
 ```
 
 ## Clipboard Support

@@ -19,12 +19,6 @@ macOS / Linux:
 curl -fsSL https://lando22.github.io/kin/install.sh | sh
 ```
 
-Or install from npm:
-
-```bash
-npm install -g @landongarrison/kin-coding-agent
-```
-
 Then run:
 
 ```bash

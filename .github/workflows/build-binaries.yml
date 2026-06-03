@@ -48,7 +48,9 @@ jobs:
           
           # Extract changelog section for this version
           cd packages/coding-agent
-          awk "/^## \[${VERSION}\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md > /tmp/release-notes.md
+          if [ -f CHANGELOG.md ]; then
+            awk "/^## \[${VERSION}\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md > /tmp/release-notes.md
+          fi
           
           # If empty, use a default message
           if [ ! -s /tmp/release-notes.md ]; then
@@ -65,18 +67,18 @@ jobs:
           gh release create "${RELEASE_TAG}" \
             --title "${RELEASE_TAG}" \
             --notes-file /tmp/release-notes.md \
-            pi-darwin-arm64.tar.gz \
-            pi-darwin-x64.tar.gz \
-            pi-linux-x64.tar.gz \
-            pi-linux-arm64.tar.gz \
-            pi-windows-x64.zip \
-            pi-windows-arm64.zip \
+            kin-darwin-arm64.tar.gz \
+            kin-darwin-x64.tar.gz \
+            kin-linux-x64.tar.gz \
+            kin-linux-arm64.tar.gz \
+            kin-windows-x64.zip \
+            kin-windows-arm64.zip \
             2>/dev/null || \
           gh release upload "${RELEASE_TAG}" \
-            pi-darwin-arm64.tar.gz \
-            pi-darwin-x64.tar.gz \
-            pi-linux-x64.tar.gz \
-            pi-linux-arm64.tar.gz \
-            pi-windows-x64.zip \
-            pi-windows-arm64.zip \
+            kin-darwin-arm64.tar.gz \
+            kin-darwin-x64.tar.gz \
+            kin-linux-x64.tar.gz \
+            kin-linux-arm64.tar.gz \
+            kin-windows-x64.zip \
+            kin-windows-arm64.zip \
             --clobber
