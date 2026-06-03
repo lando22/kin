@@ -15,7 +15,7 @@
 # NOTE: For the binary path to work, that repo must be PUBLIC and have a
 # GitHub Release with assets named kin-<os>-<arch>.tar.gz (the build-binaries
 # workflow produces these on tag push).
-#   KIN_INSTALL_VERSION Tag to install, e.g. v0.75.3 (default: latest)
+#   KIN_INSTALL_VERSION Tag to install, e.g. v0.1.0 (default: latest)
 #   KIN_INSTALL_DIR     Where program files go (default: ~/.local/share/kin)
 #   KIN_INSTALL_BIN     Where the `kin` symlink goes (default: ~/.local/bin)
 #
@@ -47,14 +47,24 @@ fi
 
 banner() {
 	printf '\n'
-	printf '%s' "$MAGENTA"
-	printf '   ██╗  ██╗██╗███╗   ██╗\n'
-	printf '   ██║ ██╔╝██║████╗  ██║\n'
-	printf '   █████╔╝ ██║██╔██╗ ██║\n'
-	printf '   ██╔═██╗ ██║██║╚██╗██║\n'
-	printf '   ██║  ██╗██║██║ ╚████║\n'
-	printf '   ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝\n'
-	printf '%s' "$RESET"
+	if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+		i=0
+		while [ "$i" -lt 10 ]; do
+			case $((i % 4)) in
+				0) c1="$MAGENTA"; c2="$CYAN"; c3="$GREEN"; c4="$YELLOW"; bar="$MAGENTA■■■■$CYAN■■■■$GREEN■■■■$YELLOW■■■■" ;;
+				1) c1="$CYAN"; c2="$GREEN"; c3="$YELLOW"; c4="$MAGENTA"; bar="$CYAN■■■■$GREEN■■■■$YELLOW■■■■$MAGENTA■■■■" ;;
+				2) c1="$GREEN"; c2="$YELLOW"; c3="$MAGENTA"; c4="$CYAN"; bar="$GREEN■■■■$YELLOW■■■■$MAGENTA■■■■$CYAN■■■■" ;;
+				*) c1="$YELLOW"; c2="$MAGENTA"; c3="$CYAN"; c4="$GREEN"; bar="$YELLOW■■■■$MAGENTA■■■■$CYAN■■■■$GREEN■■■■" ;;
+			esac
+			printf '\r   %s■ %s■%s  %sinstalling kin%s  %s[%s%s]%s' "$c1" "$c2" "$RESET" "$BOLD" "$RESET" "$DIM" "$bar" "$DIM" "$RESET"
+			i=$((i + 1))
+			sleep 0.06
+		done
+		printf '\r\033[K'
+	fi
+	printf '   %s■ %s■%s\n' "$MAGENTA" "$CYAN" "$RESET"
+	printf '   %s■ %s■%s  %sKin%s\n' "$GREEN" "$YELLOW" "$RESET" "$BOLD" "$RESET"
+	printf '   %s[%s■■■■%s■■■■%s■■■■%s■■■■%s]%s\n' "$DIM" "$MAGENTA" "$CYAN" "$GREEN" "$YELLOW" "$DIM" "$RESET"
 	printf '   %sa minimal terminal coding agent%s  %s· github.com/lando22/kin%s\n\n' "$DIM" "$RESET" "$CYAN" "$RESET"
 }
 
