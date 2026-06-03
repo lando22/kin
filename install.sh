@@ -15,7 +15,7 @@
 # NOTE: For the binary path to work, that repo must be PUBLIC and have a
 # GitHub Release with assets named kin-<os>-<arch>.tar.gz (the build-binaries
 # workflow produces these on tag push).
-#   KIN_INSTALL_VERSION Tag to install, e.g. v0.1.0 (default: latest)
+#   KIN_INSTALL_VERSION Tag to install, e.g. v0.1.1 (default: latest)
 #   KIN_INSTALL_DIR     Where program files go (default: ~/.local/share/kin)
 #   KIN_INSTALL_BIN     Where the `kin` symlink goes (default: ~/.local/bin)
 #
