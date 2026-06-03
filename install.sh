@@ -51,10 +51,10 @@ banner() {
 		i=0
 		while [ "$i" -lt 10 ]; do
 			case $((i % 4)) in
-				0) c1="$MAGENTA"; c2="$CYAN"; c3="$GREEN"; c4="$YELLOW"; bar="$MAGENTA■■■■$CYAN■■■■$GREEN■■■■$YELLOW■■■■" ;;
-				1) c1="$CYAN"; c2="$GREEN"; c3="$YELLOW"; c4="$MAGENTA"; bar="$CYAN■■■■$GREEN■■■■$YELLOW■■■■$MAGENTA■■■■" ;;
-				2) c1="$GREEN"; c2="$YELLOW"; c3="$MAGENTA"; c4="$CYAN"; bar="$GREEN■■■■$YELLOW■■■■$MAGENTA■■■■$CYAN■■■■" ;;
-				*) c1="$YELLOW"; c2="$MAGENTA"; c3="$CYAN"; c4="$GREEN"; bar="$YELLOW■■■■$MAGENTA■■■■$CYAN■■■■$GREEN■■■■" ;;
+				0) c1="$MAGENTA"; c2="$CYAN"; c3="$GREEN"; c4="$YELLOW"; bar="${MAGENTA}■■■■${CYAN}■■■■${GREEN}■■■■${YELLOW}■■■■" ;;
+				1) c1="$CYAN"; c2="$GREEN"; c3="$YELLOW"; c4="$MAGENTA"; bar="${CYAN}■■■■${GREEN}■■■■${YELLOW}■■■■${MAGENTA}■■■■" ;;
+				2) c1="$GREEN"; c2="$YELLOW"; c3="$MAGENTA"; c4="$CYAN"; bar="${GREEN}■■■■${YELLOW}■■■■${MAGENTA}■■■■${CYAN}■■■■" ;;
+				*) c1="$YELLOW"; c2="$MAGENTA"; c3="$CYAN"; c4="$GREEN"; bar="${YELLOW}■■■■${MAGENTA}■■■■${CYAN}■■■■${GREEN}■■■■" ;;
 			esac
 			printf '\r   %s■ %s■%s  %sinstalling kin%s  %s[%s%s]%s' "$c1" "$c2" "$RESET" "$BOLD" "$RESET" "$DIM" "$bar" "$DIM" "$RESET"
 			i=$((i + 1))
