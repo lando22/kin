@@ -14,10 +14,10 @@ describe("createAgentSession skills option", () => {
 
 	beforeEach(() => {
 		tempDir = join(tmpdir(), `pi-sdk-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-		skillsDir = join(tempDir, "skills", "test-skill");
+		skillsDir = join(tempDir, "SKILLS", "test-skill");
 		mkdirSync(skillsDir, { recursive: true });
 
-		// Create a test skill in the pi skills directory
+		// Create a test skill in the default personal Kin skills directory.
 		writeFileSync(
 			join(skillsDir, "SKILL.md"),
 			`---
