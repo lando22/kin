@@ -11,6 +11,8 @@ Kin is built from [Pi](https://github.com/badlogic/pi-mono), the minimal termina
 
 Kin keeps that foundation, but puts memory first. The goal is not just an agent that can edit code; it is a collaborator that carries context forward, learns your preferences, and develops a durable picture of your projects.
 
+Kin is still early. Expect rough edges, missing polish, and occasional bugs while the memory-first workflow settles in.
+
 ## Install
 
 macOS / Linux:
