@@ -35,7 +35,7 @@ kin
 
 Kin can use subscription providers through `/login`, or API-key providers through environment variables or the auth file.
 
-### Option 1: subscription login
+### Option 1: Codex subscription login
 
 Start kin and run:
 
@@ -43,14 +43,14 @@ Start kin and run:
 /login
 ```
 
-Then select a provider. Built-in subscription logins include Claude Pro/Max, ChatGPT Plus/Pro (Codex), and GitHub Copilot.
+Then select OpenAI Codex. Built-in subscription logins also include Claude Pro/Max and GitHub Copilot.
 
-### Option 2: API key
+### Option 2: OpenRouter API key
 
 Set an API key before launching kin:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+export OPENROUTER_API_KEY=sk-or-...
 kin
 ```
 
@@ -58,9 +58,21 @@ You can also run `/login` and select an API-key provider to store the key in `~/
 
 See [Providers](providers.md) for all supported providers, environment variables, and cloud-provider setup.
 
+## Onboarding
+
+For your first real run, start Kin's onboarding chat:
+
+```text
+/init
+```
+
+Kin will get to know you personally, learn how you like to work, explore the current project, and write its first memory files. Personal memory lives in `~/.kin/Memory/`; project memory lives in `~/.kin/Projects/`.
+
+If you already have memory and want to refresh it later, run `/reinit` instead. It reconnects with you and the project without wiping the existing picture.
+
 ## First session
 
-Once kin starts, type a request and press Enter:
+Once onboarding is done, type a request and press Enter:
 
 ```text
 Summarize this repository and tell me how to run its checks.
@@ -74,6 +86,17 @@ By default, kin gives the model four tools:
 - `bash` - run shell commands
 
 You can restrict Kin to a narrower built-in set with tool options, for example `read,definition` for inspection without file mutation. Kin runs in your current working directory and can modify files there. Use git or another checkpointing workflow if you want easy rollback.
+
+## Reflect and wake
+
+Kin can carry context forward between days with two headless lifecycle commands:
+
+```bash
+kin reflect
+kin wake
+```
+
+`kin reflect` reviews recent sessions, checks relevant project context, gardens memory, writes a reflection to `~/.kin/Reflections/`, and may leave an agenda. `kin wake` reads the latest reflection, agenda, memory, and project context, then writes a wake note to `~/.kin/Wakes/` when there is something useful to surface.
 
 ## Give kin project instructions
 

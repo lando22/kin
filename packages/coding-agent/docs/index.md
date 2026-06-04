@@ -1,6 +1,6 @@
 # Kin Documentation
 
-Kin is a minimal terminal coding harness. It is designed to stay small at the core while being extended through TypeScript extensions, skills, prompt templates, themes, and kin packages.
+Kin is a memory-first personal coding agent for your terminal. It remembers who you are, how you work, and what matters inside each project, while staying small at the core and extensible through TypeScript extensions, skills, prompt templates, themes, and kin packages.
 
 ## Quick start
 
@@ -25,13 +25,17 @@ Then run it in a project directory:
 kin
 ```
 
-Authenticate with `/login` for subscription providers, or set an API key such as `ANTHROPIC_API_KEY` before starting kin.
+Authenticate with `/login` for your ChatGPT Plus/Pro Codex subscription, or set an API key such as `OPENROUTER_API_KEY` before starting kin.
+
+Run `/init` on your first launch to start the onboarding chat. Kin will get to know you, learn your collaboration style and goals, explore the current project, and write durable memory under `~/.kin/Memory/` and `~/.kin/Projects/`.
 
 For the full first-run flow, see [Quickstart](quickstart.md).
 
 ## Start here
 
 - [Quickstart](quickstart.md) - install, authenticate, and run a first session.
+- [Quickstart: onboarding](quickstart.md#onboarding) - initialize or refresh Kin's personal and project memory.
+- [Quickstart: reflect and wake](quickstart.md#reflect-and-wake) - review recent work and surface next-day context.
 - [Using Kin](usage.md) - interactive mode, slash commands, context files, and CLI reference.
 - [Providers](providers.md) - subscription and API-key setup for built-in providers.
 - [Settings](settings.md) - global and project settings.

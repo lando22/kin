@@ -1,6 +1,6 @@
 # Providers
 
-Pi supports subscription-based providers via OAuth and API key providers via environment variables or auth file. For each provider, pi knows all available models. The list is updated with every pi release.
+Kin supports subscription-based providers via OAuth and API key providers via environment variables or auth file. For each provider, kin knows all available models. The list is updated with every kin release.
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ Pi supports subscription-based providers via OAuth and API key providers via env
 
 ## Subscriptions
 
-Use `/login` in interactive mode, then select a provider:
+Use `/login` in interactive mode, then select a provider. For most first-time Kin users, OpenAI Codex with a ChatGPT Plus/Pro subscription is the simplest subscription path:
 
 - ChatGPT Plus/Pro (Codex)
 - Claude Pro/Max
@@ -39,11 +39,11 @@ Anthropic subscription auth is active for Claude Pro/Max accounts. Third-party h
 
 ### Environment Variables or Auth File
 
-Use `/login` in interactive mode and select a provider to store an API key in `auth.json`, or set credentials via environment variable:
+Use `/login` in interactive mode and select a provider to store an API key in `auth.json`, or set credentials via environment variable. OpenRouter is the recommended API-key starting point:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-pi
+export OPENROUTER_API_KEY=sk-or-...
+kin
 ```
 
 | Provider | Environment Variable | `auth.json` key |
@@ -83,8 +83,9 @@ Store credentials in `~/.kin/agent/auth.json`:
 
 ```json
 {
-  "anthropic": { "type": "api_key", "key": "sk-ant-..." },
+  "openrouter": { "type": "api_key", "key": "sk-or-..." },
   "openai": { "type": "api_key", "key": "sk-..." },
+  "anthropic": { "type": "api_key", "key": "sk-ant-..." },
   "deepseek": { "type": "api_key", "key": "sk-..." },
   "google": { "type": "api_key", "key": "..." },
   "opencode": { "type": "api_key", "key": "..." },
@@ -105,16 +106,16 @@ The `key` field supports three formats:
 
 - **Shell command:** `"!command"` executes and uses stdout (cached for process lifetime)
   ```json
-  { "type": "api_key", "key": "!security find-generic-password -ws 'anthropic'" }
+  { "type": "api_key", "key": "!security find-generic-password -ws 'openrouter'" }
   { "type": "api_key", "key": "!op read 'op://vault/item/credential'" }
   ```
 - **Environment variable:** Uses the value of the named variable
   ```json
-  { "type": "api_key", "key": "MY_ANTHROPIC_KEY" }
+  { "type": "api_key", "key": "MY_OPENROUTER_KEY" }
   ```
 - **Literal value:** Used directly
   ```json
-  { "type": "api_key", "key": "sk-ant-..." }
+  { "type": "api_key", "key": "sk-or-..." }
   ```
 
 OAuth credentials are also stored here after `/login` and managed automatically.

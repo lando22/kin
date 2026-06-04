@@ -29,14 +29,14 @@ kin
 
 On first launch, Kin will help you connect a model provider and start onboarding.
 
-You can authenticate with an API key:
+You can authenticate with an OpenRouter API key:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+export OPENROUTER_API_KEY=sk-or-...
 kin
 ```
 
-Or start Kin and use `/login` for supported OAuth flows:
+Or start Kin and use `/login` with your ChatGPT Plus/Pro subscription for Codex:
 
 ```bash
 kin
@@ -49,7 +49,18 @@ Once you are in a project, talk to Kin naturally:
 Explain this codebase and write down anything important you should remember.
 ```
 
-Kin stores memory under `~/.kin/` and project context under `~/.kin/Projects/`.
+Run `/init` for the first onboarding conversation. Kin will get to know you personally, learn how you like to work, explore the current project, and write the first version of its memory.
+
+Kin stores personal memory under `~/.kin/Memory/`, project context under `~/.kin/Projects/`, reflections under `~/.kin/Reflections/`, and wake notes under `~/.kin/Wakes/`.
+
+## Memory Lifecycle
+
+Kin's memory is meant to last across your whole coding journey, not just the current chat window.
+
+- **Onboarding:** `/init` starts a conversational first run. Kin learns who you are, how you think and collaborate, what you are building, and what goals or constraints should shape future work. `/reinit` refreshes that picture later without wiping existing memory.
+- **Working memory:** During normal sessions, Kin quietly uses your personal portrait and the current project's context so it can pick up where you left off.
+- **Reflect:** `kin reflect` runs a headless reflection cycle. Kin reviews recent sessions, checks relevant project context, gardens memory, records what happened, and can leave an agenda for the next day.
+- **Wake:** `kin wake` reads the latest reflection, agenda, memory, and project context. If there is something useful to say or safe follow-up work to surface, it writes a wake note for the day.
 
 ## What Kin Does
 

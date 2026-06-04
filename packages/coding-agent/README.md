@@ -12,7 +12,7 @@
   <a href="https://exe.dev"><img src="docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
 </p>
 
-Kin is a minimal terminal coding harness. Adapt kin to your workflows, not the other way around, without having to fork and modify kin internals. Extend it with TypeScript [Extensions](#extensions), [Skills](#skills), [Prompt Templates](#prompt-templates), and [Themes](#themes). Put your extensions, skills, prompt templates, and themes in [Kin Packages](#kin-packages) and share them with others via npm or git.
+Kin is a memory-first personal coding agent for your terminal. It remembers who you are, how you work, what matters inside each project, and carries that context across your whole coding journey. Adapt kin to your workflows, not the other way around, without having to fork and modify kin internals. Extend it with TypeScript [Extensions](#extensions), [Skills](#skills), [Prompt Templates](#prompt-templates), and [Themes](#themes). Put your extensions, skills, prompt templates, and themes in [Kin Packages](#kin-packages) and share them with others via npm or git.
 
 Kin ships with powerful defaults but skips features like sub agents and plan mode. Instead, you can ask kin to build what you want or install a third party kin package that matches your workflow.
 
@@ -37,6 +37,7 @@ I regularly publish my own `kin-mono` work sessions here:
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [Memory & Onboarding](#memory--onboarding)
 - [Providers & Models](#providers--models)
 - [Interactive Mode](#interactive-mode)
   - [Editor](#editor)
@@ -66,23 +67,37 @@ I regularly publish my own `kin-mono` work sessions here:
 curl -fsSL https://lando22.github.io/kin/install.sh | sh
 ```
 
-Authenticate with an API key:
+Authenticate with an OpenRouter API key:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+export OPENROUTER_API_KEY=sk-or-...
 kin
 ```
 
-Or use your existing subscription:
+Or use your ChatGPT Plus/Pro subscription for Codex:
 
 ```bash
 kin
 /login  # Then select provider
 ```
 
-Then just talk to kin. By default, kin gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [kin packages](#kin-packages).
+Then run `/init` to start Kin's onboarding conversation, or just talk to kin. By default, kin gives the model four tools: `read`, `write`, `edit`, and `bash`. The model uses these to fulfill your requests. Add capabilities via [skills](#skills), [prompt templates](#prompt-templates), [extensions](#extensions), or [kin packages](#kin-packages).
 
 **Platform notes:** [Windows](docs/windows.md) | [Termux (Android)](docs/termux.md) | [tmux](docs/tmux.md) | [Terminal setup](docs/terminal-setup.md) | [Shell aliases](docs/shell-aliases.md)
+
+---
+
+## Memory & Onboarding
+
+Kin is designed to become more useful over time. Its memory is not a side feature; it is how Kin stays with you across projects, sessions, decisions, and long-running work.
+
+- **Personal memory:** Kin keeps a portrait of who you are, how you like to work, what you care about, and the collaboration style that helps you do your best work. It lives in `~/.kin/Memory/`.
+- **Project memory:** Kin keeps stable project context in `~/.kin/Projects/`, including what the codebase is, how to build and test it, important conventions, current goals, and decisions that should not be rediscovered every session.
+- **Onboarding:** Run `/init` for a first conversation where Kin gets to know you personally, then explores the current project and writes its first memory files. Run `/reinit` later to refresh that picture without wiping existing memory.
+- **Reflect:** Run `kin reflect` after meaningful work or at the end of a day. Kin reviews recent sessions, reads relevant context, gardens memory, writes a reflection to `~/.kin/Reflections/`, and may leave an agenda for tomorrow.
+- **Wake:** Run `kin wake` when you come back. Kin reads the latest reflection, any agenda, personal memory, and project context, then writes a wake note to `~/.kin/Wakes/` if there is something useful to surface.
+
+Memory should feel quiet in normal use. Kin does not need to announce every remembered fact; it uses memory to make better calls, ask better questions, and avoid making you repeat yourself.
 
 ---
 
@@ -161,6 +176,8 @@ Type `/` in the editor to trigger commands. [Extensions](#extensions) can regist
 
 | Command | Description |
 |---------|-------------|
+| `/init` | Start Kin onboarding and initialize memory |
+| `/reinit` | Re-run Kin onboarding without wiping memory |
 | `/login`, `/logout` | OAuth authentication |
 | `/model` | Switch models |
 | `/scoped-models` | Enable/disable models for Ctrl+P cycling |
