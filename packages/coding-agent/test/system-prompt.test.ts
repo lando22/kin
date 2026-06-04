@@ -27,14 +27,14 @@ describe("buildSystemPrompt", () => {
 	});
 
 	describe("default tools", () => {
-		test("describes Pi as a personal memory-focused agent", () => {
+		test("describes Kin as a personal memory-focused agent", () => {
 			const prompt = buildSystemPrompt({
 				contextFiles: [],
 				skills: [],
 				cwd: process.cwd(),
 			});
 
-			expect(prompt).toContain("You are Kin — a personal coding agent built for Landon.");
+			expect(prompt).toContain("You are Kin — a personal coding agent.");
 			expect(prompt).toContain("Memory has two layers:");
 			// Kin should own its memory in the first person, not narrate it as an external source.
 			expect(prompt).toContain("It's your own knowledge, not an external source");

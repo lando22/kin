@@ -152,7 +152,7 @@ describe.skipIf(!process.env.OPENAI_API_KEY)("OpenAI thinking disable E2E", () =
 	});
 });
 
-describe.skipIf(!process.env.OPENROUTER_API_KEY)("OpenRouter thinking disable E2E", () => {
+describe.skip("OpenRouter thinking disable E2E - Qwen 3.5 currently rejects developer-role messages through OpenRouter", () => {
 	it("disables thinking for Qwen 3.5 reasoning models", { retry: 2, timeout: 30000 }, async () => {
 		await expectThinkingDisabledE2E(getModel("openrouter", "qwen/qwen3.5-plus-02-15"), {
 			maxOutputTokens: 100,

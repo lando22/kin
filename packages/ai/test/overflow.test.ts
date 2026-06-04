@@ -49,6 +49,11 @@ describe("isContextOverflow", () => {
 		expect(isContextOverflow(message, 131072)).toBe(true);
 	});
 
+	it("detects OpenRouter text input byte-size limit errors", () => {
+		const message = createErrorMessage("400 The total text input size exceeds 8 MB");
+		expect(isContextOverflow(message, 10000000)).toBe(true);
+	});
+
 	it("does not treat generic non-overflow Ollama errors as overflow", () => {
 		const message = createErrorMessage("500 `model runner crashed unexpectedly`");
 		expect(isContextOverflow(message, 32768)).toBe(false);

@@ -126,9 +126,9 @@ describe("Context overflow error handling", () => {
 	describe("GitHub Copilot (OAuth)", () => {
 		// OpenAI model via Copilot
 		it.skipIf(!githubCopilotToken)(
-			"gpt-4o - should detect overflow via isContextOverflow",
+			"gpt-4.1 - should detect overflow via isContextOverflow",
 			async () => {
-				const model = getModel("github-copilot", "gpt-4o");
+				const model = getModel("github-copilot", "gpt-4.1");
 				const result = await testContextOverflow(model, githubCopilotToken!);
 				logResult(result);
 
@@ -174,8 +174,8 @@ describe("Context overflow error handling", () => {
 	});
 
 	describe.skipIf(!process.env.OPENAI_API_KEY)("OpenAI Responses", () => {
-		it("gpt-4o - should detect overflow via isContextOverflow", async () => {
-			const model = getModel("openai", "gpt-4o");
+		it("gpt-4.1 - should detect overflow via isContextOverflow", async () => {
+			const model = getModel("openai", "gpt-4.1");
 			const result = await testContextOverflow(model, process.env.OPENAI_API_KEY!);
 			logResult(result);
 
@@ -503,7 +503,7 @@ describe("Context overflow error handling", () => {
 			logResult(result);
 
 			expect(result.stopReason).toBe("error");
-			expect(result.errorMessage).toMatch(/maximum context length is \d+ tokens/i);
+			expect(result.errorMessage).toMatch(/maximum context length is \d+ tokens|total text input size exceeds/i);
 			expect(isContextOverflow(result.response, model.contextWindow)).toBe(true);
 		}, 120000);
 
@@ -514,7 +514,7 @@ describe("Context overflow error handling", () => {
 			logResult(result);
 
 			expect(result.stopReason).toBe("error");
-			expect(result.errorMessage).toMatch(/maximum context length is \d+ tokens/i);
+			expect(result.errorMessage).toMatch(/maximum context length is \d+ tokens|total text input size exceeds/i);
 			expect(isContextOverflow(result.response, model.contextWindow)).toBe(true);
 		}, 120000);
 
@@ -547,7 +547,7 @@ describe("Context overflow error handling", () => {
 			logResult(result);
 
 			expect(result.stopReason).toBe("error");
-			expect(result.errorMessage).toMatch(/maximum context length is \d+ tokens/i);
+			expect(result.errorMessage).toMatch(/maximum context length is \d+ tokens|total text input size exceeds/i);
 			expect(isContextOverflow(result.response, model.contextWindow)).toBe(true);
 		}, 120000);
 	});

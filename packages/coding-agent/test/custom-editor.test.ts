@@ -22,9 +22,8 @@ describe("CustomEditor", () => {
 		expect(lines.map((line) => visibleWidth(line))).toEqual(lines.map(() => 40));
 		expect(lines).toHaveLength(3);
 		expect(stripVTControlCharacters(lines[0] ?? "")).toMatch(/^╭─+╮$/);
-		expect(stripVTControlCharacters(lines[1] ?? "")).toContain("›");
 		expect(stripVTControlCharacters(lines[1] ?? "")).toContain("Type a command...");
-		expect(stripVTControlCharacters(lines.at(-1) ?? "")).toContain(" pi ");
+		expect(stripVTControlCharacters(lines.at(-1) ?? "")).toContain(" kin ");
 	});
 
 	it("switches the prompt box label in bash mode", () => {

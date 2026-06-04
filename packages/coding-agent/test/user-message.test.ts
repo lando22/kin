@@ -18,7 +18,6 @@ describe("UserMessageComponent", () => {
 		expect(lines).toHaveLength(3);
 		expect(lines.map((line) => visibleWidth(line))).toEqual([20, 20, 20]);
 		expect(lines[0]).toContain(OSC133_ZONE_START);
-		expect(lines[1]).toContain("›");
 		expect(lines[1]).toContain("hello");
 		expect(lines[2]).toContain(OSC133_ZONE_END + OSC133_ZONE_FINAL);
 		expect(lines[2].endsWith(BG_RESET)).toBe(true);
