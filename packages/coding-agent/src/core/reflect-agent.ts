@@ -18,7 +18,7 @@ import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
 import { getMemoryDir, readCorpusHealth } from "./kin-memory.ts";
 import { ageInDays, formatAgeShort } from "./memory-freshness.ts";
-import { formatLocalDate, getAgendaPath, getReflectionPath } from "./reflect.ts";
+import { formatLocalDate, getAgendaPath, getReflectionPath, writeReflection } from "./reflect.ts";
 import { SessionManager } from "./session-manager.ts";
 import { loadSkillsFromDir } from "./skills.ts";
 
@@ -401,5 +401,21 @@ export async function runReflectAgent(options: RunReflectAgentOptions): Promise<
 		await session.prompt(task, { signal } as Parameters<typeof session.prompt>[1]);
 	} finally {
 		session.dispose();
+	}
+
+	// Post-agent check: if the agent loop ended without writing a reflection,
+	// write a minimal marker so the nightly log is unambiguous vs a silent failure.
+	if (!existsSync(reflectionPath)) {
+		writeReflection(
+			[
+				`# Reflection \u2014 ${formatLocalDate(date)}`,
+				"",
+				"Nothing worth preserving today.",
+				"",
+				"The reflect agent ran but either found nothing worth recording or decided not to write. This marker confirms the cycle executed correctly \u2014 no silent failure.",
+			].join("\n"),
+			date,
+		);
+		log("No reflection was written by the agent. Wrote a minimal marker.");
 	}
 }
