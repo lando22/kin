@@ -18,7 +18,7 @@ import type { Model } from "@landongarrison/kin-ai";
 import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
 import { getMemoryDir } from "./kin-memory.ts";
-import { formatLocalDate } from "./reflect.ts";
+import { formatLocalDate, KIN_COMMIT_TRAILER } from "./reflect.ts";
 import { getWakePath } from "./wake.ts";
 
 function buildWakeTaskMessage(options: {
@@ -71,9 +71,11 @@ Decide what to do with the morning. Wake doesn't always mean work — it's just 
 - Create a branch (e.g. \`kin/wake-${dateStr}\` or something descriptive).
 - Do the work using your tools.
 - Run the project's own checks (figure out the command from the repo) and fix anything that breaks.
-- Commit on the branch, push it, and open a PR with \`gh pr create\` — clear title, and a body explaining what you did and what you were unsure about. The PR is how the user will see this.
+- Commit on the branch with the trailer \`${KIN_COMMIT_TRAILER}\` (your nightly reflection uses it to recognize your own work later), push it, and open a PR with \`gh pr create\` — clear title, and a body explaining what you did and what you were unsure about. The PR is how the user will see this.
 - Then write ${options.wakePath} as a short morning message summarizing what you did and linking the PR.
 - If you can't push or open a PR (no \`gh\`, no auth, no remote), leave the work committed on the local branch and say so in the message.
+
+**If the agenda is empty and nothing presses** — check your open questions (\`${memoryDir}/open-questions.md\`, if it exists). Pick one and try to answer it yourself by reading code and git history; update the note with what you found. If you genuinely can't answer it from the code, your morning message can ask the user — one sharp, specific question beats a generic greeting.
 
 Rails: never work on \`main\` — always a branch. Never force-push, merge, or deploy. Keep it scoped to one thing. If your agenda marked something \`safe-unattended: no\`, or you're not confident it's safe to do without supervision, don't do it — write a message proposing it instead.
 

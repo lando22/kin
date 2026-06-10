@@ -13,6 +13,12 @@ import { basename, dirname, join } from "node:path";
 import type { Message, Model } from "@landongarrison/kin-ai";
 import { completeSimple } from "@landongarrison/kin-ai";
 
+/**
+ * Trailer Kin appends to commits it authors. Reflection greps for it to tell Kin's work
+ * from the user's when judging what survived — keep the "Kin" token stable.
+ */
+export const KIN_COMMIT_TRAILER = "Co-Authored-By: Kin <noreply@kin.local>";
+
 // =============================================================================
 // Date helpers (local time, not UTC)
 // =============================================================================

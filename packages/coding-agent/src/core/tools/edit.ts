@@ -23,6 +23,7 @@ import { withFileMutationQueue } from "./file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
 import { invalidArgText, shortenPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
+import { getTsDiagnostics } from "./ts-diagnostics.ts";
 
 type EditPreview = EditDiffResult | EditDiffError;
 
@@ -397,6 +398,15 @@ export function createEditToolDefinition(
 									const caveat = ageDays === null ? null : freshnessCaveat(ageDays);
 									const noteBody = caveat ? `${fileNote}\n\n(${caveat})` : fileNote;
 									resultText += `\n\n[File note for ${path}]:\n${noteBody}\n---`;
+								}
+								// Custom operations mean the file may live on a remote system, where a
+								// local type-check would lie — only check files written through the
+								// default local filesystem path.
+								if (!options?.operations) {
+									const diagnostics = getTsDiagnostics(absolutePath);
+									if (diagnostics) {
+										resultText += `\n\n[TypeScript errors in ${path} after this edit]:\n${diagnostics}`;
+									}
 								}
 								resolve({
 									content: [

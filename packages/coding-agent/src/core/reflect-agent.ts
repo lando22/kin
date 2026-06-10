@@ -16,6 +16,7 @@ import type { Model } from "@landongarrison/kin-ai";
 import { getSkillsDir } from "../config.ts";
 import type { AgentSessionServices } from "./agent-session-services.ts";
 import { createAgentSessionFromServices } from "./agent-session-services.ts";
+import { execCommand } from "./exec.ts";
 import { getMemoryDir, readCorpusHealth } from "./kin-memory.ts";
 import { ageInDays, formatAgeShort } from "./memory-freshness.ts";
 import { formatLocalDate, getAgendaPath, getReflectionPath } from "./reflect.ts";
@@ -229,6 +230,55 @@ export function formatCorpusHealth(homeDir = homedir()): string | null {
 }
 
 // =============================================================================
+// Recent commits (outcome signal)
+// =============================================================================
+
+/** Matches the Co-Authored-By trailer Kin appends to its own commits (see KIN_COMMIT_TRAILER). */
+const KIN_TRAILER_RE = /co-authored-by:\s*kin\b/i;
+
+const RECENT_COMMITS_DAYS = 7;
+const RECENT_COMMITS_MAX = 50;
+
+/**
+ * Recent commits in the given repo, marking which ones Kin authored (via its commit
+ * trailer) and which the user made alone. This is reflect's outcome signal: the agent
+ * can diff its own commits against HEAD to see what survived, and skim the user's solo
+ * commits to learn what happened while it wasn't in the loop.
+ * Returns null when cwd isn't a git repo or git fails.
+ */
+export async function formatRecentCommits(cwd: string, days = RECENT_COMMITS_DAYS): Promise<string | null> {
+	try {
+		// \x1f separates fields, \x1e terminates records: trailers can span lines,
+		// so line-based parsing would break.
+		const result = await execCommand(
+			"git",
+			[
+				"log",
+				"-n",
+				String(RECENT_COMMITS_MAX),
+				`--since=${days} days ago`,
+				"--date=short",
+				"--pretty=format:%h%x1f%ad%x1f%an%x1f%s%x1f%(trailers:only,unfold)%x1e",
+			],
+			cwd,
+			{ timeout: 10_000 },
+		);
+		if (result.code !== 0) return null;
+
+		const lines: string[] = [];
+		for (const record of result.stdout.split("\x1e")) {
+			const [hash, date, author, subject, trailers] = record.replace(/^\s+/, "").split("\x1f");
+			if (!hash || !date) continue;
+			const who = trailers && KIN_TRAILER_RE.test(trailers) ? "you" : (author ?? "unknown");
+			lines.push(`- ${hash} ${date} (${who}) ${subject ?? ""}`);
+		}
+		return lines.length > 0 ? lines.join("\n") : null;
+	} catch {
+		return null;
+	}
+}
+
+// =============================================================================
 // Skills landscape
 // =============================================================================
 
@@ -262,13 +312,34 @@ export function formatSkillsLandscape(skillsDir = getSkillsDir()): string | null
 // Reflect task message
 // =============================================================================
 
-function buildReflectTaskMessage(sessionIndex: string, reflectionPath: string, agendaPath: string, date: Date): string {
+function buildReflectTaskMessage(options: {
+	sessionIndex: string;
+	reflectionPath: string;
+	agendaPath: string;
+	date: Date;
+	/** Output of formatRecentCommits for the reflect cwd, or null when not a git repo. */
+	recentCommits: string | null;
+	cwd: string;
+}): string {
+	const { sessionIndex, reflectionPath, agendaPath, date, recentCommits, cwd } = options;
 	const dateStr = formatLocalDate(date);
 	const memoryPath = join(homedir(), ".kin", "Memory", "MEMORY.md");
 	const memoryDir = getMemoryDir();
 	const skillsDir = getSkillsDir();
 	const corpusHealth = formatCorpusHealth();
 	const skillsLandscape = formatSkillsLandscape(skillsDir);
+
+	const outcomesSection = recentCommits
+		? `
+
+---
+
+Commits in ${cwd} over the last ${RECENT_COMMITS_DAYS} days ("you" = commits carrying your Co-Authored-By trailer):
+
+${recentCommits}
+
+Outcome check — this is how you learn taste. For work you authored, find out whether it survived: \`git diff <your-commit>..HEAD -- <files you touched>\` shows whether the user has since amended, rewritten, or reverted your changes. If they rewrote something, read the rewrite — the difference between what you wrote and what they kept is a preference worth recording in memory. If your work survived untouched, that's signal your approach fit. Commits the user made without you are worth a skim too: they show what happened while you weren't in the loop.`
+		: "";
 
 	const corpusHealthSection = corpusHealth
 		? `
@@ -308,6 +379,7 @@ Your memory:
 - Portrait (always loaded): ${memoryPath}
 - Corpus (atomic notes, grepped on demand): ${memoryDir}/
 - Skills (procedures, loaded by their description when a task matches): ${skillsDir}/
+${outcomesSection}
 ${corpusHealthSection}
 ${skillsSection}
 
@@ -320,6 +392,7 @@ Use your tools however makes sense. Some things worth doing:
 - Read your portrait and project files to get oriented
 - Garden memory with targeted edits: mint atomic corpus notes for referenceable facts, update the portrait only for ambient facts, and merge/expire/reconcile what's already there — be surgical, keep the portrait small
 - Tend the corpus: skim the review candidates above. Merge notes that say the same thing, rewrite ones that have gone stale, and delete a note outright if it's wrong, redundant, or no longer useful — a smaller true corpus beats a large rotting one. Don't prune a note just for being old; confirm it's actually dead before removing it.
+- Tend your open questions (\`${memoryDir}/open-questions.md\`): a corpus note listing things you genuinely don't understand about the user's projects — why something is structured the way it is, what an odd script is for, a behavior you couldn't explain. Add new puzzles from today, delete answered ones, and keep the first line a one-line summary like any other corpus note. These feed wake: an unanswered question there can become a sharp morning question for the user.
 - Tend skills (${skillsDir}/): memory captures user/project context and the state of things; a skill captures *how to do a class of task*. If today's work produced a durable, repeatable procedure — a debugging path, a build/release sequence, a convention this codebase insists on — write it down as a skill so a future session starts already knowing. Preference order: (1) PATCH an existing skill above if one covers the territory; (2) add a concrete example or reference file under an existing skill; (3) only CREATE a new skill when nothing fits, and name it at the CLASS level (e.g. \`releasing-a-package\`, never \`fix-bug-1234\` or \`debug-todays-error\` — if the name only makes sense for today, it's the wrong altitude). A skill is a folder \`${skillsDir}/<name>/SKILL.md\` with YAML frontmatter (\`name\`, \`description\`); the description is the trigger you'll match on later, so make it precise. Do NOT encode environment failures or "X is broken" as a skill — those harden into refusals you cite against yourself long after the problem is fixed; capture the FIX instead. A smooth session with no durable technique warrants no skill — don't force one.
 
 When you have thought it through, write two things:
@@ -383,8 +456,16 @@ export async function runReflectAgent(options: RunReflectAgentOptions): Promise<
 
 	log("Building session index...");
 	const sessionIndex = generateSessionIndex(sessionDir, date);
+	const recentCommits = await formatRecentCommits(services.cwd);
 
-	const task = buildReflectTaskMessage(sessionIndex, reflectionPath, agendaPath, date);
+	const task = buildReflectTaskMessage({
+		sessionIndex,
+		reflectionPath,
+		agendaPath,
+		date,
+		recentCommits,
+		cwd: services.cwd,
+	});
 
 	log("Starting reflect agent...");
 

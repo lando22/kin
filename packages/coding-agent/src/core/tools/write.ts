@@ -10,6 +10,7 @@ import { withFileMutationQueue } from "./file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
 import { invalidArgText, normalizeDisplayText, replaceTabs, shortenPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
+import { getTsDiagnostics } from "./ts-diagnostics.ts";
 
 const writeSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),
@@ -224,10 +225,17 @@ export function createWriteToolDefinition(
 									await ops.writeFile(absolutePath, content);
 									if (aborted) return;
 									signal?.removeEventListener("abort", onAbort);
+									let resultText = `Successfully wrote ${content.length} bytes to ${path}`;
+									// Custom operations mean the file may live on a remote system, where
+									// a local type-check would lie — only check local writes.
+									if (!options?.operations) {
+										const diagnostics = getTsDiagnostics(absolutePath);
+										if (diagnostics) {
+											resultText += `\n\n[TypeScript errors in ${path} after this write]:\n${diagnostics}`;
+										}
+									}
 									resolve({
-										content: [
-											{ type: "text", text: `Successfully wrote ${content.length} bytes to ${path}` },
-										],
+										content: [{ type: "text", text: resultText }],
 										details: undefined,
 									});
 								} catch (error) {
