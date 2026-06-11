@@ -10,7 +10,7 @@ import { withFileMutationQueue } from "./file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
 import { invalidArgText, normalizeDisplayText, replaceTabs, shortenPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
-import { getTsDiagnostics } from "./ts-diagnostics.ts";
+import { captureTsBaseline, getTsDiagnostics } from "./ts-diagnostics.ts";
 
 const writeSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),
@@ -221,6 +221,11 @@ export function createWriteToolDefinition(
 									// Create parent directories if needed.
 									await ops.mkdir(dir);
 									if (aborted) return;
+									// Snapshot pre-existing type errors so only ones this write introduces
+									// get reported (local files only — see the diagnostics gate below).
+									if (!options?.operations) {
+										captureTsBaseline(absolutePath);
+									}
 									// Write the file contents.
 									await ops.writeFile(absolutePath, content);
 									if (aborted) return;
@@ -231,7 +236,7 @@ export function createWriteToolDefinition(
 									if (!options?.operations) {
 										const diagnostics = getTsDiagnostics(absolutePath);
 										if (diagnostics) {
-											resultText += `\n\n[TypeScript errors in ${path} after this write]:\n${diagnostics}`;
+											resultText += `\n\n[New TypeScript errors in ${path} after this write]:\n${diagnostics}`;
 										}
 									}
 									resolve({

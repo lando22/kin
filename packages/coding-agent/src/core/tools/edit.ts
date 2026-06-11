@@ -23,7 +23,7 @@ import { withFileMutationQueue } from "./file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
 import { invalidArgText, shortenPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
-import { getTsDiagnostics } from "./ts-diagnostics.ts";
+import { captureTsBaseline, getTsDiagnostics } from "./ts-diagnostics.ts";
 
 type EditPreview = EditDiffResult | EditDiffError;
 
@@ -378,6 +378,11 @@ export function createEditToolDefinition(
 								}
 
 								const finalContent = bom + restoreLineEndings(newContent, originalEnding);
+								// Snapshot pre-existing type errors so only ones this edit introduces
+								// get reported (local files only — see the diagnostics gate below).
+								if (!options?.operations) {
+									captureTsBaseline(absolutePath);
+								}
 								await ops.writeFile(absolutePath, finalContent);
 
 								// Check if aborted after writing.
@@ -405,7 +410,7 @@ export function createEditToolDefinition(
 								if (!options?.operations) {
 									const diagnostics = getTsDiagnostics(absolutePath);
 									if (diagnostics) {
-										resultText += `\n\n[TypeScript errors in ${path} after this edit]:\n${diagnostics}`;
+										resultText += `\n\n[New TypeScript errors in ${path} after this edit]:\n${diagnostics}`;
 									}
 								}
 								resolve({
