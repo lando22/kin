@@ -276,11 +276,12 @@ export function createBashToolDefinition(
 	const commandPrefix = options?.commandPrefix;
 	const spawnHook = options?.spawnHook;
 	const persistenceNote = options?.persistentSession
-		? " Commands run in one persistent shell, so the working directory and environment variables carry over between calls — a `cd` or `export` stays in effect for later commands, and you don't need to repeat them. (State resets if a command times out or is interrupted.)"
+		? " Commands run in one persistent shell, so the working directory and environment variables carry over between calls — a `cd` or `export` stays in effect for later commands, and you don't need to repeat them. (State resets if a command times out or is interrupted.) Because the shell is stateful, only one bash command can run at a time — do not call bash in parallel."
 		: "";
 	return {
 		name: "bash",
 		label: "bash",
+		executionMode: options?.persistentSession ? ("sequential" as const) : undefined,
 		description: `Execute a bash command in the current working directory. Returns stdout and stderr.${persistenceNote} Output is truncated to last ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds.`,
 		promptSnippet: "Execute bash commands (rg, git, tests, build scripts, etc.)",
 		parameters: bashSchema,
