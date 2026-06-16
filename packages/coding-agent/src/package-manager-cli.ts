@@ -296,9 +296,13 @@ function updateTargetIncludesExtensions(target: UpdateTarget): boolean {
 	return target.type === "all" || target.type === "extensions";
 }
 
-function printSelfUpdateUnavailable(npmCommand?: string[], updatePackageName = PACKAGE_NAME): void {
+function printSelfUpdateUnavailable(
+	npmCommand?: string[],
+	updatePackageName = PACKAGE_NAME,
+	binaryVersion?: string,
+): void {
 	console.error(`error: ${APP_NAME} cannot self-update this installation.`);
-	console.error(getSelfUpdateUnavailableInstruction(PACKAGE_NAME, npmCommand, updatePackageName));
+	console.error(getSelfUpdateUnavailableInstruction(PACKAGE_NAME, npmCommand, updatePackageName, binaryVersion));
 
 	const entrypoint = process.argv[1];
 	if (entrypoint) {
@@ -334,6 +338,7 @@ function printSelfUpdateNote(note: string): void {
 interface SelfUpdatePlan {
 	packageName: string;
 	shouldRun: boolean;
+	latestVersion?: string;
 	note?: string;
 }
 
@@ -346,7 +351,12 @@ async function getSelfUpdatePlan(force: boolean): Promise<SelfUpdatePlan> {
 		const latestRelease = await getLatestKinRelease(VERSION);
 		const packageName = latestRelease?.packageName ?? PACKAGE_NAME;
 		if (!latestRelease || packageName !== PACKAGE_NAME || isNewerPackageVersion(latestRelease.version, VERSION)) {
-			return { packageName, shouldRun: true, ...(latestRelease?.note ? { note: latestRelease.note } : {}) };
+			return {
+				packageName,
+				shouldRun: true,
+				latestVersion: latestRelease?.version,
+				...(latestRelease?.note ? { note: latestRelease.note } : {}),
+			};
 		}
 	} catch {
 		return { packageName: PACKAGE_NAME, shouldRun: true };
@@ -551,13 +561,15 @@ export async function handlePackageCommand(args: string[]): Promise<boolean> {
 						process.exitCode = 1;
 						return true;
 					}
+					const binaryVersion = installMethod === "bun-binary" ? selfUpdatePlan.latestVersion : undefined;
 					const selfUpdateCommand = getSelfUpdateCommand(
 						PACKAGE_NAME,
 						selfUpdateNpmCommand,
 						selfUpdatePlan.packageName,
+						binaryVersion,
 					);
 					if (!selfUpdateCommand) {
-						printSelfUpdateUnavailable(selfUpdateNpmCommand, selfUpdatePlan.packageName);
+						printSelfUpdateUnavailable(selfUpdateNpmCommand, selfUpdatePlan.packageName, binaryVersion);
 						process.exitCode = 1;
 						return true;
 					}

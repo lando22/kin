@@ -99,6 +99,15 @@ function getInferredNpmInstall(): { root: string; prefix: string } | undefined {
 	return undefined;
 }
 
+const INSTALL_REPO = "lando22/kin";
+const INSTALL_SCRIPT_URL = `https://${INSTALL_REPO}.github.io/kin/install.sh`;
+
+export function makeBinarySelfUpdateCommand(version: string): SelfUpdateCommand {
+	const tag = version.startsWith("v") ? version : `v${version}`;
+	const shellCommand = `curl -fsSL ${INSTALL_SCRIPT_URL} | KIN_INSTALL_VERSION=${tag} sh`;
+	return makeSelfUpdateCommand(makeSelfUpdateCommandStep("sh", ["-c", shellCommand]));
+}
+
 function getSelfUpdateCommandForMethod(
 	method: InstallMethod,
 	installedPackageName: string,
@@ -107,6 +116,7 @@ function getSelfUpdateCommandForMethod(
 ): SelfUpdateCommand | undefined {
 	switch (method) {
 		case "bun-binary":
+		case "unknown":
 			return undefined;
 		case "pnpm":
 			return makeSelfUpdateCommand(
@@ -140,8 +150,6 @@ function getSelfUpdateCommandForMethod(
 					: makeSelfUpdateCommandStep(command, [...prefixArgs, "uninstall", "-g", installedPackageName]);
 			return makeSelfUpdateCommand(installStep, uninstallStep);
 		}
-		case "unknown":
-			return undefined;
 	}
 }
 
@@ -273,8 +281,15 @@ export function getSelfUpdateCommand(
 	packageName: string,
 	npmCommand?: string[],
 	updatePackageName = packageName,
+	binaryVersion?: string,
 ): SelfUpdateCommand | undefined {
 	const method = detectInstallMethod();
+
+	if (method === "bun-binary") {
+		const version = binaryVersion ?? "latest";
+		return makeBinarySelfUpdateCommand(version);
+	}
+
 	const command = getSelfUpdateCommandForMethod(method, packageName, updatePackageName, npmCommand);
 	if (!command || !isManagedByGlobalPackageManager(method, packageName, npmCommand) || !isSelfUpdatePathWritable()) {
 		return undefined;
@@ -286,10 +301,12 @@ export function getSelfUpdateUnavailableInstruction(
 	packageName: string,
 	npmCommand?: string[],
 	updatePackageName = packageName,
+	binaryVersion?: string,
 ): string {
 	const method = detectInstallMethod();
 	if (method === "bun-binary") {
-		return `Download from: https://github.com/lando22/kin/releases/latest`;
+		const command = makeBinarySelfUpdateCommand(binaryVersion ?? "latest");
+		return `Binary installs can be updated by re-running the installer: ${command.display}`;
 	}
 	const command = getSelfUpdateCommandForMethod(method, packageName, updatePackageName, npmCommand);
 	if (command) {
