@@ -4,6 +4,7 @@ import { homedir } from "os";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
 import { CONFIG_DIR_NAME, getAgentDir } from "../config.ts";
+import type { McpSettings } from "./mcp/types.ts";
 
 export interface CompactionSettings {
 	enabled?: boolean; // default: true
@@ -109,6 +110,8 @@ export interface Settings {
 	markdown?: MarkdownSettings;
 	warnings?: WarningSettings;
 	sessionDir?: string; // Custom session storage directory (same format as --session-dir CLI flag)
+	/** MCP (Model Context Protocol) server configuration. */
+	mcp?: McpSettings;
 }
 
 /** Deep merge settings: project/overrides take precedence, nested objects merge recursively */
@@ -723,6 +726,23 @@ export class SettingsManager {
 			maxRetries: this.settings.retry?.maxRetries ?? 3,
 			baseDelayMs: this.settings.retry?.baseDelayMs ?? 2000,
 		};
+	}
+
+	getMcpSettings(): McpSettings | undefined {
+		return this.settings.mcp;
+	}
+
+	setMcpSettings(mcp: McpSettings): void {
+		this.globalSettings.mcp = mcp;
+		this.markModified("mcp");
+		this.save();
+	}
+
+	setProjectMcpSettings(mcp: McpSettings): void {
+		const projectSettings = structuredClone(this.projectSettings);
+		projectSettings.mcp = mcp;
+		this.markProjectModified("mcp");
+		this.saveProjectSettings(projectSettings);
 	}
 
 	getProviderRetrySettings(): { timeoutMs?: number; maxRetries?: number; maxRetryDelayMs: number } {

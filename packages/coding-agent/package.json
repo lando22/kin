@@ -41,6 +41,7 @@
 		"@landongarrison/kin-agent-core": "^0.2.1",
 		"@landongarrison/kin-ai": "^0.2.1",
 		"@landongarrison/kin-tui": "^0.2.1",
+		"@modelcontextprotocol/sdk": "^1.29.0",
 		"@silvia-odwyer/photon-node": "^0.3.4",
 		"chalk": "^5.5.0",
 		"cross-spawn": "^7.0.6",

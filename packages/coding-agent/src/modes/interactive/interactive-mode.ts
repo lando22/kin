@@ -71,6 +71,7 @@ import type {
 import { FooterDataProvider, type ReadonlyFooterDataProvider } from "../../core/footer-data-provider.ts";
 import { type AppKeybinding, KeybindingsManager } from "../../core/keybindings.ts";
 import { getMemoryDir, resetKinMemory, shouldRunFirstRunOnboarding } from "../../core/kin-memory.ts";
+import type { McpServerConfig, McpSettings } from "../../core/mcp/types.ts";
 import { createCompactionSummaryMessage } from "../../core/messages.ts";
 import { defaultModelPerProvider } from "../../core/model-resolver.ts";
 import { DefaultPackageManager } from "../../core/package-manager.ts";
@@ -2588,6 +2589,12 @@ export class InteractiveMode {
 				return;
 			}
 
+			if (text === "/mcp" || text.startsWith("/mcp ")) {
+				const subcommand = text.startsWith("/mcp ") ? text.slice(5).trim() : "";
+				await this.handleMcpCommand(subcommand);
+				this.editor.setText("");
+				return;
+			}
 			if (text === "/login") {
 				this.showOAuthSelector("login");
 				this.editor.setText("");
@@ -5053,6 +5060,149 @@ export class InteractiveMode {
 
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new Text(info, 1, 0));
+		this.ui.requestRender();
+	}
+
+	private async handleMcpCommand(subcommand: string): Promise<void> {
+		const args = subcommand.split(/\s+/).filter(Boolean);
+		const verb = args[0];
+
+		if (verb === "reload") {
+			const result = await this.session.startMcp();
+			const message = result.errors.length
+				? `${theme.fg("accent", "MCP reloaded")} — connected ${result.serverCount} server(s), ${result.toolCount} tool(s). ${result.errors.length} error(s).`
+				: `${theme.fg("accent", "MCP reloaded")} — connected ${result.serverCount} server(s), ${result.toolCount} tool(s).`;
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(message, 1, 0));
+			this.ui.requestRender();
+			return;
+		}
+
+		if (verb === "list") {
+			const tools = this.session.getMcpToolDefinitions();
+			let output = `${theme.bold("MCP Tools")} (${tools.length})\n\n`;
+			if (tools.length === 0) {
+				output += theme.fg("dim", "No MCP tools registered. Add a server with /mcp add or edit settings.json.");
+			} else {
+				for (const tool of tools) {
+					output += `${theme.fg("accent", tool.name)}${tool.description ? ` — ${tool.description}` : ""}\n`;
+				}
+			}
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(output, 1, 0));
+			this.ui.requestRender();
+			return;
+		}
+
+		if (verb === "add" || verb === "add-url") {
+			if (verb === "add" && args.length < 3) {
+				this.showWarning("Usage: /mcp add <name> <command> [args...]");
+				return;
+			}
+			if (verb === "add-url" && args.length !== 3) {
+				this.showWarning("Usage: /mcp add-url <name> <url>");
+				return;
+			}
+
+			const name = args[1];
+			const current = this.session.settingsManager.getMcpSettings() ?? { servers: {} };
+			const next: McpSettings = { servers: { ...current.servers } };
+
+			if (verb === "add") {
+				const command = args[2];
+				const commandArgs = args.slice(3);
+				const serverConfig: McpServerConfig = {
+					command,
+					args: commandArgs.length ? commandArgs : undefined,
+				};
+				next.servers[name] = serverConfig;
+			} else {
+				next.servers[name] = { transport: "streamableHttp", url: args[2] };
+			}
+
+			this.session.settingsManager.setMcpSettings(next);
+			await this.session.settingsManager.flush();
+			const result = await this.session.startMcp();
+
+			const message = result.errors.length
+				? `${theme.fg("accent", `Server ${name} added`)}. Connected ${result.serverCount} server(s), ${result.toolCount} tool(s). ${result.errors.length} error(s).`
+				: `${theme.fg("accent", `Server ${name} added`)}. Connected ${result.serverCount} server(s), ${result.toolCount} tool(s).`;
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(message, 1, 0));
+			this.ui.requestRender();
+			return;
+		}
+
+		if (verb === "remove") {
+			if (args.length !== 2) {
+				this.showWarning("Usage: /mcp remove <name>");
+				return;
+			}
+			const name = args[1];
+			const current = this.session.settingsManager.getMcpSettings();
+			if (!current?.servers || !(name in current.servers)) {
+				this.showWarning(`No MCP server named "${name}". /mcp to list servers.`);
+				return;
+			}
+
+			const next: McpSettings = { servers: { ...current.servers } };
+			delete next.servers[name];
+			this.session.settingsManager.setMcpSettings(next);
+			await this.session.settingsManager.flush();
+			await this.session.startMcp();
+
+			this.chatContainer.addChild(new Spacer(1));
+			this.chatContainer.addChild(new Text(theme.fg("accent", `Server ${name} removed.`), 1, 0));
+			this.ui.requestRender();
+			return;
+		}
+
+		// Default: status view
+		const settings = this.session.settingsManager.getMcpSettings();
+		const status = this.session.getMcpStatus();
+		const configuredServers = settings?.servers ? Object.entries(settings.servers) : [];
+
+		let output = `${theme.bold("MCP Status")}\n\n`;
+
+		if (configuredServers.length === 0) {
+			output += `${theme.fg("dim", "No MCP servers configured.")}\n`;
+			output += `${theme.fg("dim", "Usage:")}\n`;
+			output += `${theme.fg("dim", "  /mcp add <name> <command> [args...]")}\n`;
+			output += `${theme.fg("dim", "  /mcp add-url <name> <url>")}\n`;
+			output += `${theme.fg("dim", "  /mcp reload")}\n`;
+			output += `${theme.fg("dim", "  /mcp list")}\n`;
+		} else {
+			const connected = new Set(status?.connectedServerNames ?? []);
+			for (const [serverName, serverConfig] of configuredServers) {
+				const transport =
+					"transport" in serverConfig && serverConfig.transport
+						? serverConfig.transport
+						: serverConfig.command
+							? "stdio"
+							: serverConfig.url
+								? "streamableHttp"
+								: "stdio";
+				const isConnected = connected.has(serverName);
+				const isDisabled = serverConfig.enabled === false;
+				const symbol = isDisabled
+					? theme.fg("muted", "○")
+					: isConnected
+						? theme.fg("success", "●")
+						: theme.fg("error", "●");
+				output += `${symbol} ${serverName}${theme.fg("dim", ` (${transport})`)}\n`;
+			}
+
+			output += `\n${theme.fg("dim", `Connected: ${status?.serverCount ?? 0}/${configuredServers.length} · Tools: ${status?.toolCount ?? 0}`)}`;
+			if (status?.errors && status.errors.length > 0) {
+				output += `\n\n${theme.fg("error", "Errors:")}\n`;
+				for (const error of status.errors) {
+					output += `${theme.fg("error", `  ${error.serverName}: ${error.message}`)}\n`;
+				}
+			}
+		}
+
+		this.chatContainer.addChild(new Spacer(1));
+		this.chatContainer.addChild(new Text(output, 1, 0));
 		this.ui.requestRender();
 	}
 

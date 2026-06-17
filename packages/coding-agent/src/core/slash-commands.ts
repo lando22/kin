@@ -82,6 +82,7 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<BuiltinSlashCommand> = [
 	{ name: "session", description: "Show session info and stats" },
 	{ name: "model", description: "Select model" },
 	{ name: "compact", description: "Manually compact the session context" },
+	{ name: "mcp", description: "Show MCP server status and manage MCP servers" },
 	{ name: "login", description: "Configure provider authentication" },
 	{ name: "logout", description: "Remove provider authentication" },
 	{ name: "quit", description: `Quit ${APP_NAME}` },

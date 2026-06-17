@@ -33,6 +33,7 @@ import {
 	resetApiProviders,
 	streamSimple,
 } from "@landongarrison/kin-ai";
+import { VERSION } from "../config.ts";
 import { theme } from "../modes/interactive/theme/theme.ts";
 import { stripFrontmatter } from "../utils/frontmatter.ts";
 import { sleep } from "../utils/sleep.ts";
@@ -78,6 +79,7 @@ import {
 } from "./extensions/index.ts";
 import { emitSessionShutdownEvent } from "./extensions/runner.ts";
 import { readCorpusIndex, readMemoryContent, readProjectContent, readWorkingContent } from "./kin-memory.ts";
+import { McpManager, type McpStartResult } from "./mcp/manager.ts";
 import type { BashExecutionMessage, CustomMessage } from "./messages.ts";
 import type { ModelRegistry } from "./model-registry.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";
@@ -309,6 +311,8 @@ export class AgentSession {
 
 	// Model registry for API key resolution
 	private _modelRegistry: ModelRegistry;
+	private _mcpManager: McpManager;
+	private _mcpToolDefinitions: ToolDefinition<any, any>[] = [];
 
 	// Tool registry for extension getTools/setTools
 	private _toolRegistry: Map<string, AgentTool> = new Map();
@@ -334,6 +338,7 @@ export class AgentSession {
 		this._allowedToolNames = config.allowedToolNames ? new Set(config.allowedToolNames) : undefined;
 		this._baseToolsOverride = config.baseToolsOverride;
 		this._sessionStartEvent = config.sessionStartEvent ?? { type: "session_start", reason: "startup" };
+		this._mcpManager = new McpManager(this.settingsManager.getMcpSettings(), this._cwd, "kin", VERSION);
 
 		// Always subscribe to agent events for internal handling
 		// (session persistence, extensions, auto-compaction, retry logic)
@@ -719,7 +724,41 @@ export class AgentSession {
 		this._eventListeners = [];
 		this._persistentBashOps?.dispose();
 		this._persistentBashOps = undefined;
+		// Best-effort MCP cleanup; dispose() is synchronous so we can't await.
+		void this._mcpManager.close();
 		cleanupSessionResources(this.sessionId);
+	}
+
+	/**
+	 * Start configured MCP servers and register their tools.
+	 *
+	 * This is separate from the constructor because MCP connection is async,
+	 * and AgentSession callers (createAgentSession / createAgentSessionFromServices)
+	 * are already async.
+	 */
+	async startMcp(signal?: AbortSignal): Promise<McpStartResult> {
+		// Always recreate the manager so a reload picks up the latest settings.
+		this._mcpManager = new McpManager(this.settingsManager.getMcpSettings(), this._cwd, "kin", VERSION);
+		const result = await this._mcpManager.start(signal);
+		this._mcpToolDefinitions = this._mcpManager.toolDefinitions;
+		// Activate discovered MCP tools alongside the existing active set. If an
+		// allowlist is configured, _refreshToolRegistry will filter accordingly.
+		const mcpToolNames = this._mcpToolDefinitions.map((definition) => definition.name);
+		this._refreshToolRegistry({
+			activeToolNames: [...this.getActiveToolNames(), ...mcpToolNames],
+			includeAllExtensionTools: true,
+		});
+		return result;
+	}
+
+	/** Returns the most recent MCP startup result, including status per server. */
+	getMcpStatus(): McpStartResult | undefined {
+		return this._mcpManager?.status;
+	}
+
+	/** Returns the active MCP tool definitions currently registered in this session. */
+	getMcpToolDefinitions(): ToolDefinition[] {
+		return [...this._mcpToolDefinitions];
 	}
 
 	// =========================================================================
@@ -2272,12 +2311,19 @@ export class AgentSession {
 		const isAllowedTool = (name: string): boolean => !allowedToolNames || allowedToolNames.has(name);
 
 		const registeredTools = this._extensionRunner.getAllRegisteredTools();
+		const mcpTools = this._mcpToolDefinitions
+			.filter((definition) => isAllowedTool(definition.name))
+			.map((definition) => ({
+				definition,
+				sourceInfo: createSyntheticSourceInfo(`<mcp:${definition.name}>`, { source: "mcp" }),
+			}));
 		const allCustomTools = [
 			...registeredTools,
 			...this._customTools.map((definition) => ({
 				definition,
 				sourceInfo: createSyntheticSourceInfo(`<sdk:${definition.name}>`, { source: "sdk" }),
 			})),
+			...mcpTools,
 		].filter((tool) => isAllowedTool(tool.definition.name));
 		const definitionRegistry = new Map<string, ToolDefinitionEntry>(
 			Array.from(this._baseToolDefinitions.entries())
@@ -2432,6 +2478,7 @@ export class AgentSession {
 			flagValues: previousFlagValues,
 			includeAllExtensionTools: true,
 		});
+		await this.startMcp();
 
 		const hasBindings =
 			this._extensionUIContext ||
