@@ -94,3 +94,39 @@ if (totalUpdates === 0) {
 } else {
 	console.log(`\n✅ Updated ${totalUpdates} dependency version(s)`);
 }
+
+// --- Sync root package.json ---
+
+const rootPkgPath = join(process.cwd(), 'package.json');
+const rootPkg = JSON.parse(readFileSync(rootPkgPath, 'utf8'));
+const sharedVersion = versionMap[Object.keys(versionMap)[0]];
+
+let rootUpdated = false;
+
+// Sync root version
+if (rootPkg.version !== sharedVersion) {
+	console.log(`\nRoot package.json:`);
+	console.log(`  version: ${rootPkg.version} → ${sharedVersion}`);
+	rootPkg.version = sharedVersion;
+	rootUpdated = true;
+}
+
+// Sync root dependencies that reference workspace packages
+for (const depField of ['dependencies', 'devDependencies']) {
+	if (!rootPkg[depField]) continue;
+	for (const [depName, currentVersion] of Object.entries(rootPkg[depField])) {
+		if (versionMap[depName]) {
+			const newVersion = `^${versionMap[depName]}`;
+			if (currentVersion !== newVersion) {
+				console.log(`  ${depName}: ${currentVersion} → ${newVersion} (${depField})`);
+				rootPkg[depField][depName] = newVersion;
+				rootUpdated = true;
+			}
+		}
+	}
+}
+
+if (rootUpdated) {
+	writeFileSync(rootPkgPath, JSON.stringify(rootPkg, null, '\t') + '\n');
+	console.log('\n✅ Root package.json synced');
+}
