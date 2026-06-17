@@ -732,6 +732,19 @@ export class SettingsManager {
 		return this.settings.mcp;
 	}
 
+	setMcpSettings(mcp: McpSettings): void {
+		this.globalSettings.mcp = mcp;
+		this.markModified("mcp");
+		this.save();
+	}
+
+	setProjectMcpSettings(mcp: McpSettings): void {
+		const projectSettings = structuredClone(this.projectSettings);
+		projectSettings.mcp = mcp;
+		this.markProjectModified("mcp");
+		this.saveProjectSettings(projectSettings);
+	}
+
 	getProviderRetrySettings(): { timeoutMs?: number; maxRetries?: number; maxRetryDelayMs: number } {
 		return {
 			timeoutMs: this.settings.retry?.provider?.timeoutMs,

@@ -751,6 +751,16 @@ export class AgentSession {
 		return result;
 	}
 
+	/** Returns the most recent MCP startup result, including status per server. */
+	getMcpStatus(): McpStartResult | undefined {
+		return this._mcpManager?.status;
+	}
+
+	/** Returns the active MCP tool definitions currently registered in this session. */
+	getMcpToolDefinitions(): ToolDefinition[] {
+		return [...this._mcpToolDefinitions];
+	}
+
 	// =========================================================================
 	// Read-only State Access
 	// =========================================================================

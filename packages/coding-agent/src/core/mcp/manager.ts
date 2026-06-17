@@ -17,6 +17,8 @@ export interface McpStartResult {
 	serverCount: number;
 	toolCount: number;
 	errors: McpServerError[];
+	connectedServerNames: string[];
+	configuredServerNames: string[];
 }
 
 export interface McpServerError {
@@ -35,6 +37,7 @@ export class McpManager {
 	private _cwd: string;
 	private _clientName: string;
 	private _clientVersion: string;
+	private _lastStartResult: McpStartResult | undefined;
 
 	constructor(settings: McpSettings | undefined, cwd: string, clientName: string, clientVersion: string) {
 		this._settings = settings;
@@ -47,6 +50,11 @@ export class McpManager {
 		return this._toolDefinitions;
 	}
 
+	/** Result of the last completed start attempt, including any per-server errors. */
+	get status(): McpStartResult | undefined {
+		return this._lastStartResult;
+	}
+
 	/**
 	 * Connect to all enabled MCP servers and discover their tools.
 	 * Errors for individual servers are collected and returned rather than
@@ -56,10 +64,19 @@ export class McpManager {
 		await this.close();
 		this._toolDefinitions = [];
 		this._connections = [];
+		this._lastStartResult = undefined;
 
 		const servers = this._settings?.servers;
-		if (!servers || Object.keys(servers).length === 0) {
-			return { serverCount: 0, toolCount: 0, errors: [] };
+		const configuredServerNames = servers ? Object.keys(servers) : [];
+		if (!servers || configuredServerNames.length === 0) {
+			this._lastStartResult = {
+				serverCount: 0,
+				toolCount: 0,
+				errors: [],
+				connectedServerNames: [],
+				configuredServerNames: [],
+			};
+			return this._lastStartResult;
 		}
 
 		const errors: McpServerError[] = [];
@@ -74,11 +91,14 @@ export class McpManager {
 			}
 		}
 
-		return {
+		this._lastStartResult = {
 			serverCount: this._connections.length,
 			toolCount: this._toolDefinitions.length,
 			errors,
+			connectedServerNames: this._connections.map((connection) => connection.name),
+			configuredServerNames,
 		};
+		return this._lastStartResult;
 	}
 
 	/**
