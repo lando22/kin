@@ -1,6 +1,6 @@
 {
 	"name": "@landongarrison/kin-coding-agent",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "Coding agent CLI with read, bash, edit, write tools and session management",
 	"type": "module",
 	"kinConfig": {
@@ -38,9 +38,9 @@
 		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"dependencies": {
-		"@landongarrison/kin-agent-core": "^0.2.1",
-		"@landongarrison/kin-ai": "^0.2.1",
-		"@landongarrison/kin-tui": "^0.2.1",
+		"@landongarrison/kin-agent-core": "^0.2.2",
+		"@landongarrison/kin-ai": "^0.2.2",
+		"@landongarrison/kin-tui": "^0.2.2",
 		"@silvia-odwyer/photon-node": "^0.3.4",
 		"chalk": "^5.5.0",
 		"cross-spawn": "^7.0.6",
