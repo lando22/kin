@@ -298,7 +298,7 @@ describe("Context overflow error handling", () => {
 
 	describe.skipIf(!process.env.CEREBRAS_API_KEY)("Cerebras", () => {
 		it("qwen-3-235b - should detect overflow via isContextOverflow", async () => {
-			const model = getModel("cerebras", "llama3.1-8b");
+			const model = getModel("cerebras", "zai-glm-4.7");
 			const result = await testContextOverflow(model, process.env.CEREBRAS_API_KEY!);
 			logResult(result);
 
